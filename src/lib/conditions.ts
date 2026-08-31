@@ -11,19 +11,12 @@ import { getRecentSightings } from "@/lib/sightings";
 import { getNwsForecast } from "@/lib/data/nws";
 import { getTides, stageAt } from "@/lib/data/coops";
 import { getBuoy } from "@/lib/data/ndbc";
-import {
-  computeScore,
-  hourlyScore,
-  recentNeFactor,
-  sightingsFactor,
-} from "@/lib/score";
+import { computeScore, hourlyScore, recentNeFactor } from "@/lib/score";
 import { getServerSupabase, hasServiceRole } from "@/lib/supabase/server";
 
 function computeNextWindow(
   conditions: Conditions,
   nwsHourly: Awaited<ReturnType<typeof getNwsForecast>>["hourly"],
-  beachId: string,
-  sightings: Sighting[],
   now: Date,
 ): OpportunityWindow | null {
   if (nwsHourly.length < 2) return null;
@@ -33,7 +26,6 @@ function computeNextWindow(
     conditions.recentNeFraction,
     conditions.wind,
   ).factor;
-  const sightF = sightingsFactor(beachId, sightings, now).factor;
 
   const scored = nwsHourly
     .map((h) => {
@@ -45,7 +37,6 @@ function computeNextWindow(
           wind: h.wind,
           stage: events.length ? stageAt(events, when.getTime()) : "unknown",
           recentNeF,
-          sightingsF: sightF,
         }),
       };
     })
@@ -121,14 +112,10 @@ export async function computeBeachConditions(
     observedAt: now.toISOString(),
   };
 
-  const score = computeScore({ beachId: beach.id, conditions, sightings, now });
-  const nextWindow = computeNextWindow(
-    conditions,
-    nws.hourly,
-    beach.id,
-    sightings,
-    now,
-  );
+  // Score is computed from public sources only — sightings are not a factor.
+  const score = computeScore({ conditions, now });
+  const nextWindow = computeNextWindow(conditions, nws.hourly, now);
+  // Sightings are still fetched purely for display alongside the score.
   const recentSightings = sightings
     .filter((s) => s.beach_id === beach.id)
     .slice(0, 10);
@@ -153,10 +140,7 @@ export async function computeBeachConditions(
 
 /** Lightweight summaries for the map and beach selector (parallel fetch). */
 export async function computeAllSummaries(): Promise<BeachSummary[]> {
-  const [beaches, sightings] = await Promise.all([
-    getBeaches(),
-    getRecentSightings(100),
-  ]);
+  const beaches = await getBeaches();
 
   const summaries = await Promise.all(
     beaches.map(async (beach) => {
@@ -175,11 +159,7 @@ export async function computeAllSummaries(): Promise<BeachSummary[]> {
         sources: [],
         observedAt: new Date().toISOString(),
       };
-      const score = computeScore({
-        beachId: beach.id,
-        conditions,
-        sightings,
-      });
+      const score = computeScore({ conditions });
       const summary: BeachSummary = {
         beach,
         score: score.score,

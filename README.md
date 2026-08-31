@@ -4,13 +4,15 @@ A mobile-first web app that scores the **fall mullet run** opportunity for
 Northeast Florida beaches — **Mickler's Landing** (prioritized), Jacksonville
 Beach, Mayport, and St. Augustine Beach.
 
-It pulls **free public data** and blends it with your own sightings into a
-transparent **0–100 opportunity score**:
+It scores each beach from **free public data** into a transparent **0–100
+opportunity score**, and lets you log sightings alongside it:
 
 - **Wind & air temp** — [National Weather Service API](https://www.weather.gov/documentation/services-web-api) (`api.weather.gov`)
 - **Tides** — [NOAA CO-OPS](https://api.tidesandcurrents.noaa.gov/api/prod/) high/low predictions
 - **Buoys** — [NDBC](https://www.ndbc.noaa.gov/) real-time wind, water temp, and waves
-- **Sightings** — logged manually by you (beach, time, school size, notes)
+- **Sightings** — logged manually by you (beach, time, school size, notes).
+  Tracked and displayed, but **not part of the score yet** — the score uses
+  public sources only until enough sightings are collected to be predictive.
 
 For each beach the app shows the current conditions, a plain-English **"why"**
 behind the score, and the **next best window**, plus a map, a recent-sightings
@@ -23,17 +25,21 @@ list, and an alert-rules table for future notifications.
 
 ## How the score works
 
-A weighted blend of six factors, each a 0–1 quality figure × its weight
-(all pure functions in [`src/lib/score.ts`](src/lib/score.ts)):
+A weighted blend of five **public-data** factors, each a 0–1 quality figure ×
+its weight (all pure functions in [`src/lib/score.ts`](src/lib/score.ts)):
 
 | Factor              | Weight | What it rewards |
 | ------------------- | -----: | --------------- |
-| Season window       | 22 | Proximity to the mid/late-October run peak |
-| Wind direction      | 20 | NE (45°) is ideal; N/E decent; onshore-S/offshore-W poor |
-| Recent NE pattern   | 16 | Share of recent buoy hours blowing out of the NE |
-| Tide stage          | 15 | Moving water (falling best, then rising); slack is weaker |
-| Recent sightings    | 15 | Recency- and size-weighted reports, this beach + nearby |
-| Wind speed          | 12 | Moderate 10–17 kt best; calm or blown-out poor |
+| Season window       | 25 | Proximity to the mid/late-October run peak |
+| Wind direction      | 24 | NE (45°) is ideal; N/E decent; onshore-S/offshore-W poor |
+| Recent NE pattern   | 18 | Share of recent buoy hours blowing out of the NE |
+| Tide stage          | 18 | Moving water (falling best, then rising); slack is weaker |
+| Wind speed          | 15 | Moderate 10–17 kt best; calm or blown-out poor |
+
+> **Sightings are not a scoring factor (yet).** The score is derived from public
+> sources only. Manually logged sightings are still recorded and shown next to
+> the score; they can be folded back in as a weighted factor once enough have
+> been collected to be predictive.
 
 The **next best window** re-scores the NWS hourly forecast against the tide
 timeline for the next ~48 h and reports the highest contiguous stretch.
@@ -179,6 +185,8 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>/api/refresh
 
 ## Roadmap
 
+- Fold sightings back into the score as a weighted factor once enough reports
+  have been collected to be predictive.
 - Wire a notification channel (email/SMS/push) to act on triggered alert rules.
 - Auth for trusted sighting contributors.
 - Historical score charts and catch logging.

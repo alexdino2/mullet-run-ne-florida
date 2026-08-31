@@ -26,8 +26,9 @@ export default async function SightingsPage() {
         </Link>
       </div>
       <p className="mt-1 text-sm text-slate-500">
-        Log a school you spotted. Reports feed straight into the opportunity
-        score.
+        Log a school you spotted. Sightings are tracked and shown here, but
+        don’t affect the opportunity score yet — the score uses public data
+        only while we gather more reports.
       </p>
 
       {!configured && (

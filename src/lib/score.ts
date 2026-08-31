@@ -2,7 +2,6 @@ import type {
   Conditions,
   ScoreComponent,
   ScoreResult,
-  Sighting,
   TideStage,
   WindObservation,
 } from "@/lib/types";
@@ -10,32 +9,29 @@ import type {
 /**
  * Mullet opportunity score.
  *
- * A transparent, weighted 0–100 score built from six factors, each returning a
- * 0..1 quality figure that is multiplied by its weight. The factors are pure
- * functions so the same logic drives both the "now" score and the hourly
- * lookahead used for the next-best-window forecast.
+ * A transparent, weighted 0–100 score built from five PUBLIC-DATA factors, each
+ * returning a 0..1 quality figure that is multiplied by its weight. The factors
+ * are pure functions so the same logic drives both the "now" score and the
+ * hourly lookahead used for the next-best-window forecast.
  *
  * Weights (sum to 100):
- *   season 22 · windDir 20 · recentNE 16 · tide 15 · sightings 15 · windSpeed 12
+ *   season 25 · windDir 24 · recentNE 18 · tide 18 · windSpeed 15
+ *
+ * Manually logged sightings are intentionally NOT part of the score: the score
+ * is derived from public sources only (NWS, NOAA CO-OPS, NDBC, season). Sightings
+ * are still recorded and displayed, and can be folded back in as a factor once
+ * enough have been collected to be predictive.
  */
 
 const NEUTRAL = 0.45;
 
 export const WEIGHTS = {
-  season: 22,
-  windDir: 20,
-  recentNe: 16,
-  tide: 15,
-  sightings: 15,
-  windSpeed: 12,
+  season: 25,
+  windDir: 24,
+  recentNe: 18,
+  tide: 18,
+  windSpeed: 15,
 } as const;
-
-const SIZE_WEIGHT: Record<Sighting["school_size"], number> = {
-  small: 0.3,
-  medium: 0.55,
-  large: 0.8,
-  huge: 1,
-};
 
 function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
@@ -107,30 +103,6 @@ export function recentNeFactor(
   return { factor: NEUTRAL, estimated: true };
 }
 
-/**
- * Weighted recent-sightings signal. Same-beach reports count fully; nearby
- * beaches contribute a fraction. Recency decays linearly over four days.
- */
-export function sightingsFactor(
-  beachId: string,
-  sightings: Sighting[],
-  now: Date,
-): { factor: number; recentCount: number } {
-  const nowMs = now.getTime();
-  let sum = 0;
-  let recentCount = 0;
-  for (const s of sightings) {
-    const hoursAgo = (nowMs - new Date(s.observed_at).getTime()) / 3600000;
-    if (hoursAgo < 0 || hoursAgo > 96) continue;
-    const recency = clamp01(1 - hoursAgo / 96);
-    const size = SIZE_WEIGHT[s.school_size] ?? 0.4;
-    const place = s.beach_id === beachId ? 1 : 0.35;
-    sum += recency * size * place;
-    if (s.beach_id === beachId) recentCount += 1;
-  }
-  return { factor: clamp01(sum), recentCount };
-}
-
 function ratingFor(score: number): ScoreResult["rating"] {
   if (score >= 80) return "prime";
   if (score >= 60) return "good";
@@ -143,15 +115,13 @@ function pts(weight: number, factor: number): number {
 }
 
 export interface ScoreInputs {
-  beachId: string;
   conditions: Conditions;
-  sightings: Sighting[];
   now?: Date;
 }
 
 export function computeScore(input: ScoreInputs): ScoreResult {
   const now = input.now ?? new Date();
-  const { conditions, sightings, beachId } = input;
+  const { conditions } = input;
   const wind = conditions.wind;
   const components: ScoreComponent[] = [];
 
@@ -216,23 +186,6 @@ export function computeScore(input: ScoreInputs): ScoreResult {
           }.`,
   });
 
-  // Sightings
-  const sight = sightingsFactor(beachId, sightings, now);
-  components.push({
-    key: "sightings",
-    label: "Recent sightings",
-    weight: WEIGHTS.sightings,
-    factor: sight.factor,
-    points: pts(WEIGHTS.sightings, sight.factor),
-    available: true,
-    reason:
-      sight.recentCount > 0
-        ? `${sight.recentCount} report${sight.recentCount === 1 ? "" : "s"} at this beach in the last 4 days.`
-        : sight.factor > 0
-          ? "Recent reports at nearby beaches."
-          : "No recent sightings logged.",
-  });
-
   // Wind speed
   const spdFactor = wind ? windSpeedFactor(wind.speedKt) : NEUTRAL;
   components.push({
@@ -269,9 +222,8 @@ export function hourlyScore(params: {
   wind: WindObservation | undefined;
   stage: TideStage;
   recentNeF: number;
-  sightingsF: number;
 }): number {
-  const { when, wind, stage, recentNeF, sightingsF } = params;
+  const { when, wind, stage, recentNeF } = params;
   const season = seasonFactor(when);
   const dir = wind ? windDirFactor(wind.directionDeg) : NEUTRAL;
   const spd = wind ? windSpeedFactor(wind.speedKt) : NEUTRAL;
@@ -281,7 +233,6 @@ export function hourlyScore(params: {
     WEIGHTS.windDir * dir +
     WEIGHTS.recentNe * recentNeF +
     WEIGHTS.tide * tide +
-    WEIGHTS.sightings * sightingsF +
     WEIGHTS.windSpeed * spd;
   return clampScore(total);
 }
