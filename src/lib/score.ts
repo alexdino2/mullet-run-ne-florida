@@ -162,8 +162,8 @@ export function computeScore(input: ScoreInputs): ScoreResult {
     available: conditions.recentNeFraction != null,
     reason:
       conditions.recentNeFraction != null
-        ? `${Math.round(conditions.recentNeFraction * 100)}% of recent buoy readings blew out of the NE.`
-        : "Estimated from current wind (no buoy history).",
+        ? `${Math.round(conditions.recentNeFraction * 100)}% of recent hourly readings blew out of the NE.`
+        : "Estimated from current wind (no recent history).",
   });
 
   // Tide

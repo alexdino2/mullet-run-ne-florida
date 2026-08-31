@@ -8,6 +8,7 @@ It scores each beach from **free public data** into a transparent **0–100
 opportunity score**, and lets you log sightings alongside it:
 
 - **Wind & air temp** — [National Weather Service API](https://www.weather.gov/documentation/services-web-api) (`api.weather.gov`)
+- **Wind/temp fallback** — [Open-Meteo](https://open-meteo.com/) (free, no key) fills in wind, temperature, recent-NE, and the hourly forecast whenever `api.weather.gov` is unreachable — its edge blocks some datacenter IPs, including Vercel's serverless egress, so this keeps wind (a key signal) always present
 - **Tides** — [NOAA CO-OPS](https://api.tidesandcurrents.noaa.gov/api/prod/) high/low predictions
 - **Buoys** — [NDBC](https://www.ndbc.noaa.gov/) real-time wind, water temp, and waves
 - **Sightings** — logged manually by you (beach, time, school size, notes).
@@ -18,8 +19,9 @@ For each beach the app shows the current conditions, a plain-English **"why"**
 behind the score, and the **next best window**, plus a map, a recent-sightings
 list, and an alert-rules table for future notifications.
 
-> No paid services are used. NWS, CO-OPS, and NDBC are free/no-key. Supabase and
-> Vercel run on their free tiers. Map tiles are free OpenStreetMap.
+> No paid services are used. NWS, CO-OPS, NDBC, and the Open-Meteo fallback are
+> free/no-key. Supabase and Vercel run on their free tiers. Map tiles are free
+> OpenStreetMap.
 
 ---
 
