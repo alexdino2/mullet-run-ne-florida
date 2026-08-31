@@ -3,23 +3,63 @@ import type {
   BeachConditions,
   BeachSummary,
   Conditions,
+  HourlyForecast,
   OpportunityWindow,
   Sighting,
 } from "@/lib/types";
 import { getBeaches } from "@/lib/beaches";
 import { getRecentSightings } from "@/lib/sightings";
 import { getNwsForecast } from "@/lib/data/nws";
+import { getOpenMeteo } from "@/lib/data/openmeteo";
 import { getTides, stageAt } from "@/lib/data/coops";
 import { getBuoy } from "@/lib/data/ndbc";
 import { computeScore, hourlyScore, recentNeFactor } from "@/lib/score";
 import { getServerSupabase, hasServiceRole } from "@/lib/supabase/server";
 
+/**
+ * Fetch every source for a beach in parallel and assemble the merged
+ * conditions. Wind/temp prefer the buoy, then NWS, then Open-Meteo — the last
+ * guarantees coverage when api.weather.gov is unreachable (e.g. from Vercel's
+ * serverless egress). Also returns the hourly series used for the next window.
+ */
+async function assembleConditions(
+  beach: Beach,
+): Promise<{ conditions: Conditions; hourly: HourlyForecast[] }> {
+  const [nws, om, tide, buoy] = await Promise.all([
+    getNwsForecast(beach.lat, beach.lon),
+    getOpenMeteo(beach.lat, beach.lon),
+    getTides(beach.tide_station),
+    getBuoy(beach.buoy_station),
+  ]);
+
+  const sources: string[] = [];
+  if (nws.hourly.length) sources.push("NWS");
+  if (om.current?.wind || om.hourly.length) sources.push("Open-Meteo");
+  if (tide) sources.push("NOAA CO-OPS");
+  if (buoy) sources.push(`NDBC ${beach.buoy_station}`);
+
+  const conditions: Conditions = {
+    wind: buoy?.wind ?? nws.current?.wind ?? om.current?.wind,
+    airTempF: nws.current?.airTempF ?? om.current?.airTempF,
+    waterTempF: buoy?.waterTempF,
+    waveHeightFt: buoy?.waveHeightFt,
+    tide,
+    recentNeFraction: buoy?.recentNeFraction ?? om.recentNeFraction,
+    sources,
+    observedAt: new Date().toISOString(),
+  };
+
+  // Prefer the NWS hourly series for the forecast; fall back to Open-Meteo.
+  const hourly = nws.hourly.length >= 2 ? nws.hourly : om.hourly;
+  return { conditions, hourly };
+}
+
 function computeNextWindow(
   conditions: Conditions,
-  nwsHourly: Awaited<ReturnType<typeof getNwsForecast>>["hourly"],
+  hourly: HourlyForecast[],
   now: Date,
 ): OpportunityWindow | null {
-  if (nwsHourly.length < 2) return null;
+  if (hourly.length < 2) return null;
 
   const events = conditions.tide?.events ?? [];
   const recentNeF = recentNeFactor(
@@ -27,7 +67,7 @@ function computeNextWindow(
     conditions.wind,
   ).factor;
 
-  const scored = nwsHourly
+  const scored = hourly
     .map((h) => {
       const when = new Date(h.time);
       return {
@@ -90,31 +130,11 @@ export async function computeBeachConditions(
 ): Promise<BeachConditions> {
   const now = new Date();
   const sightings = allSightings ?? (await getRecentSightings(100));
-  const nws = await getNwsForecast(beach.lat, beach.lon);
-  const [tide, buoy] = await Promise.all([
-    getTides(beach.tide_station),
-    getBuoy(beach.buoy_station),
-  ]);
-
-  const sources: string[] = [];
-  if (nws.hourly.length) sources.push("NWS");
-  if (tide) sources.push("NOAA CO-OPS");
-  if (buoy) sources.push(`NDBC ${beach.buoy_station}`);
-
-  const conditions: Conditions = {
-    wind: buoy?.wind ?? nws.current?.wind,
-    airTempF: nws.current?.airTempF,
-    waterTempF: buoy?.waterTempF,
-    waveHeightFt: buoy?.waveHeightFt,
-    tide,
-    recentNeFraction: buoy?.recentNeFraction,
-    sources,
-    observedAt: now.toISOString(),
-  };
+  const { conditions, hourly } = await assembleConditions(beach);
 
   // Score is computed from public sources only — sightings are not a factor.
   const score = computeScore({ conditions, now });
-  const nextWindow = computeNextWindow(conditions, nws.hourly, now);
+  const nextWindow = computeNextWindow(conditions, hourly, now);
   // Sightings are still fetched purely for display alongside the score.
   const recentSightings = sightings
     .filter((s) => s.beach_id === beach.id)
@@ -144,21 +164,7 @@ export async function computeAllSummaries(): Promise<BeachSummary[]> {
 
   const summaries = await Promise.all(
     beaches.map(async (beach) => {
-      const [nws, tide, buoy] = await Promise.all([
-        getNwsForecast(beach.lat, beach.lon),
-        getTides(beach.tide_station),
-        getBuoy(beach.buoy_station),
-      ]);
-      const conditions: Conditions = {
-        wind: buoy?.wind ?? nws.current?.wind,
-        airTempF: nws.current?.airTempF,
-        waterTempF: buoy?.waterTempF,
-        waveHeightFt: buoy?.waveHeightFt,
-        tide,
-        recentNeFraction: buoy?.recentNeFraction,
-        sources: [],
-        observedAt: new Date().toISOString(),
-      };
+      const { conditions } = await assembleConditions(beach);
       const score = computeScore({ conditions });
       const summary: BeachSummary = {
         beach,
