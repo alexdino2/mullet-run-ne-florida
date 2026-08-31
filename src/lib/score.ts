@@ -43,11 +43,20 @@ function dayOfYear(d: Date): number {
   return Math.floor(diff / 86400000);
 }
 
-/** Fall mullet run in NE Florida peaks around mid/late October. */
+/**
+ * Northeast Florida fall mullet run.
+ *
+ * The run migrates north→south down the Atlantic coast, and the First Coast
+ * (Jacksonville, Ponte Vedra/Mickler's, St. Augustine) is the northern end of
+ * Florida's coast, so the fish pass here EARLIER than Central/SE Florida.
+ * Practical window: builds through September, peaks late Sept–mid October
+ * (~Oct 10), tapers into November. Modeled as a Gaussian centered on Oct 10
+ * with a ~30-day spread and an off-season floor.
+ */
 export function seasonFactor(date: Date): number {
   const doy = dayOfYear(date);
-  const peak = 293; // ~Oct 20
-  const sigma = 34;
+  const peak = 283; // ~Oct 10 — center of the NE Florida run
+  const sigma = 30;
   let diff = Math.abs(doy - peak);
   diff = Math.min(diff, 365 - diff); // wrap around the year
   const g = Math.exp(-(diff * diff) / (2 * sigma * sigma));
