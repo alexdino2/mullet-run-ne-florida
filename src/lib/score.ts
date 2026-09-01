@@ -49,18 +49,36 @@ function dayOfYear(d: Date): number {
  * The run migrates north→south down the Atlantic coast, and the First Coast
  * (Jacksonville, Ponte Vedra/Mickler's, St. Augustine) is the northern end of
  * Florida's coast, so the fish pass here EARLIER than Central/SE Florida.
- * Practical window: builds through September, peaks late Sept–mid October
- * (~Oct 10), tapers into November. Modeled as a Gaussian centered on Oct 10
- * with a ~30-day spread and an off-season floor.
+ *
+ * The run is not a single-day peak — it is "fully on" for several weeks — so
+ * this is a flat-topped window with Gaussian shoulders:
+ *   - Core plateau ~Sep 25 → Oct 20 scores 1.0 (the run is on).
+ *   - A September shoulder ramps up to it; a November shoulder tapers off it a
+ *     little more slowly (the tail lingers past the core).
+ *   - Off-season rests at a small floor (mullet are around, just not running).
+ * Adjust the SEASON bounds/spreads to match your on-the-water timing.
  */
+const SEASON = {
+  plateauStart: 268, // ~Sep 25 — core window opens
+  plateauEnd: 293, //   ~Oct 20 — core window closes
+  riseSigma: 20, //     September build
+  fallSigma: 26, //     November taper (slightly longer tail)
+  floor: 0.08, //       off-season baseline
+} as const;
+
 export function seasonFactor(date: Date): number {
   const doy = dayOfYear(date);
-  const peak = 283; // ~Oct 10 — center of the NE Florida run
-  const sigma = 30;
-  let diff = Math.abs(doy - peak);
-  diff = Math.min(diff, 365 - diff); // wrap around the year
-  const g = Math.exp(-(diff * diff) / (2 * sigma * sigma));
-  return Math.max(0.08, g);
+  let g: number;
+  if (doy < SEASON.plateauStart) {
+    const d = SEASON.plateauStart - doy;
+    g = Math.exp(-(d * d) / (2 * SEASON.riseSigma * SEASON.riseSigma));
+  } else if (doy > SEASON.plateauEnd) {
+    const d = doy - SEASON.plateauEnd;
+    g = Math.exp(-(d * d) / (2 * SEASON.fallSigma * SEASON.fallSigma));
+  } else {
+    g = 1; // core plateau — the run is fully on
+  }
+  return Math.max(SEASON.floor, g);
 }
 
 /** Angular distance (0..180) between two compass bearings. */

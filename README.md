@@ -32,7 +32,7 @@ its weight (all pure functions in [`src/lib/score.ts`](src/lib/score.ts)):
 
 | Factor              | Weight | What it rewards |
 | ------------------- | -----: | --------------- |
-| Season window       | 25 | Proximity to the NE Florida run peak (builds in Sept, peaks ~Oct 10, tapers into Nov) |
+| Season window       | 25 | NE Florida run timing — builds in Sept, full-on ~Sep 25–Oct 20, tapers into Nov |
 | Wind direction      | 24 | NE (45°) is ideal; N/E decent; onshore-S/offshore-W poor |
 | Recent NE pattern   | 18 | Share of recent buoy hours blowing out of the NE |
 | Tide stage          | 18 | Moving water (falling best, then rising); slack is weaker |
@@ -183,9 +183,11 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>/api/refresh
   [`src/lib/beaches.ts`](src/lib/beaches.ts)). Tide (`tide_station`) and buoy
   (`buoy_station`) IDs are approximate nearest stations and can be refined.
 - **Scoring weights** — `WEIGHTS` in [`src/lib/score.ts`](src/lib/score.ts).
-- **Season curve** — `seasonFactor` in the same file. Gaussian centered on
-  ~Oct 10 (σ≈30 days) to match NE Florida, where the run runs earlier than
-  Central/SE Florida. Shift `peak`/`sigma` if your local timing differs.
+- **Season curve** — `seasonFactor` in the same file. A flat-topped window
+  (core plateau ~Sep 25–Oct 20 = 1.0) with Gaussian shoulders that ramp up
+  through September and taper a little more slowly through November — tuned for
+  NE Florida, where the run runs earlier than Central/SE Florida. Adjust the
+  `SEASON` bounds/spreads if your local timing differs.
 
 ## Roadmap
 
