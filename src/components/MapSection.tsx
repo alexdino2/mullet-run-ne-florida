@@ -93,6 +93,9 @@ export function MapSection() {
             <Link
               key={s.beach.id}
               href={`/?beach=${s.beach.id}`}
+              data-analytics-event="beach_selected"
+              data-analytics-property-beach-id={s.beach.id}
+              data-analytics-property-source="map_ranking"
               className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100 hover:ring-ocean-300"
             >
               <div>

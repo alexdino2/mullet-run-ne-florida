@@ -111,6 +111,8 @@ ever sees the public anon key (protected by Row Level Security).
 | `SUPABASE_SERVICE_ROLE_KEY` | optional | Server-only key; enables writing the conditions cache from the cron job |
 | `CRON_SECRET` | optional | Protects `/api/refresh`; Vercel Cron sends it automatically |
 | `NWS_USER_AGENT` | optional | Contact string sent to `api.weather.gov` per their etiquette |
+| `NEXT_PUBLIC_POSTHOG_KEY` | optional | PostHog project API key; analytics stays disabled when empty |
+| `NEXT_PUBLIC_POSTHOG_HOST` | optional | PostHog ingestion host; defaults to `https://us.i.posthog.com` |
 | `NEXT_PUBLIC_ADS_CLIENT` | optional | Display-ad publisher id (AdSense `ca-pub-…`); empty renders labeled ad placeholders |
 | `NEXT_PUBLIC_AMAZON_AFFILIATE_TAG` | optional | Amazon Associates tag appended to gear links; empty links stay un-tagged |
 | `NEXT_PUBLIC_CHARTER_CONTACT_EMAIL` | optional | Address captains email to claim a charter listing |

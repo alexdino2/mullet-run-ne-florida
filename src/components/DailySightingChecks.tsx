@@ -54,6 +54,9 @@ export function DailySightingChecks({
                 href={recent.url}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
+                data-analytics-event="external_report_clicked"
+                data-analytics-property-beach-id={beach.id}
+                data-analytics-property-source={recent.source}
                 className="mt-2 block text-xs font-medium text-ocean-700 hover:underline"
               >
                 {recent.title} · {recent.source}
