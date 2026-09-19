@@ -10,6 +10,12 @@ export interface GuideSection {
   heading?: string;
   paragraphs?: string[];
   bullets?: string[];
+  video?: {
+    youtubeId: string;
+    title: string;
+    description: string;
+    creator: string;
+  };
 }
 
 export interface Guide {
@@ -35,7 +41,7 @@ export const GUIDES: Guide[] = [
     emoji: "🔬",
     summary:
       "The migration biology behind the run — the species, the environmental cues, and the north-to-south timing that drives everything else on this site.",
-    updated: "2026-09-01",
+    updated: "2026-09-19",
     readMinutes: 6,
     sections: [
       {
@@ -73,6 +79,13 @@ export const GUIDES: Guide[] = [
         paragraphs: [
           "Pods can run hundreds of yards long and tens of feet wide, temporarily linking separated habitats into one dense food web. Tarpon, snook, redfish, jack crevalle, Spanish mackerel, bluefish, flounder, and sharks follow the bait, corralling it against beaches, jetties, and inlet mouths — the surface-blowup feeding frenzies the run is famous for.",
         ],
+        video: {
+          youtubeId: "zA5mn423F9g",
+          title: "Epic Drone Footage of the Florida Mullet Run — 4K",
+          description:
+            "See the scale of migrating mullet schools and the predators working their edges from above.",
+          creator: "BlacktipH",
+        },
       },
     ],
     related: ["locations", "tactics", "regulations"],
@@ -176,8 +189,8 @@ export const GUIDES: Guide[] = [
     emoji: "🎣",
     summary:
       "How to fish the blitz — matching the bait, working the edges of a pod, and the surf setup that lands tarpon, snook, and sharks from the beach.",
-    updated: "2026-09-01",
-    readMinutes: 6,
+    updated: "2026-09-19",
+    readMinutes: 7,
     sections: [
       {
         paragraphs: [
@@ -204,6 +217,19 @@ export const GUIDES: Guide[] = [
           "Paddle-tail swimbaits and soft jerkbaits (5–7\")",
           "Casting spoons for mackerel and jacks on the fringes",
         ],
+      },
+      {
+        heading: "Throwing a cast net for live bait",
+        paragraphs: [
+          "A cast net lets you catch fresh mullet and other baitfish where harvest is legal. Start by practicing on grass, make sure the mesh and lead line are clear before every throw, and never throw over people, submerged structure, or protected wildlife. Check current FWC rules for the water you are fishing before keeping bait.",
+        ],
+        video: {
+          youtubeId: "YcTUyswezwE",
+          title: "How to Throw a Cast Net",
+          description:
+            "Florida Sportsman demonstrates how to load, rotate, and release a cast net so it opens cleanly.",
+          creator: "Florida Sportsman",
+        },
       },
       {
         heading: "A surf setup that handles the run",

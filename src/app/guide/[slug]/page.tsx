@@ -35,6 +35,9 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
   const related = guide.related
     .map(relatedLink)
     .filter((r): r is { href: string; label: string } => r !== null);
+  const videos = guide.sections.flatMap((section) =>
+    section.video ? [section.video] : [],
+  );
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -46,6 +49,14 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
     author: { "@type": "Organization", name: "Florida Mullet Run" },
     publisher: { "@type": "Organization", name: "Florida Mullet Run" },
     mainEntityOfPage: `https://floridamulletrun.com/guide/${guide.slug}`,
+    video: videos.map((video) => ({
+      "@type": "VideoObject",
+      name: video.title,
+      description: video.description,
+      thumbnailUrl: `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`,
+      embedUrl: `https://www.youtube-nocookie.com/embed/${video.youtubeId}`,
+      contentUrl: `https://www.youtube.com/watch?v=${video.youtubeId}`,
+    })),
   };
 
   return (
@@ -106,6 +117,30 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
                   </li>
                 ))}
               </ul>
+            )}
+            {section.video && (
+              <figure className="mt-4 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+                <div className="aspect-video bg-slate-900">
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${section.video.youtubeId}`}
+                    title={section.video.title}
+                    className="h-full w-full"
+                    loading="lazy"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+                <figcaption className="p-3">
+                  <p className="text-sm font-bold text-slate-900">
+                    {section.video.title}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    {section.video.description} Video by{" "}
+                    {section.video.creator}.
+                  </p>
+                </figcaption>
+              </figure>
             )}
             {i === 1 && <AdSlot label="In-content ad" />}
           </section>
