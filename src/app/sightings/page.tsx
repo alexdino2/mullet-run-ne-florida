@@ -1,16 +1,19 @@
 import Link from "next/link";
 import { getBeaches } from "@/lib/beaches";
 import { getRecentSightings } from "@/lib/sightings";
+import { getLatestSightingChecks } from "@/lib/sighting-checks";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { SightingForm } from "@/components/SightingForm";
 import { SightingList } from "@/components/SightingList";
+import { DailySightingChecks } from "@/components/DailySightingChecks";
 
 export const dynamic = "force-dynamic";
 
 export default async function SightingsPage() {
-  const [beaches, sightings] = await Promise.all([
+  const [beaches, sightings, checks] = await Promise.all([
     getBeaches(),
     getRecentSightings(50),
+    getLatestSightingChecks(),
   ]);
   const configured = isSupabaseConfigured();
 
@@ -43,7 +46,17 @@ export default async function SightingsPage() {
       </div>
 
       <h2 className="mb-2 mt-6 text-xs font-bold uppercase tracking-widest text-slate-400">
-        Latest reports
+        Daily beach checks
+      </h2>
+      <p className="mb-3 text-xs text-slate-500">
+        Each beach is scanned daily for recent, attributable online mullet
+        reports. These unverified signals are kept separate from eyewitness
+        sightings.
+      </p>
+      <DailySightingChecks beaches={beaches} checks={checks} />
+
+      <h2 className="mb-2 mt-6 text-xs font-bold uppercase tracking-widest text-slate-400">
+        Latest eyewitness reports
       </h2>
       <SightingList sightings={sightings} beaches={beaches} />
     </div>
