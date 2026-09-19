@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Beach, SchoolSize } from "@/lib/types";
 import { SIZE_META } from "@/lib/ui";
 
@@ -25,7 +25,12 @@ export function SightingForm({
     defaultBeachId ?? beaches[0]?.id ?? "",
   );
   const [size, setSize] = useState<SchoolSize>("medium");
-  const [observedAt, setObservedAt] = useState(localNow());
+  // Seeded after mount so the server-rendered HTML (UTC on Vercel) and the
+  // client-rendered HTML (the visitor's local time) match during hydration.
+  // Computing local time during render caused a hydration mismatch that could
+  // surface as a client-side exception for anyone outside UTC.
+  const [observedAt, setObservedAt] = useState("");
+  const [maxTime, setMaxTime] = useState("");
   const [notes, setNotes] = useState("");
   const [location, setLocation] = useState<{
     lat: number;
@@ -39,6 +44,12 @@ export function SightingForm({
     "idle",
   );
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const now = localNow();
+    setObservedAt(now);
+    setMaxTime(now);
+  }, []);
 
   function useCurrentLocation() {
     if (!navigator.geolocation) {
@@ -63,6 +74,7 @@ export function SightingForm({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!observedAt) return;
     setStatus("saving");
     setMessage("");
     try {
@@ -190,7 +202,7 @@ export function SightingForm({
         <input
           type="datetime-local"
           value={observedAt}
-          max={localNow()}
+          max={maxTime || undefined}
           onChange={(e) => setObservedAt(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-ocean-500 focus:outline-none focus:ring-1 focus:ring-ocean-500"
         />
