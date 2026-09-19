@@ -2,24 +2,39 @@
 
 import "leaflet/dist/leaflet.css";
 import { CircleMarker, MapContainer, TileLayer, Tooltip } from "react-leaflet";
-import type { BeachSummary } from "@/lib/types";
+import type { BeachSummary, Sighting } from "@/lib/types";
 import { ratingClasses } from "@/lib/ui";
 
+const SIGHTING_STYLE: Record<
+  Sighting["school_size"],
+  { radius: number; color: string; label: string }
+> = {
+  small: { radius: 5, color: "#f59e0b", label: "Small" },
+  medium: { radius: 7, color: "#f97316", label: "Medium" },
+  large: { radius: 9, color: "#ef4444", label: "Large" },
+  huge: { radius: 12, color: "#be123c", label: "Huge" },
+};
+
 /**
- * Leaflet map with a colored dot per beach. Uses free OpenStreetMap tiles
- * (no API key), and CircleMarkers so there are no marker-image assets to bundle.
+ * Vercel-friendly live tracker using free OpenStreetMap tiles. Score stations
+ * are rings; crowd reports are warm solid dots sized by school size.
  */
 export default function BeachMap({
   summaries,
+  sightings,
 }: {
   summaries: BeachSummary[];
+  sightings: Sighting[];
 }) {
-  const center: [number, number] = [30.05, -81.38];
+  const center: [number, number] = [27.8, -81.45];
+  const beaches = new Map(
+    summaries.map((summary) => [summary.beach.id, summary.beach]),
+  );
 
   return (
     <MapContainer
       center={center}
-      zoom={9}
+      zoom={6}
       scrollWheelZoom={false}
       style={{ height: "100%", width: "100%" }}
       className="z-0"
@@ -28,18 +43,49 @@ export default function BeachMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      {sightings.map((sighting) => {
+        const beach = beaches.get(sighting.beach_id);
+        const lat = sighting.lat ?? beach?.lat;
+        const lon = sighting.lon ?? beach?.lon;
+        if (lat === undefined || lon === undefined) return null;
+        const style = SIGHTING_STYLE[sighting.school_size];
+
+        return (
+          <CircleMarker
+            key={sighting.id}
+            center={[lat, lon]}
+            radius={style.radius}
+            pathOptions={{
+              color: "#ffffff",
+              weight: 2,
+              fillColor: style.color,
+              fillOpacity: 0.95,
+            }}
+          >
+            <Tooltip direction="top" offset={[0, -6]} opacity={1}>
+              <div className="max-w-48">
+                <div className="font-semibold">
+                  {style.label} school · {beach?.name ?? "Florida coast"}
+                </div>
+                <div>{new Date(sighting.observed_at).toLocaleString()}</div>
+                {sighting.notes && <div className="mt-1">{sighting.notes}</div>}
+              </div>
+            </Tooltip>
+          </CircleMarker>
+        );
+      })}
       {summaries.map((s) => {
         const { hex } = ratingClasses(s.rating);
         return (
           <CircleMarker
             key={s.beach.id}
             center={[s.beach.lat, s.beach.lon]}
-            radius={s.beach.id === "micklers" ? 13 : 10}
+            radius={s.beach.id === "micklers" ? 14 : 11}
             pathOptions={{
-              color: "#ffffff",
-              weight: 2,
+              color: hex,
+              weight: 4,
               fillColor: hex,
-              fillOpacity: 0.9,
+              fillOpacity: 0.16,
             }}
           >
             <Tooltip direction="top" offset={[0, -6]} opacity={1}>

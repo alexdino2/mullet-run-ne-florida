@@ -2,7 +2,7 @@
   "name": "mullet-watch-nefl",
   "version": "0.1.0",
   "private": true,
-  "description": "Mobile-first mullet run tracker for Northeast Florida beaches.",
+  "description": "Live Florida mullet run conditions and crowdsourced sighting map.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

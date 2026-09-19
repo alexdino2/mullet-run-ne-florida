@@ -73,6 +73,27 @@ export default async function DashboardPage({
         <NextWindowCard window={data.nextWindow} />
       </div>
 
+      <div className="mt-6 flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+            Live migration map
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Recent crowd reports and live conditions along Florida’s Atlantic
+            coast.
+          </p>
+        </div>
+        <Link
+          href="/sightings"
+          className="shrink-0 rounded-lg bg-ocean-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-ocean-700"
+        >
+          + Report bait
+        </Link>
+      </div>
+      <div className="mt-3">
+        <MapSection />
+      </div>
+
       <SectionTitle>Current conditions</SectionTitle>
       <ConditionsGrid conditions={data.conditions} />
 
@@ -80,9 +101,6 @@ export default async function DashboardPage({
       <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
         <ScoreBreakdown components={data.score.components} />
       </div>
-
-      <SectionTitle>All beaches</SectionTitle>
-      <MapSection />
 
       <div className="mt-6 flex items-center justify-between">
         <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
