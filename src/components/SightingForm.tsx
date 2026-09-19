@@ -27,10 +27,39 @@ export function SightingForm({
   const [size, setSize] = useState<SchoolSize>("medium");
   const [observedAt, setObservedAt] = useState(localNow());
   const [notes, setNotes] = useState("");
+  const [location, setLocation] = useState<{
+    lat: number;
+    lon: number;
+    accuracy: number;
+  } | null>(null);
+  const [locationStatus, setLocationStatus] = useState<
+    "idle" | "locating" | "error"
+  >("idle");
   const [status, setStatus] = useState<"idle" | "saving" | "ok" | "error">(
     "idle",
   );
   const [message, setMessage] = useState("");
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      setLocationStatus("error");
+      return;
+    }
+
+    setLocationStatus("locating");
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setLocation({
+          lat: Number(coords.latitude.toFixed(5)),
+          lon: Number(coords.longitude.toFixed(5)),
+          accuracy: Math.round(coords.accuracy),
+        });
+        setLocationStatus("idle");
+      },
+      () => setLocationStatus("error"),
+      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
+    );
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,6 +74,9 @@ export function SightingForm({
           school_size: size,
           observed_at: new Date(observedAt).toISOString(),
           notes,
+          lat: location?.lat,
+          lon: location?.lon,
+          location_accuracy_m: location?.accuracy,
         }),
       });
       const data = await res.json();
@@ -56,6 +88,7 @@ export function SightingForm({
       setStatus("ok");
       setMessage("Sighting logged. Tight lines! 🎣");
       setNotes("");
+      setLocation(null);
       setObservedAt(localNow());
       router.refresh();
     } catch {
@@ -84,6 +117,45 @@ export function SightingForm({
             </option>
           ))}
         </select>
+      </div>
+
+      <div>
+        <div className="mb-1 flex items-center justify-between gap-3">
+          <label className="block text-sm font-semibold text-slate-700">
+            Map location{" "}
+            <span className="font-normal text-slate-400">(recommended)</span>
+          </label>
+          {location && (
+            <button
+              type="button"
+              onClick={() => setLocation(null)}
+              className="text-xs font-semibold text-slate-400 hover:text-slate-600"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={useCurrentLocation}
+          disabled={locationStatus === "locating"}
+          className="w-full rounded-lg border border-ocean-200 bg-ocean-50 px-3 py-2.5 text-sm font-semibold text-ocean-800 transition hover:bg-ocean-100 disabled:opacity-60"
+        >
+          {locationStatus === "locating"
+            ? "Getting your location…"
+            : location
+              ? `Location added · accurate to ~${location.accuracy}m`
+              : "◎ Use my current location"}
+        </button>
+        <p className="mt-1.5 text-xs text-slate-400">
+          Your coordinates place this report on the public tracker. Without
+          them, the selected beach location is used.
+        </p>
+        {locationStatus === "error" && (
+          <p className="mt-1 text-xs text-red-600">
+            Location unavailable. Check browser permission and try again.
+          </p>
+        )}
       </div>
 
       <div>

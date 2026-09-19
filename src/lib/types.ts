@@ -19,6 +19,10 @@ export interface Sighting {
   observed_at: string;
   school_size: SchoolSize;
   notes: string | null;
+  /** Optional reporter position; older reports fall back to the selected beach. */
+  lat: number | null;
+  lon: number | null;
+  location_accuracy_m: number | null;
   created_at: string;
 }
 

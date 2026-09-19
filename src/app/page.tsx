@@ -11,6 +11,8 @@ import { NextWindowCard } from "@/components/NextWindowCard";
 import { MapSection } from "@/components/MapSection";
 import { SightingList } from "@/components/SightingList";
 import { AlertRulesTable } from "@/components/AlertRulesTable";
+import { AdSlot } from "@/components/AdSlot";
+import { GUIDES } from "@/lib/content/guides";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +75,29 @@ export default async function DashboardPage({
         <NextWindowCard window={data.nextWindow} />
       </div>
 
+      <div className="mt-6 flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+            Live migration map
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Recent crowd reports and live conditions along Florida’s Atlantic
+            coast.
+          </p>
+        </div>
+        <Link
+          href="/sightings"
+          className="shrink-0 rounded-lg bg-ocean-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-ocean-700"
+        >
+          + Report bait
+        </Link>
+      </div>
+      <div className="mt-3">
+        <MapSection />
+      </div>
+
+      <AdSlot label="Advertisement" />
+
       <SectionTitle>Current conditions</SectionTitle>
       <ConditionsGrid conditions={data.conditions} />
 
@@ -80,9 +105,6 @@ export default async function DashboardPage({
       <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
         <ScoreBreakdown components={data.score.components} />
       </div>
-
-      <SectionTitle>All beaches</SectionTitle>
-      <MapSection />
 
       <div className="mt-6 flex items-center justify-between">
         <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
@@ -101,6 +123,48 @@ export default async function DashboardPage({
           beaches={beaches}
           emptyHint="No sightings logged here yet — be the first to report a school."
         />
+      </div>
+
+      <SectionTitle>Learn the run</SectionTitle>
+      <div className="grid grid-cols-2 gap-3">
+        {GUIDES.map((g) => (
+          <Link
+            key={g.slug}
+            href={`/guide/${g.slug}`}
+            className="group rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100 transition hover:ring-ocean-300"
+          >
+            <div className="flex items-center gap-1.5">
+              <span aria-hidden>{g.emoji}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wide text-ocean-600">
+                {g.category}
+              </span>
+            </div>
+            <p className="mt-1 text-sm font-bold leading-snug text-slate-900 group-hover:text-ocean-700">
+              {g.title}
+            </p>
+          </Link>
+        ))}
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <Link
+          href="/gear"
+          className="rounded-xl bg-ocean-600 p-3 text-center text-xs font-bold text-white shadow-sm hover:bg-ocean-700"
+        >
+          🎣 Gear
+        </Link>
+        <Link
+          href="/charters"
+          className="rounded-xl bg-ocean-600 p-3 text-center text-xs font-bold text-white shadow-sm hover:bg-ocean-700"
+        >
+          ⛵ Charters
+        </Link>
+        <Link
+          href="/insider"
+          className="rounded-xl bg-amber-500 p-3 text-center text-xs font-bold text-white shadow-sm hover:bg-amber-600"
+        >
+          ★ Insider
+        </Link>
       </div>
 
       <SectionTitle>Alert rules (for future notifications)</SectionTitle>

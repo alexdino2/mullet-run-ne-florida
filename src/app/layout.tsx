@@ -1,12 +1,34 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import Script from "next/script";
+import { monetization, adsEnabled } from "@/lib/monetization";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mullet Watch NEFL",
+  metadataBase: new URL("https://floridamulletrun.com"),
+  title: {
+    default: "Florida Mullet Run Tracker",
+    template: "%s | Florida Mullet Run",
+  },
   description:
-    "Mullet run opportunity scores for Northeast Florida beaches — wind, tides, buoys, and sightings.",
-  applicationName: "Mullet Watch NEFL",
+    "Track Florida's fall mullet migration with live coastal conditions, crowdsourced sightings, inlet guides, gear picks, and charter captains.",
+  applicationName: "Florida Mullet Run",
+  keywords: [
+    "florida mullet run",
+    "mullet run 2025",
+    "mullet migration florida",
+    "surf fishing florida",
+    "tarpon snook mullet run",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Florida Mullet Run",
+    title: "Florida Mullet Run Tracker",
+    description:
+      "Live coastal conditions and crowdsourced mullet sightings from Northeast Florida to Miami.",
+  },
 };
 
 export const viewport: Viewport = {
@@ -16,6 +38,24 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
+const NAV = [
+  { href: "/", label: "Now" },
+  { href: "/sightings", label: "Sightings" },
+  { href: "/guide", label: "Guide" },
+  { href: "/gear", label: "Gear" },
+  { href: "/charters", label: "Charters" },
+  { href: "/insider", label: "Insider" },
+];
+
+const FOOTER_LINKS = [
+  { href: "/guide/biology", label: "Migration biology" },
+  { href: "/guide/locations", label: "Inlet guides" },
+  { href: "/guide/regulations", label: "FWC regulations" },
+  { href: "/guide/tactics", label: "Tactics & gear" },
+  { href: "/gear", label: "Gear shop" },
+  { href: "/charters", label: "Book a charter" },
+];
+
 export default function RootLayout({
   children,
 }: {
@@ -23,38 +63,58 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      {adsEnabled && (
+        <Script
+          id="adsbygoogle-init"
+          async
+          strategy="afterInteractive"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${monetization.adsClient}`}
+          crossOrigin="anonymous"
+        />
+      )}
       <body className="min-h-screen">
-        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-slate-50 shadow-sm sm:max-w-lg">
-          <header className="sticky top-0 z-[500] border-b border-ocean-800 bg-ocean-900 px-4 py-3 text-white">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-2">
+        <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-slate-50 shadow-sm">
+          <header className="sticky top-0 z-[500] border-b border-ocean-800 bg-ocean-900 text-white">
+            <div className="flex items-center justify-between px-4 py-3">
+              <Link href="/" className="flex shrink-0 items-center gap-2">
                 <span className="text-xl" aria-hidden>
                   🐟
                 </span>
                 <span className="text-base font-bold tracking-tight">
-                  Mullet Watch <span className="text-ocean-300">NEFL</span>
+                  Florida <span className="text-ocean-300">Mullet Run</span>
                 </span>
               </Link>
-              <nav className="flex items-center gap-1 text-sm">
-                <Link
-                  href="/"
-                  className="rounded-md px-2 py-1 font-medium hover:bg-ocean-800"
-                >
-                  Now
-                </Link>
-                <Link
-                  href="/sightings"
-                  className="rounded-md px-2 py-1 font-medium hover:bg-ocean-800"
-                >
-                  Sightings
-                </Link>
-              </nav>
             </div>
+            <nav className="flex items-center gap-1 overflow-x-auto px-3 pb-2 text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {NAV.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="whitespace-nowrap rounded-md px-2.5 py-1 font-medium hover:bg-ocean-800"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </header>
           <main className="flex-1 px-4 pb-16 pt-4">{children}</main>
-          <footer className="border-t border-slate-200 px-4 py-4 text-center text-xs text-slate-400">
-            Public data: NWS · NOAA CO-OPS · NDBC. Scores are heuristics, not a
-            guarantee. Fish responsibly.
+          <footer className="border-t border-slate-200 bg-white px-4 py-6 text-xs text-slate-500">
+            <div className="grid grid-cols-2 gap-y-2 gap-x-4 sm:grid-cols-3">
+              {FOOTER_LINKS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="font-medium text-slate-600 hover:text-ocean-700"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+            <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400">
+              Public data: NWS · NOAA CO-OPS · NDBC. Scores are heuristics, not a
+              guarantee. Regulations change — always confirm current limits with
+              the FWC. Fish responsibly.
+            </p>
           </footer>
         </div>
       </body>

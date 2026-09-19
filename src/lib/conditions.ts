@@ -58,6 +58,7 @@ function computeNextWindow(
   conditions: Conditions,
   hourly: HourlyForecast[],
   now: Date,
+  latitude: number,
 ): OpportunityWindow | null {
   if (hourly.length < 2) return null;
 
@@ -77,6 +78,7 @@ function computeNextWindow(
           wind: h.wind,
           stage: events.length ? stageAt(events, when.getTime()) : "unknown",
           recentNeF,
+          latitude,
         }),
       };
     })
@@ -133,8 +135,13 @@ export async function computeBeachConditions(
   const { conditions, hourly } = await assembleConditions(beach);
 
   // Score is computed from public sources only — sightings are not a factor.
-  const score = computeScore({ conditions, now });
-  const nextWindow = computeNextWindow(conditions, hourly, now);
+  const score = computeScore({ conditions, now, latitude: beach.lat });
+  const nextWindow = computeNextWindow(
+    conditions,
+    hourly,
+    now,
+    beach.lat,
+  );
   // Sightings are still fetched purely for display alongside the score.
   const recentSightings = sightings
     .filter((s) => s.beach_id === beach.id)
@@ -165,7 +172,7 @@ export async function computeAllSummaries(): Promise<BeachSummary[]> {
   const summaries = await Promise.all(
     beaches.map(async (beach) => {
       const { conditions } = await assembleConditions(beach);
-      const score = computeScore({ conditions });
+      const score = computeScore({ conditions, latitude: beach.lat });
       const summary: BeachSummary = {
         beach,
         score: score.score,

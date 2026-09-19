@@ -44,14 +44,15 @@ function dayOfYear(d: Date): number {
 }
 
 /**
- * Northeast Florida fall mullet run.
+ * Florida Atlantic coast fall mullet run.
  *
  * The run migrates north→south down the Atlantic coast, and the First Coast
  * (Jacksonville, Ponte Vedra/Mickler's, St. Augustine) is the northern end of
  * Florida's coast, so the fish pass here EARLIER than Central/SE Florida.
  *
- * The run is not a single-day peak — it is "fully on" for several weeks — so
- * this is a flat-topped window with Gaussian shoulders:
+ * The run is not a single-day peak — it is "fully on" for several weeks. The
+ * baseline below is for Northeast Florida; the window shifts later by roughly
+ * four days per degree of latitude as the migration moves south:
  *   - Core plateau ~Sep 25 → Oct 20 scores 1.0 (the run is on).
  *   - A September shoulder ramps up to it; a November shoulder tapers off it a
  *     little more slowly (the tail lingers past the core).
@@ -66,14 +67,19 @@ const SEASON = {
   floor: 0.08, //       off-season baseline
 } as const;
 
-export function seasonFactor(date: Date): number {
+export function seasonFactor(date: Date, latitude = 30.2): number {
   const doy = dayOfYear(date);
+  const migrationDelay = Math.round(
+    Math.max(0, Math.min(20, (30.2 - latitude) * 4)),
+  );
+  const plateauStart = SEASON.plateauStart + migrationDelay;
+  const plateauEnd = SEASON.plateauEnd + migrationDelay;
   let g: number;
-  if (doy < SEASON.plateauStart) {
-    const d = SEASON.plateauStart - doy;
+  if (doy < plateauStart) {
+    const d = plateauStart - doy;
     g = Math.exp(-(d * d) / (2 * SEASON.riseSigma * SEASON.riseSigma));
-  } else if (doy > SEASON.plateauEnd) {
-    const d = doy - SEASON.plateauEnd;
+  } else if (doy > plateauEnd) {
+    const d = doy - plateauEnd;
     g = Math.exp(-(d * d) / (2 * SEASON.fallSigma * SEASON.fallSigma));
   } else {
     g = 1; // core plateau — the run is fully on
@@ -144,6 +150,7 @@ function pts(weight: number, factor: number): number {
 export interface ScoreInputs {
   conditions: Conditions;
   now?: Date;
+  latitude?: number;
 }
 
 export function computeScore(input: ScoreInputs): ScoreResult {
@@ -153,7 +160,7 @@ export function computeScore(input: ScoreInputs): ScoreResult {
   const components: ScoreComponent[] = [];
 
   // Season
-  const season = seasonFactor(now);
+  const season = seasonFactor(now, input.latitude);
   components.push({
     key: "season",
     label: "Season window",
@@ -249,9 +256,10 @@ export function hourlyScore(params: {
   wind: WindObservation | undefined;
   stage: TideStage;
   recentNeF: number;
+  latitude?: number;
 }): number {
-  const { when, wind, stage, recentNeF } = params;
-  const season = seasonFactor(when);
+  const { when, wind, stage, recentNeF, latitude } = params;
+  const season = seasonFactor(when, latitude);
   const dir = wind ? windDirFactor(wind.directionDeg) : NEUTRAL;
   const spd = wind ? windSpeedFactor(wind.speedKt) : NEUTRAL;
   const tide = tideFactor(stage);
