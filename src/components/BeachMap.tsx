@@ -2,6 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 import { CircleMarker, MapContainer, TileLayer, Tooltip } from "react-leaflet";
+import { captureEvent } from "@/lib/analytics";
 import type { BeachSummary, Sighting } from "@/lib/types";
 import { ratingClasses } from "@/lib/ui";
 
@@ -70,6 +71,13 @@ export default function BeachMap({
               fillColor: style.color,
               fillOpacity: 0.95,
             }}
+            eventHandlers={{
+              click: () =>
+                captureEvent("map_sighting_selected", {
+                  beach_id: sighting.beach_id,
+                  school_size: sighting.school_size,
+                }),
+            }}
           >
             <Tooltip direction="top" offset={[0, -6]} opacity={1}>
               <div className="max-w-48">
@@ -98,6 +106,14 @@ export default function BeachMap({
               weight: 4,
               fillColor: hex,
               fillOpacity: 0.16,
+            }}
+            eventHandlers={{
+              click: () =>
+                captureEvent("map_beach_selected", {
+                  beach_id: s.beach.id,
+                  score: s.score,
+                  rating: s.rating,
+                }),
             }}
           >
             <Tooltip direction="top" offset={[0, -6]} opacity={1}>

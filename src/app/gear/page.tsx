@@ -69,6 +69,10 @@ export default function GearPage() {
                   href={amazonSearch(item.query)}
                   target="_blank"
                   rel="sponsored nofollow noopener noreferrer"
+                  data-analytics-event="affiliate_link_clicked"
+                  data-analytics-property-category={cat.id}
+                  data-analytics-property-product={item.name}
+                  data-analytics-property-tier={item.tier}
                   className="mt-3 inline-flex rounded-lg bg-ocean-600 px-3 py-2 text-xs font-bold text-white hover:bg-ocean-700"
                 >
                   Shop {item.name.split("(")[0].trim()} →

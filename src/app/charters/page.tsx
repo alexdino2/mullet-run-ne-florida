@@ -54,6 +54,9 @@ export default function ChartersPage() {
               </p>
               <a
                 href={claimMailto}
+                data-analytics-event="charter_lead_started"
+                data-analytics-property-region={region.id}
+                data-analytics-property-placement="region"
                 className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-600"
               >
                 Claim this inlet
@@ -86,6 +89,8 @@ export default function ChartersPage() {
         </ul>
         <a
           href={claimMailto}
+          data-analytics-event="charter_lead_started"
+          data-analytics-property-placement="captain_cta"
           className="mt-4 inline-flex rounded-lg bg-white px-4 py-2 text-sm font-bold text-ocean-800 hover:bg-ocean-50"
         >
           List your charter →
