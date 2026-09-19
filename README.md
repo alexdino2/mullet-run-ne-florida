@@ -1,8 +1,8 @@
-# 🐟 Mullet Watch NEFL
+# 🐟 Florida Mullet Run
 
-A mobile-first web app that scores the **fall mullet run** opportunity for
-Northeast Florida beaches — **Mickler's Landing** (prioritized), Jacksonville
-Beach, Mayport, and St. Augustine Beach.
+A mobile-first web app for [floridamulletrun.com](https://floridamulletrun.com)
+that scores the **fall mullet run** opportunity along Florida's Atlantic coast
+and plots crowdsourced bait sightings on a live migration map.
 
 It scores each beach from **free public data** into a transparent **0–100
 opportunity score**, and lets you log sightings alongside it:
@@ -11,7 +11,8 @@ opportunity score**, and lets you log sightings alongside it:
 - **Wind/temp fallback** — [Open-Meteo](https://open-meteo.com/) (free, no key) fills in wind, temperature, recent-NE, and the hourly forecast whenever `api.weather.gov` is unreachable — its edge blocks some datacenter IPs, including Vercel's serverless egress, so this keeps wind (a key signal) always present
 - **Tides** — [NOAA CO-OPS](https://api.tidesandcurrents.noaa.gov/api/prod/) high/low predictions
 - **Buoys** — [NDBC](https://www.ndbc.noaa.gov/) real-time wind, water temp, and waves
-- **Sightings** — logged manually by you (beach, time, school size, notes).
+- **Sightings** — logged manually by you (beach, time, school size, notes, and
+  optional browser location).
   Tracked and displayed, but **not part of the score yet** — the score uses
   public sources only until enough sightings are collected to be predictive.
 
@@ -32,7 +33,7 @@ its weight (all pure functions in [`src/lib/score.ts`](src/lib/score.ts)):
 
 | Factor              | Weight | What it rewards |
 | ------------------- | -----: | --------------- |
-| Season window       | 25 | NE Florida run timing — builds in Sept, full-on ~Sep 25–Oct 20, tapers into Nov |
+| Season window       | 25 | North-to-south migration timing — NE Florida baseline shifts later toward Miami |
 | Wind direction      | 24 | NE (45°) is ideal; N/E decent; onshore-S/offshore-W poor |
 | Recent NE pattern   | 18 | Share of recent buoy hours blowing out of the NE |
 | Tide stage          | 18 | Moving water (falling best, then rising); slack is weaker |
@@ -56,7 +57,8 @@ uses a neutral value, and the score is still computed from what's available.
 - **Next.js 14 (App Router) + TypeScript**
 - **Tailwind CSS** (mobile-first)
 - **Supabase** (Postgres + RLS) for beaches, sightings, alert rules, cache
-- **React-Leaflet + OpenStreetMap** for the map (no API key)
+- **React-Leaflet + OpenStreetMap** for the statewide map (no API key or
+  WordPress plugin)
 - Deploys to **Vercel** with a built-in hourly **cron** refresh
 
 ---
@@ -108,11 +110,13 @@ ever sees the public anon key (protected by Row Level Security).
 
 ### Database schema
 
-The schema lives in [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
+The schema lives in [`supabase/migrations`](supabase/migrations).
 Tables are namespaced with `mw_` so they can share a project with other apps:
 
-- `mw_beaches` — target beaches (seeded; Mickler's priority 100)
-- `mw_sightings` — manual sighting reports
+- `mw_beaches` — Atlantic coast monitoring stations (seeded; Mickler's priority
+  100)
+- `mw_sightings` — manual reports with optional latitude, longitude, and
+  location accuracy
 - `mw_alert_rules` — notification rules (seeded with examples)
 - `mw_conditions_cache` — optional cache written by the refresh job
 
@@ -122,6 +126,10 @@ Editor, or use the Supabase CLI:
 ```bash
 supabase db push   # with the migration in supabase/migrations/
 ```
+
+Apply both migrations before deploying the location-enabled report form.
+`0002_sighting_locations.sql` adds the map coordinates and statewide monitoring
+stations. Existing reports remain valid and appear at their selected beach.
 
 **Row Level Security** is enabled on every table:
 
