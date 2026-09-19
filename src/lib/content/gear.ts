@@ -25,6 +25,20 @@ export interface GearCategory {
 
 export const GEAR: GearCategory[] = [
   {
+    id: "cast-nets",
+    title: "Cast Nets",
+    intent: "Catch fresh mullet before you rig up for the predators following them.",
+    items: [
+      {
+        name: "Cast Net (8–10 ft radius)",
+        query: "10 foot cast net saltwater bait",
+        blurb:
+          "Catch your own mullet — legal recreational gear and the cheapest live bait there is.",
+        tier: "$$",
+      },
+    ],
+  },
+  {
     id: "rods",
     title: "Surf & Inlet Rods",
     intent:
@@ -140,13 +154,6 @@ export const GEAR: GearCategory[] = [
     title: "Bait & Terminal Tackle",
     intent: "Everything to fish live or fresh mullet in the surf.",
     items: [
-      {
-        name: "Cast Net (8–10 ft radius)",
-        query: "10 foot cast net saltwater bait",
-        blurb:
-          "Catch your own mullet — legal recreational gear and the cheapest live bait there is.",
-        tier: "$$",
-      },
       {
         name: "Circle Hooks (5/0–8/0)",
         query: "7/0 circle hooks saltwater",
