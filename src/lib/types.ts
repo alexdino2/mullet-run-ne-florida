@@ -26,6 +26,22 @@ export interface Sighting {
   created_at: string;
 }
 
+export interface OnlineSightingReport {
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string;
+}
+
+export interface SightingCheck {
+  id?: string;
+  beach_id: string;
+  checked_at: string;
+  check_date: string;
+  status: "checked" | "unavailable";
+  reports: OnlineSightingReport[];
+}
+
 export interface AlertRule {
   id: string;
   name: string;
