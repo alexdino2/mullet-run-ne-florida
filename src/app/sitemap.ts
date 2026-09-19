@@ -6,6 +6,10 @@ const BASE = "https://floridamulletrun.com";
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
+  // Home and the live sightings map change constantly during the run and are
+  // the primary ranking targets, so crawl them more aggressively.
+  const highFrequency = new Set(["", "/sightings"]);
+
   const staticRoutes = [
     "",
     "/sightings",
@@ -16,8 +20,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ].map((path) => ({
     url: `${BASE}${path}`,
     lastModified: now,
-    changeFrequency: "weekly" as const,
-    priority: path === "" ? 1 : 0.7,
+    changeFrequency: highFrequency.has(path)
+      ? ("daily" as const)
+      : ("weekly" as const),
+    priority: path === "" ? 1 : path === "/sightings" ? 0.9 : 0.7,
   }));
 
   const guideRoutes = GUIDES.map((g) => ({
