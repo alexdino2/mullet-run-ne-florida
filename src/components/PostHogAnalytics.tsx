@@ -5,7 +5,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 
-const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+const posthogKey =
+  process.env.NEXT_PUBLIC_POSTHOG_KEY ??
+  "phc_z62VAYZou8K5H3nziNjcaxQjagDYFHZnmGdSBzHDGt2m";
 const posthogHost =
   process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
 
@@ -13,7 +15,7 @@ if (typeof window !== "undefined" && posthogKey && !posthog.__loaded) {
   posthog.init(posthogKey, {
     api_host: posthogHost,
     ui_host: posthogHost,
-    defaults: "2026-01-30",
+    defaults: "2026-05-30",
     autocapture: true,
     capture_pageview: false,
     capture_pageleave: true,
@@ -21,7 +23,7 @@ if (typeof window !== "undefined" && posthogKey && !posthog.__loaded) {
     capture_exceptions: true,
     capture_performance: true,
     rageclick: true,
-    person_profiles: "identified_only",
+    person_profiles: "always",
     session_recording: {
       maskAllInputs: true,
     },
