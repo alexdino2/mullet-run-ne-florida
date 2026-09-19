@@ -47,8 +47,17 @@ export default function BeachMap({
         const beach = beaches.get(sighting.beach_id);
         const lat = sighting.lat ?? beach?.lat;
         const lon = sighting.lon ?? beach?.lon;
-        if (lat === undefined || lon === undefined) return null;
+        if (
+          lat == null ||
+          lon == null ||
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lon)
+        )
+          return null;
         const style = SIGHTING_STYLE[sighting.school_size];
+        // Guard against any unexpected school_size so a single bad row can't
+        // throw and blank the whole client-rendered map.
+        if (!style) return null;
 
         return (
           <CircleMarker
@@ -75,6 +84,9 @@ export default function BeachMap({
         );
       })}
       {summaries.map((s) => {
+        if (!Number.isFinite(s.beach.lat) || !Number.isFinite(s.beach.lon)) {
+          return null;
+        }
         const { hex } = ratingClasses(s.rating);
         return (
           <CircleMarker

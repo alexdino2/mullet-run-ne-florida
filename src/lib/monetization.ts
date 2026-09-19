@@ -12,8 +12,6 @@
  *   3. Membership — the "Insider" subscription waitlist.
  */
 
-const env = process.env;
-
 /** Trim + drop empty strings so `""` behaves like "unset". */
 function opt(value: string | undefined): string | undefined {
   const v = value?.trim();
@@ -26,21 +24,26 @@ export const monetization = {
    * Raptive/Mediavine site id once the traffic threshold is crossed). When
    * unset, ad slots render as labeled placeholders.
    */
-  adsClient: opt(env.NEXT_PUBLIC_ADS_CLIENT),
+  // Keep public env accesses static so Next.js replaces them at build time.
+  // Aliasing `process.env` leaves a runtime `process` reference in browser
+  // bundles, where the Node.js global does not exist.
+  adsClient: opt(process.env.NEXT_PUBLIC_ADS_CLIENT),
 
   /** Amazon Associates store tag appended to product/search links. */
-  amazonTag: opt(env.NEXT_PUBLIC_AMAZON_AFFILIATE_TAG),
+  amazonTag: opt(process.env.NEXT_PUBLIC_AMAZON_AFFILIATE_TAG),
 
   /** Where captains ask to be listed in the charter directory. */
   charterContactEmail:
-    opt(env.NEXT_PUBLIC_CHARTER_CONTACT_EMAIL) ?? "captains@floridamulletrun.com",
+    opt(process.env.NEXT_PUBLIC_CHARTER_CONTACT_EMAIL) ??
+    "captains@floridamulletrun.com",
 
   /** Optional external URL for the Insider membership waitlist form. */
-  insiderWaitlistUrl: opt(env.NEXT_PUBLIC_INSIDER_WAITLIST_URL),
+  insiderWaitlistUrl: opt(process.env.NEXT_PUBLIC_INSIDER_WAITLIST_URL),
 
   /** Where Insider waitlist signups go when no external form is configured. */
   insiderContactEmail:
-    opt(env.NEXT_PUBLIC_INSIDER_CONTACT_EMAIL) ?? "insider@floridamulletrun.com",
+    opt(process.env.NEXT_PUBLIC_INSIDER_CONTACT_EMAIL) ??
+    "insider@floridamulletrun.com",
 } as const;
 
 export const adsEnabled = Boolean(monetization.adsClient);
