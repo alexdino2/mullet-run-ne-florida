@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getBeaches } from "@/lib/beaches";
 import { computeBeachConditions } from "@/lib/conditions";
@@ -12,9 +13,19 @@ import { MapSection } from "@/components/MapSection";
 import { SightingList } from "@/components/SightingList";
 import { AlertRulesTable } from "@/components/AlertRulesTable";
 import { AdSlot } from "@/components/AdSlot";
+import { FaqSection } from "@/components/FaqSection";
 import { GUIDES } from "@/lib/content/guides";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
+  },
+  description:
+    "See where the Florida mullet run is right now: live opportunity scores, coastal conditions, and a crowdsourced sightings map tracking the fall migration from Northeast Florida to Miami.",
+  alternates: { canonical: "/" },
+};
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -46,13 +57,24 @@ export default async function DashboardPage({
 
   return (
     <div>
+      <header className="mb-4">
+        <h1 className="text-xl font-bold leading-tight text-slate-900">
+          Florida Mullet Run Tracker
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Where are the mullet right now? Live opportunity scores, coastal
+          conditions, and crowdsourced sightings tracking the fall migration
+          from Northeast Florida to Miami.
+        </p>
+      </header>
+
       <BeachSwitcher beaches={beaches} currentId={selected.id} />
 
       <div className="mt-4 flex flex-col items-center">
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-bold text-slate-900">
+          <h2 className="text-lg font-bold text-slate-900">
             {selected.name}
-          </h1>
+          </h2>
           {selected.id === "micklers" && (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
               ★ Priority
@@ -166,6 +188,8 @@ export default async function DashboardPage({
           ★ Insider
         </Link>
       </div>
+
+      <FaqSection heading="Where are the mullet? FAQ" />
 
       <SectionTitle>Alert rules (for future notifications)</SectionTitle>
       <AlertRulesTable rules={rules} beaches={beaches} />

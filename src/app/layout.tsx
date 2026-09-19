@@ -7,28 +7,49 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://floridamulletrun.com"),
   title: {
-    default: "Florida Mullet Run Tracker",
+    default: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
     template: "%s | Florida Mullet Run",
   },
   description:
-    "Track Florida's fall mullet migration with live coastal conditions, crowdsourced sightings, inlet guides, gear picks, and charter captains.",
+    "Track the Florida mullet run live: see where the mullet are right now with a crowdsourced sightings map, daily opportunity scores, coastal conditions, inlet guides, gear picks, and charter captains from Northeast Florida to Miami.",
   applicationName: "Florida Mullet Run",
   keywords: [
     "florida mullet run",
-    "mullet run 2025",
+    "mullet run 2026",
+    "where are the mullet",
+    "where is the mullet run right now",
+    "mullet run florida map",
     "mullet migration florida",
     "surf fishing florida",
     "tarpon snook mullet run",
   ],
   alternates: { canonical: "/" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
     type: "website",
     url: "/",
     siteName: "Florida Mullet Run",
-    title: "Florida Mullet Run Tracker",
+    locale: "en_US",
+    title: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
     description:
-      "Live coastal conditions and crowdsourced mullet sightings from Northeast Florida to Miami.",
+      "Live coastal conditions and a crowdsourced mullet sightings map from Northeast Florida to Miami.",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
+    description:
+      "Live coastal conditions and a crowdsourced mullet sightings map from Northeast Florida to Miami.",
+  },
+  category: "sports",
 };
 
 export const viewport: Viewport = {
@@ -56,6 +77,36 @@ const FOOTER_LINKS = [
   { href: "/charters", label: "Book a charter" },
 ];
 
+const SITE_URL = "https://floridamulletrun.com";
+
+const orgJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": `${SITE_URL}/#organization`,
+  name: "Florida Mullet Run",
+  url: SITE_URL,
+  description:
+    "Live Florida mullet run tracker with a crowdsourced sightings map, daily opportunity scores, and inlet guides from Northeast Florida to Miami.",
+  areaServed: { "@type": "State", name: "Florida" },
+};
+
+const siteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${SITE_URL}/#website`,
+  name: "Florida Mullet Run",
+  url: SITE_URL,
+  publisher: { "@id": `${SITE_URL}/#organization` },
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${SITE_URL}/?beach={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -73,6 +124,16 @@ export default function RootLayout({
         />
       )}
       <body className="min-h-screen">
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+        />
         <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-slate-50 shadow-sm">
           <header className="sticky top-0 z-[500] border-b border-ocean-800 bg-ocean-900 text-white">
             <div className="flex items-center justify-between px-4 py-3">
