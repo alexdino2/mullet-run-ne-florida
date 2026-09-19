@@ -107,6 +107,11 @@ ever sees the public anon key (protected by Row Level Security).
 | `SUPABASE_SERVICE_ROLE_KEY` | optional | Server-only key; enables writing the conditions cache from the cron job |
 | `CRON_SECRET` | optional | Protects `/api/refresh`; Vercel Cron sends it automatically |
 | `NWS_USER_AGENT` | optional | Contact string sent to `api.weather.gov` per their etiquette |
+| `NEXT_PUBLIC_ADS_CLIENT` | optional | Display-ad publisher id (AdSense `ca-pub-…`); empty renders labeled ad placeholders |
+| `NEXT_PUBLIC_AMAZON_AFFILIATE_TAG` | optional | Amazon Associates tag appended to gear links; empty links stay un-tagged |
+| `NEXT_PUBLIC_CHARTER_CONTACT_EMAIL` | optional | Address captains email to claim a charter listing |
+| `NEXT_PUBLIC_INSIDER_WAITLIST_URL` | optional | Hosted waitlist form for Insider; falls back to a mailto |
+| `NEXT_PUBLIC_INSIDER_CONTACT_EMAIL` | optional | Insider waitlist mailto fallback address |
 
 ### Database schema
 
@@ -196,6 +201,42 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>/api/refresh
   through September and taper a little more slowly through November — tuned for
   NE Florida, where the run runs earlier than Central/SE Florida. Adjust the
   `SEASON` bounds/spreads if your local timing differs.
+
+## Content & monetization
+
+Beyond the live tracker, the site is built as a seasonal content hub with a
+phased, opt-in revenue model. Everything degrades gracefully — with no IDs
+configured it runs as a clean, ad-free site.
+
+### Content cluster
+
+A topical guide cluster under `/guide` establishes topical authority (E-E-A-T)
+and captures long-tail search:
+
+| Page | Purpose |
+| ---- | ------- |
+| `/guide` | Hub linking the four pillar articles |
+| `/guide/biology` | What triggers the migration (species, cues, timing) |
+| `/guide/locations` | Inlet-by-inlet corridor guide |
+| `/guide/regulations` | Plain-English FWC rules + release ethics |
+| `/guide/tactics` | How to fish the blitz |
+
+Articles are structured data in
+[`src/lib/content/guides.ts`](src/lib/content/guides.ts), server-rendered with
+per-page metadata, `Article` JSON-LD, and internal linking. A `sitemap.xml` and
+`robots.txt` are generated for indexing.
+
+### Monetization
+
+| Feature | Where | How |
+| ------- | ----- | --- |
+| **Display ads** | `<AdSlot>` across pages | Real AdSense units when `NEXT_PUBLIC_ADS_CLIENT` is set; labeled placeholders otherwise. Swap the component's body for Raptive/Mediavine after crossing their traffic thresholds. |
+| **Affiliate gear** | `/gear` | Curated tackle catalog ([`src/lib/content/gear.ts`](src/lib/content/gear.ts)); links carry the Amazon Associates tag when configured, with an FTC disclosure and `rel="sponsored nofollow"`. |
+| **Charter lead-gen** | `/charters` | Inlet directory where verified captains claim a listing (Phase 2). |
+| **Insider membership** | `/insider` | Subscription waitlist for real-time alerts and member perks (Phase 3). |
+
+All monetization config lives in
+[`src/lib/monetization.ts`](src/lib/monetization.ts).
 
 ## Roadmap
 

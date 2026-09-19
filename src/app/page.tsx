@@ -11,6 +11,8 @@ import { NextWindowCard } from "@/components/NextWindowCard";
 import { MapSection } from "@/components/MapSection";
 import { SightingList } from "@/components/SightingList";
 import { AlertRulesTable } from "@/components/AlertRulesTable";
+import { AdSlot } from "@/components/AdSlot";
+import { GUIDES } from "@/lib/content/guides";
 
 export const dynamic = "force-dynamic";
 
@@ -94,6 +96,8 @@ export default async function DashboardPage({
         <MapSection />
       </div>
 
+      <AdSlot label="Advertisement" />
+
       <SectionTitle>Current conditions</SectionTitle>
       <ConditionsGrid conditions={data.conditions} />
 
@@ -119,6 +123,48 @@ export default async function DashboardPage({
           beaches={beaches}
           emptyHint="No sightings logged here yet — be the first to report a school."
         />
+      </div>
+
+      <SectionTitle>Learn the run</SectionTitle>
+      <div className="grid grid-cols-2 gap-3">
+        {GUIDES.map((g) => (
+          <Link
+            key={g.slug}
+            href={`/guide/${g.slug}`}
+            className="group rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100 transition hover:ring-ocean-300"
+          >
+            <div className="flex items-center gap-1.5">
+              <span aria-hidden>{g.emoji}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wide text-ocean-600">
+                {g.category}
+              </span>
+            </div>
+            <p className="mt-1 text-sm font-bold leading-snug text-slate-900 group-hover:text-ocean-700">
+              {g.title}
+            </p>
+          </Link>
+        ))}
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <Link
+          href="/gear"
+          className="rounded-xl bg-ocean-600 p-3 text-center text-xs font-bold text-white shadow-sm hover:bg-ocean-700"
+        >
+          🎣 Gear
+        </Link>
+        <Link
+          href="/charters"
+          className="rounded-xl bg-ocean-600 p-3 text-center text-xs font-bold text-white shadow-sm hover:bg-ocean-700"
+        >
+          ⛵ Charters
+        </Link>
+        <Link
+          href="/insider"
+          className="rounded-xl bg-amber-500 p-3 text-center text-xs font-bold text-white shadow-sm hover:bg-amber-600"
+        >
+          ★ Insider
+        </Link>
       </div>
 
       <SectionTitle>Alert rules (for future notifications)</SectionTitle>
