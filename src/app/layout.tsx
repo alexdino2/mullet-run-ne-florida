@@ -49,6 +49,9 @@ export const metadata: Metadata = {
     description:
       "Live coastal conditions and a crowdsourced mullet sightings map from Northeast Florida to Miami.",
   },
+  other: {
+    "google-adsense-account": "ca-pub-4183912956441070",
+  },
   category: "sports",
 };
 
