@@ -24,6 +24,9 @@ export const monetization = {
    * Raptive/Mediavine site id once the traffic threshold is crossed). When
    * unset, ad slots render as labeled placeholders.
    */
+  // Keep public env accesses static so Next.js replaces them at build time.
+  // Aliasing `process.env` leaves a runtime `process` reference in browser
+  // bundles, where the Node.js global does not exist.
   adsClient: opt(process.env.NEXT_PUBLIC_ADS_CLIENT),
 
   /** Amazon Associates store tag appended to product/search links. */

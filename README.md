@@ -250,6 +250,7 @@ per-page metadata, `Article` JSON-LD, and internal linking. A `sitemap.xml` and
 | Feature | Where | How |
 | ------- | ----- | --- |
 | **Display ads** | `<AdSlot>` across pages | Real AdSense units when `NEXT_PUBLIC_ADS_CLIENT` is set; labeled placeholders otherwise. Swap the component's body for Raptive/Mediavine after crossing their traffic thresholds. |
+| **`ads.txt`** | `/ads.txt` | Authorized-sellers file derived from `NEXT_PUBLIC_ADS_CLIENT` ([`src/app/ads.txt/route.ts`](src/app/ads.txt/route.ts)); required by AdSense to serve. Returns 404 until a publisher id is set, so no unbacked claim ships. |
 | **Affiliate gear** | `/gear` | Curated tackle catalog ([`src/lib/content/gear.ts`](src/lib/content/gear.ts)); links carry the Amazon Associates tag when configured, with an FTC disclosure and `rel="sponsored nofollow"`. |
 | **Charter lead-gen** | `/charters` | Inlet directory where verified captains claim a listing (Phase 2). |
 | **Insider membership** | `/insider` | Subscription waitlist for real-time alerts and member perks (Phase 3). |
