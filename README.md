@@ -15,6 +15,9 @@ opportunity score**, and lets you log sightings alongside it:
   optional browser location).
   Tracked and displayed, but **not part of the score yet** — the score uses
   public sources only until enough sightings are collected to be predictive.
+- **Daily beach checks** — a scheduled Google News RSS scan looks for recent,
+  attributable online mullet reports for every tracked beach. These are shown
+  as unverified signals and never mixed with eyewitness reports.
 
 For each beach the app shows the current conditions, a plain-English **"why"**
 behind the score, and the **next best window**, plus a map, a recent-sightings
@@ -59,7 +62,8 @@ uses a neutral value, and the score is still computed from what's available.
 - **Supabase** (Postgres + RLS) for beaches, sightings, alert rules, cache
 - **React-Leaflet + OpenStreetMap** for the statewide map (no API key or
   WordPress plugin)
-- Deploys to **Vercel** with a built-in hourly **cron** refresh
+- Deploys to **Vercel** with built-in hourly conditions and daily sighting
+  **cron** jobs
 
 ---
 
@@ -107,6 +111,8 @@ ever sees the public anon key (protected by Row Level Security).
 | `SUPABASE_SERVICE_ROLE_KEY` | optional | Server-only key; enables writing the conditions cache from the cron job |
 | `CRON_SECRET` | optional | Protects `/api/refresh`; Vercel Cron sends it automatically |
 | `NWS_USER_AGENT` | optional | Contact string sent to `api.weather.gov` per their etiquette |
+| `NEXT_PUBLIC_POSTHOG_KEY` | optional | Override the built-in PostHog project API key |
+| `NEXT_PUBLIC_POSTHOG_HOST` | optional | PostHog ingestion host; defaults to `https://us.i.posthog.com` |
 | `NEXT_PUBLIC_ADS_CLIENT` | optional | Display-ad publisher id (AdSense `ca-pub-…`); empty renders labeled ad placeholders |
 | `NEXT_PUBLIC_AMAZON_AFFILIATE_TAG` | optional | Amazon Associates tag appended to gear links; empty links stay un-tagged |
 | `NEXT_PUBLIC_CHARTER_CONTACT_EMAIL` | optional | Address captains email to claim a charter listing |
@@ -122,6 +128,7 @@ Tables are namespaced with `mw_` so they can share a project with other apps:
   100)
 - `mw_sightings` — manual reports with optional latitude, longitude, and
   location accuracy
+- `mw_sighting_checks` — latest daily public-web scan and report links per beach
 - `mw_alert_rules` — notification rules (seeded with examples)
 - `mw_conditions_cache` — optional cache written by the refresh job
 
@@ -132,9 +139,11 @@ Editor, or use the Supabase CLI:
 supabase db push   # with the migration in supabase/migrations/
 ```
 
-Apply both migrations before deploying the location-enabled report form.
+Apply all migrations before deploying the location-enabled report form and
+daily checks.
 `0002_sighting_locations.sql` adds the map coordinates and statewide monitoring
 stations. Existing reports remain valid and appear at their selected beach.
+`0003_daily_sighting_checks.sql` stores one scan result per beach per UTC day.
 
 **Row Level Security** is enabled on every table:
 
@@ -157,17 +166,25 @@ stations. Existing reports remain valid and appear at their selected beach.
 
 ### Cron refresh
 
-[`vercel.json`](vercel.json) registers an hourly cron hitting `/api/refresh`:
+[`vercel.json`](vercel.json) registers an hourly conditions refresh and a daily
+online sighting check:
 
 ```json
-{ "crons": [{ "path": "/api/refresh", "schedule": "0 * * * *" }] }
+{
+  "crons": [
+    { "path": "/api/refresh", "schedule": "0 * * * *" },
+    { "path": "/api/check-sightings", "schedule": "15 11 * * *" }
+  ]
+}
 ```
 
 On deploy, Vercel picks this up automatically (Hobby plan allows daily crons;
-Pro allows this hourly schedule — adjust the cron expression if needed). Set
+Pro allows the hourly schedule — adjust the conditions cron if needed). Set
 `CRON_SECRET` and Vercel will send it as a bearer token so only Vercel can
-trigger the refresh. The route recomputes and caches every beach's conditions
-and evaluates the alert rules, returning which rules *would* fire.
+trigger the jobs. `/api/refresh` recomputes and caches every beach's conditions
+and evaluates alert rules. `/api/check-sightings` scans recent Google News RSS
+results for every beach and stores its findings; it requires the service-role
+key to persist them.
 
 You can call it manually:
 
@@ -185,6 +202,8 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>/api/refresh
 | `/api/summaries` | GET | Score summary for every beach (map + list) |
 | `/api/beaches` | GET | Beach list |
 | `/api/sightings` | GET / POST | List recent sightings / log a new one |
+| `/api/sighting-checks` | GET | Latest daily online check for every beach |
+| `/api/check-sightings` | GET | Cron-only scan for recent online mullet reports |
 | `/api/alert-rules` | GET | Alert rules |
 | `/api/refresh` | GET | Cron-ready refresh (recompute + cache + evaluate alerts) |
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { captureEvent } from "@/lib/analytics";
 import type { Beach } from "@/lib/types";
 
 export function BeachSwitcher({
@@ -19,7 +20,13 @@ export function BeachSwitcher({
           return (
             <button
               key={b.id}
-              onClick={() => router.push(`/?beach=${b.id}`)}
+              onClick={() => {
+                captureEvent("beach_selected", {
+                  beach_id: b.id,
+                  source: "beach_switcher",
+                });
+                router.push(`/?beach=${b.id}`);
+              }}
               className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
                 active
                   ? "border-ocean-600 bg-ocean-600 text-white"

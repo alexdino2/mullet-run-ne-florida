@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { captureEvent } from "@/lib/analytics";
 import type { Beach, SchoolSize } from "@/lib/types";
 import { SIZE_META } from "@/lib/ui";
 
@@ -52,8 +53,10 @@ export function SightingForm({
   }, []);
 
   function useCurrentLocation() {
+    captureEvent("sighting_location_requested");
     if (!navigator.geolocation) {
       setLocationStatus("error");
+      captureEvent("sighting_location_failed", { reason: "unsupported" });
       return;
     }
 
@@ -66,8 +69,14 @@ export function SightingForm({
           accuracy: Math.round(coords.accuracy),
         });
         setLocationStatus("idle");
+        captureEvent("sighting_location_added", {
+          accuracy_m: Math.round(coords.accuracy),
+        });
       },
-      () => setLocationStatus("error"),
+      (error) => {
+        setLocationStatus("error");
+        captureEvent("sighting_location_failed", { error_code: error.code });
+      },
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
     );
   }
@@ -95,6 +104,10 @@ export function SightingForm({
       if (!res.ok) {
         setStatus("error");
         setMessage(data.error ?? "Could not save sighting.");
+        captureEvent("sighting_submission_failed", {
+          beach_id: beachId,
+          status_code: res.status,
+        });
         return;
       }
       setStatus("ok");
@@ -102,10 +115,20 @@ export function SightingForm({
       setNotes("");
       setLocation(null);
       setObservedAt(localNow());
+      captureEvent("sighting_submitted", {
+        beach_id: beachId,
+        school_size: size,
+        has_location: Boolean(location),
+        has_notes: Boolean(notes.trim()),
+      });
       router.refresh();
     } catch {
       setStatus("error");
       setMessage("Network error — try again.");
+      captureEvent("sighting_submission_failed", {
+        beach_id: beachId,
+        reason: "network_error",
+      });
     }
   }
 
@@ -140,7 +163,10 @@ export function SightingForm({
           {location && (
             <button
               type="button"
-              onClick={() => setLocation(null)}
+              onClick={() => {
+                setLocation(null);
+                captureEvent("sighting_location_cleared");
+              }}
               className="text-xs font-semibold text-slate-400 hover:text-slate-600"
             >
               Clear

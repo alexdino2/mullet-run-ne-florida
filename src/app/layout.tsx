@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import Script from "next/script";
-import { monetization, adsEnabled } from "@/lib/monetization";
+import { PostHogAnalytics } from "@/components/PostHogAnalytics";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -114,70 +114,70 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      {adsEnabled && (
-        <Script
-          id="adsbygoogle-init"
-          async
-          strategy="afterInteractive"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${monetization.adsClient}`}
-          crossOrigin="anonymous"
-        />
-      )}
+      <Script
+        id="adsbygoogle-init"
+        async
+        strategy="beforeInteractive"
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4183912956441070"
+        crossOrigin="anonymous"
+      />
       <body className="min-h-screen">
-        <script
-          type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
-        />
-        <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-slate-50 shadow-sm">
-          <header className="sticky top-0 z-[500] border-b border-ocean-800 bg-ocean-900 text-white">
-            <div className="flex items-center justify-between px-4 py-3">
-              <Link href="/" className="flex shrink-0 items-center gap-2">
-                <span className="text-xl" aria-hidden>
-                  🐟
-                </span>
-                <span className="text-base font-bold tracking-tight">
-                  Florida <span className="text-ocean-300">Mullet Run</span>
-                </span>
-              </Link>
-            </div>
-            <nav className="flex items-center gap-1 overflow-x-auto px-3 pb-2 text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {NAV.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="whitespace-nowrap rounded-md px-2.5 py-1 font-medium hover:bg-ocean-800"
-                >
-                  {item.label}
+        <PostHogAnalytics>
+          <script
+            type="application/ld+json"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+          />
+          <script
+            type="application/ld+json"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+          />
+          <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-slate-50 shadow-sm">
+            <header className="sticky top-0 z-[500] border-b border-ocean-800 bg-ocean-900 text-white">
+              <div className="flex items-center justify-between px-4 py-3">
+                <Link href="/" className="flex shrink-0 items-center gap-2">
+                  <span className="text-xl" aria-hidden>
+                    🐟
+                  </span>
+                  <span className="text-base font-bold tracking-tight">
+                    Florida <span className="text-ocean-300">Mullet Run</span>
+                  </span>
                 </Link>
-              ))}
-            </nav>
-          </header>
-          <main className="flex-1 px-4 pb-16 pt-4">{children}</main>
-          <footer className="border-t border-slate-200 bg-white px-4 py-6 text-xs text-slate-500">
-            <div className="grid grid-cols-2 gap-y-2 gap-x-4 sm:grid-cols-3">
-              {FOOTER_LINKS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="font-medium text-slate-600 hover:text-ocean-700"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-            <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400">
-              Public data: NWS · NOAA CO-OPS · NDBC. Scores are heuristics, not a
-              guarantee. Regulations change — always confirm current limits with
-              the FWC. Fish responsibly.
-            </p>
-          </footer>
-        </div>
+              </div>
+              <nav className="flex items-center gap-1 overflow-x-auto px-3 pb-2 text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {NAV.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="whitespace-nowrap rounded-md px-2.5 py-1 font-medium hover:bg-ocean-800"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            </header>
+            <main className="flex-1 px-4 pb-16 pt-4">{children}</main>
+            <footer className="border-t border-slate-200 bg-white px-4 py-6 text-xs text-slate-500">
+              <div className="grid grid-cols-2 gap-y-2 gap-x-4 sm:grid-cols-3">
+                {FOOTER_LINKS.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="font-medium text-slate-600 hover:text-ocean-700"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+              <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400">
+                Public data: NWS · NOAA CO-OPS · NDBC. Scores are heuristics, not a
+                guarantee. Regulations change — always confirm current limits with
+                the FWC. Fish responsibly.
+              </p>
+            </footer>
+          </div>
+        </PostHogAnalytics>
       </body>
     </html>
   );

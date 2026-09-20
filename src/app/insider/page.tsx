@@ -51,6 +51,11 @@ export default function InsiderPage() {
         </p>
         <a
           href={waitlistHref}
+          data-analytics-event="insider_waitlist_clicked"
+          data-analytics-property-placement="hero"
+          data-analytics-property-destination={
+            waitlistExternal ? "hosted_form" : "email"
+          }
           {...(waitlistExternal
             ? { target: "_blank", rel: "noopener noreferrer" }
             : {})}
@@ -86,6 +91,11 @@ export default function InsiderPage() {
         </p>
         <a
           href={waitlistHref}
+          data-analytics-event="insider_waitlist_clicked"
+          data-analytics-property-placement="pricing"
+          data-analytics-property-destination={
+            waitlistExternal ? "hosted_form" : "email"
+          }
           {...(waitlistExternal
             ? { target: "_blank", rel: "noopener noreferrer" }
             : {})}
