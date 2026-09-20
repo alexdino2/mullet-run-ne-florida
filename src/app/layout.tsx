@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import Script from "next/script";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
-import { monetization, adsEnabled } from "@/lib/monetization";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -115,15 +114,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      {adsEnabled && (
-        <Script
-          id="adsbygoogle-init"
-          async
-          strategy="afterInteractive"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${monetization.adsClient}`}
-          crossOrigin="anonymous"
-        />
-      )}
+      <Script
+        id="adsbygoogle-init"
+        async
+        strategy="beforeInteractive"
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4183912956441070"
+        crossOrigin="anonymous"
+      />
       <body className="min-h-screen">
         <PostHogAnalytics>
           <script
