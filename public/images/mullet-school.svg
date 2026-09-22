@@ -1,6 +1,64 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" width="400" height="320" role="img" aria-labelledby="title desc">
   <title id="title">School of mullet jumping out of the water</title>
-  <desc id="desc">A school of silver mullet leaping from the Atlantic surf at sunrise, with a dark school of fish visible beneath the surface.</desc>
+  <desc id="desc">A school of silver mullet leaping from the Atlantic surf at sunrise, arcing through the air and splashing back in, with a dark school of fish visible beneath the surface.</desc>
+
+  <style>
+    .lx { animation: lx var(--dur) linear var(--delay) infinite; }
+    .ly { animation: ly var(--dur) var(--delay) infinite; }
+    .rot { animation: rot var(--dur) linear var(--delay) infinite; }
+    .sp-in, .sp-out { opacity: 0; }
+    .sp-in { animation: sp-in var(--dur) ease-out var(--delay) infinite; }
+    .sp-out { animation: sp-out var(--dur) ease-out var(--delay) infinite; }
+    .drift { animation: drift 9s ease-in-out infinite alternate; }
+    .drift2 { animation: drift 7s ease-in-out -3s infinite alternate-reverse; }
+    .ripple { animation: ripple 2.4s ease-in-out infinite alternate; }
+    .ripple:nth-child(2n) { animation-delay: -1.2s; }
+    .ripple:nth-child(3n) { animation-delay: -0.6s; }
+    .glint { animation: glint 3s ease-in-out infinite alternate; }
+    .glint:nth-child(2) { animation-delay: -1s; }
+    .glint:nth-child(3) { animation-delay: -2s; }
+
+    @keyframes lx {
+      0% { transform: translateX(0); }
+      30%, 100% { transform: translateX(var(--dx)); }
+    }
+    @keyframes ly {
+      0% { transform: translateY(0); animation-timing-function: cubic-bezier(0.33, 0.66, 0.66, 1); }
+      15% { transform: translateY(calc(var(--h) * -1)); animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0.33); }
+      30%, 100% { transform: translateY(0); }
+    }
+    @keyframes rot {
+      0% { transform: rotate(calc(var(--a) * -1)); }
+      30%, 100% { transform: rotate(var(--a)); }
+    }
+    @keyframes sp-in {
+      0% { opacity: 0; transform: scale(0.3); }
+      5% { opacity: 1; transform: scale(0.7); }
+      13%, 100% { opacity: 0; transform: scale(1.15); }
+    }
+    @keyframes sp-out {
+      0%, 25% { opacity: 0; transform: scale(0.3); }
+      28% { opacity: 1; transform: scale(0.75); }
+      37%, 100% { opacity: 0; transform: scale(1.2); }
+    }
+    @keyframes drift {
+      from { transform: translateX(-8px); }
+      to { transform: translateX(8px); }
+    }
+    @keyframes ripple {
+      from { opacity: 0.25; transform: translateX(-3px); }
+      to { opacity: 0.8; transform: translateX(3px); }
+    }
+    @keyframes glint {
+      from { opacity: 0.4; }
+      to { opacity: 1; }
+    }
+
+    /* Reduced motion: hold a single mid-leap frame instead of looping */
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-play-state: paused !important; }
+    }
+  </style>
   <defs>
     <linearGradient id="sky" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="190">
       <stop offset="0" stop-color="#0a2d44"/>
@@ -66,6 +124,7 @@
 
     <!-- Underwater shadow fish -->
     <path id="shadow" d="M-20 0 C-12 -5 6 -6 16 -4 C22 -3 25 -1 26 0 C25 1 22 3 16 4 C6 6 -12 5 -20 0 Z M-19 0 L-28 -6 L-26 0 L-28 6 Z"/>
+    <clipPath id="air"><rect width="400" height="198"/></clipPath>
   </defs>
 
   <!-- Sky and sunrise -->
@@ -82,12 +141,12 @@
 
   <!-- Sea -->
   <rect y="186" width="400" height="134" fill="url(#sea)"/>
-  <rect x="220" y="188" width="160" height="4" fill="url(#glint)"/>
-  <rect x="240" y="196" width="120" height="3" fill="url(#glint)"/>
-  <rect x="262" y="204" width="76" height="2" fill="url(#glint)"/>
+  <rect x="220" y="188" width="160" height="4" fill="url(#glint)" class="glint"/>
+  <rect x="240" y="196" width="120" height="3" fill="url(#glint)" class="glint"/>
+  <rect x="262" y="204" width="76" height="2" fill="url(#glint)" class="glint"/>
 
   <!-- School beneath the surface -->
-  <g fill="#0a2d44" opacity="0.5">
+  <g fill="#0a2d44" opacity="0.5" class="drift">
     <use href="#shadow" transform="translate(70 262) scale(0.9)"/>
     <use href="#shadow" transform="translate(112 276) scale(0.8)"/>
     <use href="#shadow" transform="translate(150 258) scale(1)"/>
@@ -105,39 +164,130 @@
 
   <!-- Nervous water over the school -->
   <g fill="none" stroke="#b0e8fb" stroke-width="1.4" stroke-linecap="round" opacity="0.55">
-    <path d="M30 222 q8 -4 16 0 t16 0"/>
-    <path d="M110 230 q8 -4 16 0 t16 0"/>
-    <path d="M200 218 q8 -4 16 0 t16 0"/>
-    <path d="M300 232 q8 -4 16 0 t16 0"/>
-    <path d="M60 246 q6 -3 12 0 t12 0"/>
-    <path d="M250 244 q6 -3 12 0 t12 0"/>
-    <path d="M160 250 q6 -3 12 0 t12 0"/>
+    <path d="M30 222 q8 -4 16 0 t16 0" class="ripple"/>
+    <path d="M110 230 q8 -4 16 0 t16 0" class="ripple"/>
+    <path d="M200 218 q8 -4 16 0 t16 0" class="ripple"/>
+    <path d="M300 232 q8 -4 16 0 t16 0" class="ripple"/>
+    <path d="M60 246 q6 -3 12 0 t12 0" class="ripple"/>
+    <path d="M250 244 q6 -3 12 0 t12 0" class="ripple"/>
+    <path d="M160 250 q6 -3 12 0 t12 0" class="ripple"/>
   </g>
 
-  <!-- Jump trails of spray -->
-  <g fill="none" stroke="#e6f7fd" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="1 5" opacity="0.7">
-    <path d="M66 196 Q84 150 110 132"/>
-    <path d="M168 194 Q184 124 212 98"/>
-    <path d="M276 196 Q290 160 312 146"/>
-  </g>
-
-  <!-- Splashes where fish leave and re-enter -->
-  <use href="#splash" x="-30" y="-30" width="60" height="36" transform="translate(64 192) scale(0.9)"/>
-  <use href="#splash" x="-30" y="-30" width="60" height="36" transform="translate(166 192) scale(1.1)"/>
-  <use href="#splash" x="-30" y="-30" width="60" height="36" transform="translate(274 192) scale(0.85)"/>
-  <use href="#splash" x="-30" y="-30" width="60" height="36" transform="translate(352 194) scale(0.7)"/>
-  <use href="#splash" x="-30" y="-30" width="60" height="36" transform="translate(22 196) scale(0.6)"/>
-
-  <!-- Leaping mullet (back to front) -->
+  <!-- Splashes, timed to each fish leaving and re-entering the water -->
   <g>
-    <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="translate(356 168) rotate(52) scale(0.42)"/>
-    <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="translate(28 170) rotate(-58) scale(0.4)"/>
-    <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="translate(236 132) rotate(18) scale(0.55)"/>
-    <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="translate(116 128) rotate(-34) scale(0.62)"/>
-    <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="translate(318 140) rotate(-28) scale(0.6)"/>
-    <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="translate(146 70) rotate(8) scale(0.5)"/>
-    <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="translate(212 90) rotate(-40) scale(0.8)"/>
-    <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="translate(74 160) rotate(-62) scale(0.5)"/>
+    <g style="--dx:56px;--h:126px;--a:56deg;--dur:3.6s;--delay:-0.22s">
+      <g transform="translate(27.04 193) scale(0.74)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(72.96 193) scale(0.74)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+    <g style="--dx:70px;--h:142px;--a:55deg;--dur:3.4s;--delay:-0.75s">
+      <g transform="translate(46.3 193) scale(0.8)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(103.7 193) scale(0.8)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+    <g style="--dx:88px;--h:190px;--a:50deg;--dur:4.2s;--delay:-0.5s">
+      <g transform="translate(99.92 193) scale(0.87)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(172.08 193) scale(0.87)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+    <g style="--dx:96px;--h:218px;--a:48deg;--dur:4.6s;--delay:-0.78s">
+      <g transform="translate(158.64 193) scale(0.98)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(237.36 193) scale(0.98)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+    <g style="--dx:70px;--h:154px;--a:50deg;--dur:3.0s;--delay:-1.65s">
+      <g transform="translate(186.3 193) scale(0.8)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(243.7 193) scale(0.8)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+    <g style="--dx:84px;--h:164px;--a:52deg;--dur:3.8s;--delay:-0.99s">
+      <g transform="translate(292.44 193) scale(0.83)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(223.56 193) scale(0.83)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+    <g style="--dx:92px;--h:182px;--a:50deg;--dur:4.0s;--delay:-0.36s">
+      <g transform="translate(270.28 193) scale(0.86)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(345.72 193) scale(0.86)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+    <g style="--dx:60px;--h:130px;--a:58deg;--dur:3.2s;--delay:-2.24s">
+      <g transform="translate(372.6 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(323.4 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+    <g style="--dx:64px;--h:150px;--a:54deg;--dur:3.3s;--delay:-0.46s">
+      <g transform="translate(114.24 193) scale(0.77)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(61.76 193) scale(0.77)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+    <g style="--dx:80px;--h:170px;--a:50deg;--dur:3.9s;--delay:-1.56s">
+      <g transform="translate(217.2 193) scale(0.81)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(282.8 193) scale(0.81)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+    <g style="--dx:70px;--h:140px;--a:55deg;--dur:3.5s;--delay:-0.7s">
+      <g transform="translate(343.7 193) scale(0.78)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(286.3 193) scale(0.78)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+    <g style="--dx:60px;--h:120px;--a:56deg;--dur:2.9s;--delay:-2.46s">
+      <g transform="translate(67.4 193) scale(0.73)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g>
+      <g transform="translate(116.6 193) scale(0.73)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g>
+    </g>
+  </g>
+
+  <!-- Leaping mullet: x drifts linearly, y rises then falls (a parabola), body pitches to follow the arc.
+       Clipped at the waterline so fish emerge from and vanish into the sea. -->
+  <g clip-path="url(#air)">
+    <g transform="translate(22 252)" style="--dx:56px;--h:126px;--a:56deg;--dur:3.6s;--delay:-0.22s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.4)"/>
+      </g></g></g>
+    </g>
+    <g transform="translate(40 252)" style="--dx:70px;--h:142px;--a:55deg;--dur:3.4s;--delay:-0.75s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.5)"/>
+      </g></g></g>
+    </g>
+    <g transform="translate(92 252)" style="--dx:88px;--h:190px;--a:50deg;--dur:4.2s;--delay:-0.5s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.62)"/>
+      </g></g></g>
+    </g>
+    <g transform="translate(150 252)" style="--dx:96px;--h:218px;--a:48deg;--dur:4.6s;--delay:-0.78s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.8)"/>
+      </g></g></g>
+    </g>
+    <g transform="translate(180 252)" style="--dx:70px;--h:154px;--a:50deg;--dur:3.0s;--delay:-1.65s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.5)"/>
+      </g></g></g>
+    </g>
+    <g transform="translate(300 252) scale(-1 1)" style="--dx:84px;--h:164px;--a:52deg;--dur:3.8s;--delay:-0.99s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.55)"/>
+      </g></g></g>
+    </g>
+    <g transform="translate(262 252)" style="--dx:92px;--h:182px;--a:50deg;--dur:4.0s;--delay:-0.36s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.6)"/>
+      </g></g></g>
+    </g>
+    <g transform="translate(378 252) scale(-1 1)" style="--dx:60px;--h:130px;--a:58deg;--dur:3.2s;--delay:-2.24s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.42)"/>
+      </g></g></g>
+    </g>
+    <g transform="translate(120 252) scale(-1 1)" style="--dx:64px;--h:150px;--a:54deg;--dur:3.3s;--delay:-0.46s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.45)"/>
+      </g></g></g>
+    </g>
+    <g transform="translate(210 252)" style="--dx:80px;--h:170px;--a:50deg;--dur:3.9s;--delay:-1.56s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.52)"/>
+      </g></g></g>
+    </g>
+    <g transform="translate(350 252) scale(-1 1)" style="--dx:70px;--h:140px;--a:55deg;--dur:3.5s;--delay:-0.7s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.46)"/>
+      </g></g></g>
+    </g>
+    <g transform="translate(62 252)" style="--dx:60px;--h:120px;--a:56deg;--dur:2.9s;--delay:-2.46s">
+      <g class="lx"><g class="ly"><g class="rot">
+        <use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.38)"/>
+      </g></g></g>
+    </g>
   </g>
 
   <!-- Foreground water lip -->
