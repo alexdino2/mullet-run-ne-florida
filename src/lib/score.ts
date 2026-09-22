@@ -5,6 +5,7 @@ import type {
   TideStage,
   WindObservation,
 } from "@/lib/types";
+import { isFavorableEasterlyDirection } from "@/lib/wind";
 
 /**
  * Mullet opportunity score.
@@ -15,7 +16,12 @@ import type {
  * hourly lookahead used for the next-best-window forecast.
  *
  * Weights (sum to 100):
- *   season 25 · windDir 24 · recentNE 18 · tide 18 · windSpeed 15
+ *   season 30 · windDir 18 · recentEasterly 12 · tide 22 · windSpeed 18
+ *
+ * Wind direction is intentionally a secondary signal. NE, ENE, and E all
+ * bring an onshore component to Florida's Atlantic beaches, while there is not
+ * enough outcome data to justify treating an exact NE bearing as uniquely
+ * predictive.
  *
  * Manually logged sightings are intentionally NOT part of the score: the score
  * is derived from public sources only (NWS, NOAA CO-OPS, NDBC, season). Sightings
@@ -26,11 +32,11 @@ import type {
 const NEUTRAL = 0.45;
 
 export const WEIGHTS = {
-  season: 25,
-  windDir: 24,
-  recentNe: 18,
-  tide: 18,
-  windSpeed: 15,
+  season: 30,
+  windDir: 18,
+  recentEasterly: 12,
+  tide: 22,
+  windSpeed: 18,
 } as const;
 
 function clamp01(n: number): number {
@@ -93,9 +99,19 @@ function angDiff(a: number, b: number): number {
   return d;
 }
 
-/** NE (45°) is ideal; N and E are decent; onshore-S/offshore-W are poor. */
+/**
+ * Broadly favor winds from NE through E.
+ *
+ * The flat top avoids claiming a precision the available evidence does not
+ * support: NE, ENE, and E are treated alike, with smooth shoulders through NNE
+ * and ESE. Southerly and offshore westerly winds receive only a small floor.
+ */
 export function windDirFactor(deg: number): number {
-  return clamp01(1 - angDiff(deg, 45) / 90);
+  const distanceFromFavorableSector =
+    deg >= 45 && deg <= 90
+      ? 0
+      : Math.min(angDiff(deg, 45), angDiff(deg, 90));
+  return clamp01(0.1 + 0.9 * (1 - distanceFromFavorableSector / 90));
 }
 
 /** Moderate wind (roughly 10–17 kt) is ideal; calm or blown-out is poor. */
@@ -122,7 +138,7 @@ export function tideFactor(stage: TideStage): number {
   }
 }
 
-export function recentNeFactor(
+export function recentEasterlyFactor(
   fraction: number | undefined,
   currentWind: WindObservation | undefined,
 ): { factor: number; estimated: boolean } {
@@ -130,8 +146,8 @@ export function recentNeFactor(
     return { factor: clamp01(0.15 + 0.85 * fraction), estimated: false };
   }
   if (currentWind) {
-    const ne = windDirFactor(currentWind.directionDeg) > 0.6;
-    return { factor: ne ? 0.5 : 0.2, estimated: true };
+    const favorable = isFavorableEasterlyDirection(currentWind.directionDeg);
+    return { factor: favorable ? 0.5 : 0.2, estimated: true };
   }
   return { factor: NEUTRAL, estimated: true };
 }
@@ -181,22 +197,25 @@ export function computeScore(input: ScoreInputs): ScoreResult {
     points: pts(WEIGHTS.windDir, dirFactor),
     available: !!wind,
     reason: wind
-      ? `${wind.directionLabel} (${Math.round(wind.directionDeg)}°) — NE is ideal.`
+      ? `${wind.directionLabel} (${Math.round(wind.directionDeg)}°) — NE through E is the favorable range.`
       : "No wind reading available; used a neutral value.",
   });
 
-  // Recent NE pattern
-  const ne = recentNeFactor(conditions.recentNeFraction, wind);
+  // Recent favorable easterly pattern
+  const easterly = recentEasterlyFactor(
+    conditions.recentEasterlyFraction,
+    wind,
+  );
   components.push({
-    key: "recentNe",
-    label: "Recent NE pattern",
-    weight: WEIGHTS.recentNe,
-    factor: ne.factor,
-    points: pts(WEIGHTS.recentNe, ne.factor),
-    available: conditions.recentNeFraction != null,
+    key: "recentEasterly",
+    label: "Recent NE–E pattern",
+    weight: WEIGHTS.recentEasterly,
+    factor: easterly.factor,
+    points: pts(WEIGHTS.recentEasterly, easterly.factor),
+    available: conditions.recentEasterlyFraction != null,
     reason:
-      conditions.recentNeFraction != null
-        ? `${Math.round(conditions.recentNeFraction * 100)}% of recent hourly readings blew out of the NE.`
+      conditions.recentEasterlyFraction != null
+        ? `${Math.round(conditions.recentEasterlyFraction * 100)}% of recent hourly readings blew from NE through E.`
         : "Estimated from current wind (no recent history).",
   });
 
@@ -255,10 +274,10 @@ export function hourlyScore(params: {
   when: Date;
   wind: WindObservation | undefined;
   stage: TideStage;
-  recentNeF: number;
+  recentEasterlyF: number;
   latitude?: number;
 }): number {
-  const { when, wind, stage, recentNeF, latitude } = params;
+  const { when, wind, stage, recentEasterlyF, latitude } = params;
   const season = seasonFactor(when, latitude);
   const dir = wind ? windDirFactor(wind.directionDeg) : NEUTRAL;
   const spd = wind ? windSpeedFactor(wind.speedKt) : NEUTRAL;
@@ -266,7 +285,7 @@ export function hourlyScore(params: {
   const total =
     WEIGHTS.season * season +
     WEIGHTS.windDir * dir +
-    WEIGHTS.recentNe * recentNeF +
+    WEIGHTS.recentEasterly * recentEasterlyF +
     WEIGHTS.tide * tide +
     WEIGHTS.windSpeed * spd;
   return clampScore(total);

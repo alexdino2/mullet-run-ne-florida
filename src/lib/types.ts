@@ -82,8 +82,8 @@ export interface Conditions {
   waterTempF?: number;
   waveHeightFt?: number;
   tide?: TideState;
-  /** Fraction 0..1 of recent buoy observations blowing out of the NE quadrant. */
-  recentNeFraction?: number;
+  /** Fraction 0..1 of recent observations blowing from NE through E. */
+  recentEasterlyFraction?: number;
   /** Source labels for transparency in the UI. */
   sources: string[];
   observedAt: string;

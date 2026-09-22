@@ -6,13 +6,14 @@ import {
   degreesToCompass,
   safeFetchText,
 } from "./http";
+import { isFavorableEasterlyDirection } from "@/lib/wind";
 
 export interface BuoyResult {
   wind?: WindObservation;
   waterTempF?: number;
   waveHeightFt?: number;
-  /** Fraction of recent valid readings blowing out of the NE quadrant. */
-  recentNeFraction?: number;
+  /** Fraction of recent valid readings blowing from NE through E. */
+  recentEasterlyFraction?: number;
 }
 
 function num(token: string | undefined): number | null {
@@ -21,9 +22,9 @@ function num(token: string | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** NE quadrant here means roughly N through E (10°–100°) with real breeze. */
-function isNe(dirDeg: number, speedMps: number): boolean {
-  return dirDeg >= 10 && dirDeg <= 100 && speedMps >= 2;
+/** Include the full NE, ENE, and E compass bins when there is a real breeze. */
+function isFavorableEasterly(dirDeg: number, speedMps: number): boolean {
+  return isFavorableEasterlyDirection(dirDeg) && speedMps >= 2;
 }
 
 /**
@@ -64,21 +65,22 @@ export async function getBuoy(
     };
   }
 
-  // Recent NE pattern over the last ~18 valid readings.
-  let neCount = 0;
+  // Recent NE-through-E pattern over the last ~18 valid readings.
+  let easterlyCount = 0;
   let validCount = 0;
   for (const r of rows.slice(0, 18)) {
     const d = num(r[5]);
     const s = num(r[6]);
     if (d == null || s == null) continue;
     validCount += 1;
-    if (isNe(d, s)) neCount += 1;
+    if (isFavorableEasterly(d, s)) easterlyCount += 1;
   }
 
   return {
     wind,
     waterTempF: wtmp != null ? Math.round(cToF(wtmp)) : undefined,
     waveHeightFt: wvht != null ? Math.round(wvht * M_TO_FT * 10) / 10 : undefined,
-    recentNeFraction: validCount > 0 ? neCount / validCount : undefined,
+    recentEasterlyFraction:
+      validCount > 0 ? easterlyCount / validCount : undefined,
   };
 }
