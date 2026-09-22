@@ -13,7 +13,11 @@ import { getNwsForecast } from "@/lib/data/nws";
 import { getOpenMeteo } from "@/lib/data/openmeteo";
 import { getTides, stageAt } from "@/lib/data/coops";
 import { getBuoy } from "@/lib/data/ndbc";
-import { computeScore, hourlyScore, recentNeFactor } from "@/lib/score";
+import {
+  computeScore,
+  hourlyScore,
+  recentEasterlyFactor,
+} from "@/lib/score";
 import { getServerSupabase, hasServiceRole } from "@/lib/supabase/server";
 
 /**
@@ -44,7 +48,8 @@ async function assembleConditions(
     waterTempF: buoy?.waterTempF,
     waveHeightFt: buoy?.waveHeightFt,
     tide,
-    recentNeFraction: buoy?.recentNeFraction ?? om.recentNeFraction,
+    recentEasterlyFraction:
+      buoy?.recentEasterlyFraction ?? om.recentEasterlyFraction,
     sources,
     observedAt: new Date().toISOString(),
   };
@@ -63,8 +68,8 @@ function computeNextWindow(
   if (hourly.length < 2) return null;
 
   const events = conditions.tide?.events ?? [];
-  const recentNeF = recentNeFactor(
-    conditions.recentNeFraction,
+  const recentEasterlyF = recentEasterlyFactor(
+    conditions.recentEasterlyFraction,
     conditions.wind,
   ).factor;
 
@@ -77,7 +82,7 @@ function computeNextWindow(
           when,
           wind: h.wind,
           stage: events.length ? stageAt(events, when.getTime()) : "unknown",
-          recentNeF,
+          recentEasterlyF,
           latitude,
         }),
       };

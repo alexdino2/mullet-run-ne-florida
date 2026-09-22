@@ -71,10 +71,10 @@ export function ConditionsGrid({ conditions }: { conditions: Conditions }) {
         }
       />
       <Tile
-        label="Recent NE"
+        label="Recent NE–E"
         value={
-          conditions.recentNeFraction != null
-            ? `${Math.round(conditions.recentNeFraction * 100)}%`
+          conditions.recentEasterlyFraction != null
+            ? `${Math.round(conditions.recentEasterlyFraction * 100)}%`
             : "—"
         }
         sub="of recent hours"

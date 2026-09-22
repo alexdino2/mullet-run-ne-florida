@@ -1,4 +1,5 @@
 import type { HourlyForecast, WindObservation } from "@/lib/types";
+import { isFavorableEasterlyDirection } from "@/lib/wind";
 import { degreesToCompass, safeFetchJson } from "./http";
 
 /**
@@ -28,8 +29,8 @@ interface OpenMeteoResponse {
 export interface OpenMeteoResult {
   current?: { wind?: WindObservation; airTempF?: number };
   hourly: HourlyForecast[];
-  /** Fraction of the last ~18 hours blowing out of the NE quadrant. */
-  recentNeFraction?: number;
+  /** Fraction of the last ~18 hours blowing from NE through E. */
+  recentEasterlyFraction?: number;
 }
 
 function toWind(
@@ -79,7 +80,7 @@ export async function getOpenMeteo(
   const h = data.hourly;
   const hourly: HourlyForecast[] = [];
   const nowMs = Date.now();
-  let neCount = 0;
+  let easterlyCount = 0;
   let validCount = 0;
 
   if (h?.time) {
@@ -90,10 +91,12 @@ export async function getOpenMeteo(
       const temp = h.temperature_2m?.[i];
 
       if (t <= nowMs) {
-        // Past hour → contributes to the recent-NE pattern.
+        // Past hour → contributes to the recent NE-through-E pattern.
         if (dir != null && spd != null) {
           validCount += 1;
-          if (dir >= 10 && dir <= 100 && spd >= 4) neCount += 1;
+          if (isFavorableEasterlyDirection(dir) && spd >= 4) {
+            easterlyCount += 1;
+          }
         }
       } else {
         // Future hour → next-window forecast.
@@ -109,6 +112,7 @@ export async function getOpenMeteo(
   return {
     current,
     hourly,
-    recentNeFraction: validCount > 0 ? neCount / validCount : undefined,
+    recentEasterlyFraction:
+      validCount > 0 ? easterlyCount / validCount : undefined,
   };
 }

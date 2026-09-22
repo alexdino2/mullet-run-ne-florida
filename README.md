@@ -8,7 +8,7 @@ It scores each beach from **free public data** into a transparent **0–100
 opportunity score**, and lets you log sightings alongside it:
 
 - **Wind & air temp** — [National Weather Service API](https://www.weather.gov/documentation/services-web-api) (`api.weather.gov`)
-- **Wind/temp fallback** — [Open-Meteo](https://open-meteo.com/) (free, no key) fills in wind, temperature, recent-NE, and the hourly forecast whenever `api.weather.gov` is unreachable — its edge blocks some datacenter IPs, including Vercel's serverless egress, so this keeps wind (a key signal) always present
+- **Wind/temp fallback** — [Open-Meteo](https://open-meteo.com/) (free, no key) fills in wind, temperature, the recent NE–E pattern, and the hourly forecast whenever `api.weather.gov` is unreachable — its edge blocks some datacenter IPs, including Vercel's serverless egress, so this keeps wind (a key signal) always present
 - **Tides** — [NOAA CO-OPS](https://api.tidesandcurrents.noaa.gov/api/prod/) high/low predictions
 - **Buoys** — [NDBC](https://www.ndbc.noaa.gov/) real-time wind, water temp, and waves
 - **Sightings** — logged manually by you (beach, time, school size, notes, and
@@ -36,11 +36,17 @@ its weight (all pure functions in [`src/lib/score.ts`](src/lib/score.ts)):
 
 | Factor              | Weight | What it rewards |
 | ------------------- | -----: | --------------- |
-| Season window       | 25 | North-to-south migration timing — NE Florida baseline shifts later toward Miami |
-| Wind direction      | 24 | NE (45°) is ideal; N/E decent; onshore-S/offshore-W poor |
-| Recent NE pattern   | 18 | Share of recent buoy hours blowing out of the NE |
-| Tide stage          | 18 | Moving water (falling best, then rising); slack is weaker |
-| Wind speed          | 15 | Moderate 10–17 kt best; calm or blown-out poor |
+| Season window       | 30 | North-to-south migration timing — NE Florida baseline shifts later toward Miami |
+| Wind direction      | 18 | Broad NE-through-E band favored; offshore-W poor |
+| Recent NE–E pattern | 12 | Share of recent hours blowing from NE, ENE, or E |
+| Tide stage          | 22 | Moving water (falling best, then rising); slack is weaker |
+| Wind speed          | 18 | Moderate 10–17 kt best; calm or blown-out poor |
+
+Wind direction is deliberately a secondary heuristic. NE, ENE, and E all have
+an onshore component along Florida's Atlantic coast, and there is not enough
+matched wind-and-sighting data to claim that exact NE is uniquely predictive.
+The broad favorable band and lower combined direction weight avoid encoding
+that unsupported precision; future outcome data can be used to recalibrate it.
 
 > **Sightings are not a scoring factor (yet).** The score is derived from public
 > sources only. Manually logged sightings are still recorded and shown next to
