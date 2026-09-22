@@ -1,0 +1,559 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" width="400" height="320" role="img" aria-labelledby="title desc">
+  <title id="title">Mullet blitz: a school of mullet leaping to escape predators</title>
+  <desc id="desc">Over a hundred silver mullet leap from the Atlantic surf at sunrise, fleeing a tarpon, sharks and jacks chasing them in from the right.</desc>
+
+  <style>
+    .ly { animation: ly var(--dur) var(--delay) infinite; }
+    .lxr { animation: lxr var(--dur) linear var(--delay) infinite; }
+    .sp-in, .sp-out { opacity: 0; }
+    .sp-in { animation: sp-in var(--dur) ease-out var(--delay) infinite; }
+    .sp-out { animation: sp-out var(--dur) ease-out var(--delay) infinite; }
+    .school { animation: scroll 16s linear infinite; }
+    .swim { animation: swim var(--dur) linear var(--delay) infinite; }
+    .ripple { animation: ripple 1.6s ease-in-out var(--delay) infinite alternate; }
+    .glint { animation: glint 3s ease-in-out infinite alternate; }
+    .glint:nth-child(2) { animation-delay: -1s; }
+    .glint:nth-child(3) { animation-delay: -2s; }
+
+    /* Leap: x and pitch are linear, y rises then falls, which traces a parabola.
+       translateX and translateY commute, so x + pitch share one element. */
+    @keyframes lxr {
+      0% { transform: translateX(0) rotate(calc(var(--a) * -1)); }
+      30%, 100% { transform: translateX(var(--dx)) rotate(var(--a)); }
+    }
+    @keyframes ly {
+      0% { transform: translateY(0); animation-timing-function: cubic-bezier(0.33, 0.66, 0.66, 1); }
+      15% { transform: translateY(calc(var(--h) * -1)); animation-timing-function: cubic-bezier(0.33, 0, 0.66, 0.33); }
+      30%, 100% { transform: translateY(0); }
+    }
+    @keyframes sp-in {
+      0% { opacity: 0; transform: scale(0.3); }
+      4% { opacity: 1; transform: scale(0.7); }
+      12%, 100% { opacity: 0; transform: scale(1.15); }
+    }
+    @keyframes sp-out {
+      0%, 25% { opacity: 0; transform: scale(0.3); }
+      28% { opacity: 1; transform: scale(0.75); }
+      37%, 100% { opacity: 0; transform: scale(1.2); }
+    }
+    @keyframes scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-400px); }
+    }
+    @keyframes swim {
+      from { transform: translateX(0); }
+      to { transform: translateX(-560px); }
+    }
+    @keyframes ripple {
+      from { opacity: 0.2; transform: translateX(3px); }
+      to { opacity: 0.85; transform: translateX(-3px); }
+    }
+    @keyframes glint {
+      from { opacity: 0.4; }
+      to { opacity: 1; }
+    }
+
+    /* Reduced motion: hold the first (mid-blitz) frame instead of looping */
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-play-state: paused !important; }
+    }
+  </style>
+
+
+  <defs>
+    <linearGradient id="sky" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="190">
+      <stop offset="0" stop-color="#0a2d44"/>
+      <stop offset="0.45" stop-color="#0f5479"/>
+      <stop offset="0.78" stop-color="#e79a74"/>
+      <stop offset="1" stop-color="#fcd9a8"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff4d6"/>
+      <stop offset="0.45" stop-color="#ffd58a"/>
+      <stop offset="1" stop-color="#ffd58a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0480b6"/>
+      <stop offset="0.4" stop-color="#096694"/>
+      <stop offset="1" stop-color="#0a2d44"/>
+    </linearGradient>
+    <linearGradient id="glint" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffe2b0" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#ffe2b0" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#ffe2b0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="scales" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b4a5e"/>
+      <stop offset="0.38" stop-color="#6f8fa3"/>
+      <stop offset="0.6" stop-color="#d6e3ea"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="tarpon-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c3a48"/>
+      <stop offset="0.3" stop-color="#6d8a96"/>
+      <stop offset="0.55" stop-color="#dfe8ec"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <pattern id="tarpon-scales" width="9" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 8 Q4.5 1 9 8" fill="none" stroke="#1c3a48" stroke-width="0.8" opacity="0.35"/>
+    </pattern>
+    <clipPath id="air"><rect width="400" height="198"/></clipPath>
+
+    <!-- Striped mullet, facing right, ~112 units nose to tail -->
+    <symbol id="mullet" viewBox="-62 -26 118 44" overflow="visible">
+      <path fill="#2b4a5e" d="M-40 0 L-61 -14 Q-55 0 -61 14 Z"/>
+      <path fill="#35566b" d="M-22 -9 L-17 -17 L-12 -9 Z"/>
+      <path fill="#35566b" d="M0 -12 L7 -23 L10 -21 L16 -11 Z"/>
+      <path fill="#35566b" d="M-26 8 L-19 14 L-14 8 Z"/>
+      <path fill="url(#scales)" stroke="#1d3547" stroke-width="0.8"
+        d="M-42 0 C-30 -9 -6 -14 20 -12 C38 -12 50 -8 52 0 C50 7 38 11 20 11 C-6 13 -30 9 -42 0 Z"/>
+      <g fill="none" stroke="#2b4a5e" stroke-width="0.9" stroke-linecap="round" opacity="0.55">
+        <path d="M-34 -3 C-14 -8 10 -9 32 -6"/>
+        <path d="M-36 0 C-14 -4 12 -5 36 -2"/>
+        <path d="M-34 3 C-14 0 12 -1 34 2"/>
+      </g>
+      <path fill="none" stroke="#1d3547" stroke-width="0.9" d="M34 -8 Q30 0 35 8"/>
+      <path fill="#5f7f93" d="M28 1 L16 8 L24 2 Z"/>
+      <circle cx="42" cy="-2.5" r="3.4" fill="#f2f6f8" stroke="#1d3547" stroke-width="0.6"/>
+      <circle cx="42.6" cy="-2.5" r="1.9" fill="#0a1a24"/>
+      <path fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity="0.7" d="M-18 -7 C0 -11 18 -11 34 -7"/>
+    </symbol>
+
+    <!-- Tarpon, facing right, jaws open: big scales, trailing dorsal ray, upturned jaw -->
+    <symbol id="tarpon" viewBox="-104 -64 204 100" overflow="visible">
+      <path fill="#1c3a48" d="M-66 0 L-102 -34 Q-86 0 -102 34 Z"/>
+      <path fill="#2a4a58" d="M-14 -27 L0 -46 Q-18 -54 -44 -60 Q-16 -44 10 -26 Z"/>
+      <path fill="#2a4a58" d="M-34 18 L-28 34 L-12 21 Z"/>
+      <path fill="url(#tarpon-body)" stroke="#12303d" stroke-width="1"
+        d="M-70 0 C-54 -17 -10 -30 34 -28 C58 -27 74 -19 84 -9 L98 -20 L92 -4 L86 0 C80 11 62 21 34 22 C-10 25 -54 16 -70 0 Z"/>
+      <path fill="url(#tarpon-scales)"
+        d="M-60 0 C-46 -14 -10 -25 30 -24 L30 18 C-10 21 -46 13 -60 0 Z"/>
+      <path fill="none" stroke="#12303d" stroke-width="1.2" d="M54 -22 Q46 -2 56 16"/>
+      <path fill="#0a1a24" d="M84 -9 L98 -20 L92 -4 Z" opacity="0.6"/>
+      <path fill="#6d8a96" d="M50 6 L30 18 L44 5 Z"/>
+      <circle cx="70" cy="-11" r="6" fill="#f6f1e0" stroke="#12303d" stroke-width="0.8"/>
+      <circle cx="71" cy="-11" r="3.4" fill="#0a1a24"/>
+      <path fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" opacity="0.6" d="M-30 -18 C0 -24 30 -24 52 -19"/>
+    </symbol>
+
+    <!-- Shark dorsal + tail fin, heading left, with wake -->
+    <symbol id="shark" viewBox="-4 -36 80 40" overflow="visible">
+      <path fill="#0d2230" d="M0 2 C3 -14 9 -26 18 -33 C17 -19 21 -8 32 2 Z"/>
+      <path fill="#0d2230" d="M60 2 L66 -12 L68 -2 L72 2 Z"/>
+      <g fill="none" stroke="#e6f7fd" stroke-width="1.4" stroke-linecap="round" opacity="0.8">
+        <path d="M-2 2 Q14 -3 34 2"/>
+        <path d="M30 4 L60 8"/>
+        <path d="M28 0 L52 -4"/>
+      </g>
+    </symbol>
+
+    <!-- Splash crown -->
+    <symbol id="splash" viewBox="-30 -30 60 36" overflow="visible">
+      <g fill="#e6f7fd">
+        <path d="M-24 4 Q-18 -10 -14 -20 Q-12 -8 -8 2 Z"/>
+        <path d="M-10 2 Q-6 -16 0 -28 Q4 -14 8 2 Z"/>
+        <path d="M8 2 Q12 -8 16 -18 Q18 -6 24 4 Z"/>
+        <circle cx="-18" cy="-24" r="2"/>
+        <circle cx="-4" cy="-32" r="1.6"/>
+        <circle cx="8" cy="-30" r="2.2"/>
+        <circle cx="20" cy="-22" r="1.6"/>
+      </g>
+      <ellipse cx="0" cy="4" rx="28" ry="4" fill="none" stroke="#e6f7fd" stroke-width="1.6" opacity="0.8"/>
+    </symbol>
+
+    <!-- Underwater silhouettes, facing left -->
+    <path id="shadow" d="M20 0 C12 -5 -6 -6 -16 -4 C-22 -3 -25 -1 -26 0 C-25 1 -22 3 -16 4 C-6 6 12 5 20 0 Z M19 0 L28 -6 L26 0 L28 6 Z"/>
+    <path id="jack" d="M-40 0 C-30 -14 0 -18 24 -12 C34 -9 40 -4 44 0 L60 -16 L54 0 L60 16 L44 0 C40 4 34 9 24 12 C0 18 -30 14 -40 0 Z M-4 -16 L10 -26 L14 -15 Z"/>
+  </defs>
+
+  <!-- Sky and sunrise -->
+  <rect width="400" height="320" fill="url(#sky)"/>
+  <circle cx="300" cy="182" r="70" fill="url(#sun)"/>
+  <circle cx="300" cy="186" r="22" fill="#fff1cf"/>
+  <g fill="none" stroke="#0a2d44" stroke-width="1.6" stroke-linecap="round" opacity="0.7">
+    <path d="M60 58 q6 -6 12 0 q6 -6 12 0"/>
+    <path d="M96 42 q4 -4 8 0 q4 -4 8 0"/>
+    <path d="M340 70 q5 -5 10 0 q5 -5 10 0"/>
+    <path d="M200 30 q4 -4 8 0 q4 -4 8 0"/>
+    <path d="M150 48 q5 -5 10 0 q5 -5 10 0"/>
+  </g>
+
+  <!-- Sea -->
+  <rect y="186" width="400" height="134" fill="url(#sea)"/>
+  <g>
+    <rect x="220" y="188" width="160" height="4" fill="url(#glint)" class="glint"/>
+    <rect x="240" y="196" width="120" height="3" fill="url(#glint)" class="glint"/>
+    <rect x="262" y="204" width="76" height="2" fill="url(#glint)" class="glint"/>
+  </g>
+
+  <!-- The school below, streaming left (two tiles for a seamless loop) -->
+  <g fill="#0a2d44" opacity="0.5"><g class="school">
+    <use href="#shadow" transform="translate(43 257.6) scale(0.81)"/>
+    <use href="#shadow" transform="translate(209.7 213) scale(0.56)"/>
+    <use href="#shadow" transform="translate(104.1 278.6) scale(0.55)"/>
+    <use href="#shadow" transform="translate(389.6 289) scale(0.76)"/>
+    <use href="#shadow" transform="translate(231.7 250.4) scale(0.65)"/>
+    <use href="#shadow" transform="translate(347.7 296) scale(0.97)"/>
+    <use href="#shadow" transform="translate(331.4 254.6) scale(1.00)"/>
+    <use href="#shadow" transform="translate(46.9 283.4) scale(0.89)"/>
+    <use href="#shadow" transform="translate(262.8 230.9) scale(0.49)"/>
+    <use href="#shadow" transform="translate(339.7 254.8) scale(0.96)"/>
+    <use href="#shadow" transform="translate(81.2 251.2) scale(0.94)"/>
+    <use href="#shadow" transform="translate(107.1 300.8) scale(0.91)"/>
+    <use href="#shadow" transform="translate(196.2 261.7) scale(0.93)"/>
+    <use href="#shadow" transform="translate(238 293.5) scale(0.69)"/>
+    <use href="#shadow" transform="translate(341.8 254.3) scale(0.83)"/>
+    <use href="#shadow" transform="translate(27.1 302.6) scale(0.50)"/>
+    <use href="#shadow" transform="translate(213.6 305.9) scale(0.57)"/>
+    <use href="#shadow" transform="translate(303.9 234.2) scale(0.68)"/>
+    <use href="#shadow" transform="translate(379.9 301.1) scale(0.59)"/>
+    <use href="#shadow" transform="translate(43.5 297.1) scale(0.77)"/>
+    <use href="#shadow" transform="translate(91.4 303.5) scale(0.66)"/>
+    <use href="#shadow" transform="translate(257.8 297.6) scale(0.87)"/>
+    <use href="#shadow" transform="translate(245.5 241.7) scale(0.66)"/>
+    <use href="#shadow" transform="translate(66.5 231.6) scale(0.57)"/>
+    <use href="#shadow" transform="translate(19.7 270.2) scale(0.63)"/>
+    <use href="#shadow" transform="translate(90.7 311.4) scale(0.56)"/>
+    <use href="#shadow" transform="translate(89.2 238) scale(0.71)"/>
+    <use href="#shadow" transform="translate(346 267.4) scale(0.55)"/>
+    <use href="#shadow" transform="translate(199 253.3) scale(0.52)"/>
+    <use href="#shadow" transform="translate(163.3 237.6) scale(0.55)"/>
+    <use href="#shadow" transform="translate(14.3 226.9) scale(0.61)"/>
+    <use href="#shadow" transform="translate(158.4 312) scale(0.74)"/>
+    <use href="#shadow" transform="translate(210 234.3) scale(0.75)"/>
+    <use href="#shadow" transform="translate(29.9 282.4) scale(0.55)"/>
+    <use href="#shadow" transform="translate(256.7 268.3) scale(0.67)"/>
+    <use href="#shadow" transform="translate(182.4 290) scale(0.76)"/>
+    <use href="#shadow" transform="translate(191.2 257.5) scale(0.94)"/>
+    <use href="#shadow" transform="translate(273.7 310.6) scale(0.66)"/>
+    <use href="#shadow" transform="translate(32.4 219.2) scale(1.00)"/>
+    <use href="#shadow" transform="translate(123.9 216.8) scale(0.67)"/>
+    <use href="#shadow" transform="translate(80.1 232.7) scale(0.91)"/>
+    <use href="#shadow" transform="translate(345.9 273) scale(0.63)"/>
+    <use href="#shadow" transform="translate(36.9 243.2) scale(0.97)"/>
+    <use href="#shadow" transform="translate(18.2 214.1) scale(0.56)"/>
+    <use href="#shadow" transform="translate(294.5 245.6) scale(0.46)"/>
+    <use href="#shadow" transform="translate(372.1 291) scale(0.48)"/>
+    <use href="#shadow" transform="translate(66.3 273.8) scale(0.96)"/>
+    <use href="#shadow" transform="translate(331.2 258.5) scale(0.54)"/>
+    <use href="#shadow" transform="translate(132.4 305.9) scale(0.68)"/>
+    <use href="#shadow" transform="translate(388.2 285.9) scale(0.92)"/>
+    <use href="#shadow" transform="translate(299.6 288.9) scale(0.55)"/>
+    <use href="#shadow" transform="translate(202.9 248.5) scale(0.58)"/>
+    <use href="#shadow" transform="translate(9.2 227.4) scale(0.83)"/>
+    <use href="#shadow" transform="translate(323.6 278) scale(0.81)"/>
+    <use href="#shadow" transform="translate(131.6 258.7) scale(0.55)"/>
+    <use href="#shadow" transform="translate(371.8 279.8) scale(0.98)"/>
+    <use href="#shadow" transform="translate(343.8 217.6) scale(0.64)"/>
+    <use href="#shadow" transform="translate(11.3 278.4) scale(0.70)"/>
+    <use href="#shadow" transform="translate(317 237.1) scale(0.57)"/>
+    <use href="#shadow" transform="translate(150.6 215.5) scale(0.90)"/>
+    <use href="#shadow" transform="translate(443 257.6) scale(0.81)"/>
+    <use href="#shadow" transform="translate(609.7 213) scale(0.56)"/>
+    <use href="#shadow" transform="translate(504.1 278.6) scale(0.55)"/>
+    <use href="#shadow" transform="translate(789.6 289) scale(0.76)"/>
+    <use href="#shadow" transform="translate(631.7 250.4) scale(0.65)"/>
+    <use href="#shadow" transform="translate(747.7 296) scale(0.97)"/>
+    <use href="#shadow" transform="translate(731.4 254.6) scale(1.00)"/>
+    <use href="#shadow" transform="translate(446.9 283.4) scale(0.89)"/>
+    <use href="#shadow" transform="translate(662.8 230.9) scale(0.49)"/>
+    <use href="#shadow" transform="translate(739.7 254.8) scale(0.96)"/>
+    <use href="#shadow" transform="translate(481.2 251.2) scale(0.94)"/>
+    <use href="#shadow" transform="translate(507.1 300.8) scale(0.91)"/>
+    <use href="#shadow" transform="translate(596.2 261.7) scale(0.93)"/>
+    <use href="#shadow" transform="translate(638 293.5) scale(0.69)"/>
+    <use href="#shadow" transform="translate(741.8 254.3) scale(0.83)"/>
+    <use href="#shadow" transform="translate(427.1 302.6) scale(0.50)"/>
+    <use href="#shadow" transform="translate(613.6 305.9) scale(0.57)"/>
+    <use href="#shadow" transform="translate(703.9 234.2) scale(0.68)"/>
+    <use href="#shadow" transform="translate(779.9 301.1) scale(0.59)"/>
+    <use href="#shadow" transform="translate(443.5 297.1) scale(0.77)"/>
+    <use href="#shadow" transform="translate(491.4 303.5) scale(0.66)"/>
+    <use href="#shadow" transform="translate(657.8 297.6) scale(0.87)"/>
+    <use href="#shadow" transform="translate(645.5 241.7) scale(0.66)"/>
+    <use href="#shadow" transform="translate(466.5 231.6) scale(0.57)"/>
+    <use href="#shadow" transform="translate(419.7 270.2) scale(0.63)"/>
+    <use href="#shadow" transform="translate(490.7 311.4) scale(0.56)"/>
+    <use href="#shadow" transform="translate(489.2 238) scale(0.71)"/>
+    <use href="#shadow" transform="translate(746 267.4) scale(0.55)"/>
+    <use href="#shadow" transform="translate(599 253.3) scale(0.52)"/>
+    <use href="#shadow" transform="translate(563.3 237.6) scale(0.55)"/>
+    <use href="#shadow" transform="translate(414.3 226.9) scale(0.61)"/>
+    <use href="#shadow" transform="translate(558.4 312) scale(0.74)"/>
+    <use href="#shadow" transform="translate(610 234.3) scale(0.75)"/>
+    <use href="#shadow" transform="translate(429.9 282.4) scale(0.55)"/>
+    <use href="#shadow" transform="translate(656.7 268.3) scale(0.67)"/>
+    <use href="#shadow" transform="translate(582.4 290) scale(0.76)"/>
+    <use href="#shadow" transform="translate(591.2 257.5) scale(0.94)"/>
+    <use href="#shadow" transform="translate(673.7 310.6) scale(0.66)"/>
+    <use href="#shadow" transform="translate(432.4 219.2) scale(1.00)"/>
+    <use href="#shadow" transform="translate(523.9 216.8) scale(0.67)"/>
+    <use href="#shadow" transform="translate(480.1 232.7) scale(0.91)"/>
+    <use href="#shadow" transform="translate(745.9 273) scale(0.63)"/>
+    <use href="#shadow" transform="translate(436.9 243.2) scale(0.97)"/>
+    <use href="#shadow" transform="translate(418.2 214.1) scale(0.56)"/>
+    <use href="#shadow" transform="translate(694.5 245.6) scale(0.46)"/>
+    <use href="#shadow" transform="translate(772.1 291) scale(0.48)"/>
+    <use href="#shadow" transform="translate(466.3 273.8) scale(0.96)"/>
+    <use href="#shadow" transform="translate(731.2 258.5) scale(0.54)"/>
+    <use href="#shadow" transform="translate(532.4 305.9) scale(0.68)"/>
+    <use href="#shadow" transform="translate(788.2 285.9) scale(0.92)"/>
+    <use href="#shadow" transform="translate(699.6 288.9) scale(0.55)"/>
+    <use href="#shadow" transform="translate(602.9 248.5) scale(0.58)"/>
+    <use href="#shadow" transform="translate(409.2 227.4) scale(0.83)"/>
+    <use href="#shadow" transform="translate(723.6 278) scale(0.81)"/>
+    <use href="#shadow" transform="translate(531.6 258.7) scale(0.55)"/>
+    <use href="#shadow" transform="translate(771.8 279.8) scale(0.98)"/>
+    <use href="#shadow" transform="translate(743.8 217.6) scale(0.64)"/>
+    <use href="#shadow" transform="translate(411.3 278.4) scale(0.70)"/>
+    <use href="#shadow" transform="translate(717 237.1) scale(0.57)"/>
+    <use href="#shadow" transform="translate(550.6 215.5) scale(0.90)"/>
+  </g></g>
+
+  <!-- Jacks chasing through the school -->
+  <g fill="#061c2b" opacity="0.6">
+    <g style="--dur:6.5s;--delay:-0.65s"><g class="swim"><use href="#jack" transform="translate(470 232) scale(0.7)"/></g></g>
+    <g style="--dur:7.8s;--delay:-4.84s"><g class="swim"><use href="#jack" transform="translate(470 262) scale(0.8)"/></g></g>
+    <g style="--dur:5.8s;--delay:-2.03s"><g class="swim"><use href="#jack" transform="translate(470 292) scale(0.65)"/></g></g>
+    <g style="--dur:7.1s;--delay:-5.82s"><g class="swim"><use href="#jack" transform="translate(470 248) scale(0.55)"/></g></g>
+    <g style="--dur:8.6s;--delay:-7.74s"><g class="swim"><use href="#jack" transform="translate(470 282) scale(0.75)"/></g></g>
+  </g>
+
+  <!-- Nervous water over the blitz -->
+  <g fill="none" stroke="#b0e8fb" stroke-width="1.3" stroke-linecap="round">
+    <path class="ripple" style="--delay:-0.26s" d="M203.8 233.5 q6.6 -3.3 13.1 0 t13.1 0"/>
+    <path class="ripple" style="--delay:-1.17s" d="M341.9 244 q3.9 -1.9 7.7 0 t7.7 0"/>
+    <path class="ripple" style="--delay:-0.25s" d="M58.3 212.2 q7.3 -3.7 14.6 0 t14.6 0"/>
+    <path class="ripple" style="--delay:-0.74s" d="M211.6 226.2 q6 -3 12 0 t12 0"/>
+    <path class="ripple" style="--delay:-1.47s" d="M55.7 209.7 q7.4 -3.7 14.8 0 t14.8 0"/>
+    <path class="ripple" style="--delay:-0.20s" d="M93.6 234.8 q6 -3 12 0 t12 0"/>
+    <path class="ripple" style="--delay:-0.18s" d="M213.5 224.8 q6.2 -3.1 12.4 0 t12.4 0"/>
+    <path class="ripple" style="--delay:-0.65s" d="M27.3 247.8 q7.5 -3.8 15.1 0 t15.1 0"/>
+    <path class="ripple" style="--delay:-0.73s" d="M210.4 232.9 q6.3 -3.1 12.5 0 t12.5 0"/>
+    <path class="ripple" style="--delay:-0.91s" d="M303.5 231.1 q4.2 -2.1 8.4 0 t8.4 0"/>
+    <path class="ripple" style="--delay:-0.82s" d="M91.2 207.9 q5 -2.5 10 0 t10 0"/>
+    <path class="ripple" style="--delay:-1.15s" d="M161.7 241 q6.1 -3 12.1 0 t12.1 0"/>
+    <path class="ripple" style="--delay:-0.09s" d="M280.8 243.3 q5.6 -2.8 11.2 0 t11.2 0"/>
+    <path class="ripple" style="--delay:-1.37s" d="M75.7 234.6 q5.8 -2.9 11.6 0 t11.6 0"/>
+    <path class="ripple" style="--delay:-1.09s" d="M22.8 209.2 q6.7 -3.3 13.4 0 t13.4 0"/>
+    <path class="ripple" style="--delay:-0.16s" d="M5.2 212.4 q4.7 -2.3 9.3 0 t9.3 0"/>
+    <path class="ripple" style="--delay:-1.15s" d="M290.3 206.1 q7.2 -3.6 14.5 0 t14.5 0"/>
+    <path class="ripple" style="--delay:-1.24s" d="M156.1 211 q4.7 -2.3 9.4 0 t9.4 0"/>
+    <path class="ripple" style="--delay:-0.04s" d="M233.9 236.9 q4 -2 8 0 t8 0"/>
+    <path class="ripple" style="--delay:-0.38s" d="M338.8 234.7 q7.2 -3.6 14.5 0 t14.5 0"/>
+    <path class="ripple" style="--delay:-0.38s" d="M142.5 213 q7.4 -3.7 14.8 0 t14.8 0"/>
+    <path class="ripple" style="--delay:-0.92s" d="M116.7 217 q6.2 -3.1 12.4 0 t12.4 0"/>
+    <path class="ripple" style="--delay:-0.72s" d="M77.5 242.9 q7.5 -3.8 15.1 0 t15.1 0"/>
+    <path class="ripple" style="--delay:-1.37s" d="M176.4 222.1 q4.8 -2.4 9.5 0 t9.5 0"/>
+    <path class="ripple" style="--delay:-0.85s" d="M337.2 243.9 q4.2 -2.1 8.4 0 t8.4 0"/>
+    <path class="ripple" style="--delay:-0.72s" d="M46.8 222.8 q5.1 -2.6 10.2 0 t10.2 0"/>
+  </g>
+
+  <!-- Shark fins cutting the surface -->
+  <g style="--dur:11.0s;--delay:-1.65s"><g class="swim"><use href="#shark" x="-4" y="-36" width="80" height="40" transform="translate(440 196) scale(1.0)"/></g></g>
+  <g style="--dur:14.0s;--delay:-9.80s"><g class="swim"><use href="#shark" x="-4" y="-36" width="80" height="40" transform="translate(440 196) scale(0.75)"/></g></g>
+
+  <!-- Splashes, timed to each fish leaving and re-entering the water -->
+  <g>
+    <g style="--dur:2.97s;--delay:-2.52s"><g transform="translate(303.5 193) scale(0.77)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(266.8 193) scale(0.77)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.73s;--delay:-1.38s"><g transform="translate(79 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(19.8 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.98s;--delay:-1.18s"><g transform="translate(412.7 193) scale(0.72)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(348.9 193) scale(0.72)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.91s;--delay:-1.52s"><g transform="translate(126.4 193) scale(0.78)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(84.6 193) scale(0.78)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.47s;--delay:-2.10s"><g transform="translate(273.8 193) scale(0.68)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(227.8 193) scale(0.68)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.79s;--delay:-1.85s"><g transform="translate(352.2 193) scale(0.78)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(298.3 193) scale(0.78)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.39s;--delay:-1.83s"><g transform="translate(53.6 193) scale(0.73)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(-2.8 193) scale(0.73)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.71s;--delay:-0.44s"><g transform="translate(287.2 193) scale(0.68)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(240.9 193) scale(0.68)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.72s;--delay:-1.70s"><g transform="translate(299.2 193) scale(0.76)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(255.3 193) scale(0.76)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.62s;--delay:-2.51s"><g transform="translate(323.7 193) scale(0.7)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(265 193) scale(0.7)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.33s;--delay:-1.64s"><g transform="translate(241.2 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(192.5 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.72s;--delay:-0.72s"><g transform="translate(235.3 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(187.2 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.93s;--delay:-2.75s"><g transform="translate(241.8 193) scale(0.76)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(182.5 193) scale(0.76)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.98s;--delay:-2.51s"><g transform="translate(282.3 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(220.8 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.16s;--delay:-2.87s"><g transform="translate(245.2 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(203.1 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.42s;--delay:-0.30s"><g transform="translate(208.1 193) scale(0.73)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(167 193) scale(0.73)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.43s;--delay:-1.09s"><g transform="translate(274.7 193) scale(0.74)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(211 193) scale(0.74)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.89s;--delay:-1.84s"><g transform="translate(404.7 193) scale(0.71)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(344 193) scale(0.71)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.16s;--delay:-1.44s"><g transform="translate(400.4 193) scale(0.77)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(345 193) scale(0.77)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.80s;--delay:-0.09s"><g transform="translate(230.8 193) scale(0.77)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(186.4 193) scale(0.77)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.71s;--delay:-0.92s"><g transform="translate(245.1 193) scale(0.77)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(185.5 193) scale(0.77)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.46s;--delay:-1.95s"><g transform="translate(295.9 193) scale(0.71)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(244.9 193) scale(0.71)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.59s;--delay:-2.86s"><g transform="translate(387.1 193) scale(0.66)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(338.3 193) scale(0.66)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.81s;--delay:-1.94s"><g transform="translate(235.6 193) scale(0.78)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(179.1 193) scale(0.78)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.56s;--delay:-0.30s"><g transform="translate(61.7 193) scale(0.73)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(-0.9 193) scale(0.73)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.20s;--delay:-2.51s"><g transform="translate(316 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(274.2 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.70s;--delay:-1.37s"><g transform="translate(290.9 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(228.3 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.72s;--delay:-1.16s"><g transform="translate(148.3 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(107.1 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.36s;--delay:-2.24s"><g transform="translate(377 193) scale(0.7)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(344.5 193) scale(0.7)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.44s;--delay:-1.33s"><g transform="translate(22.7 193) scale(0.79)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(-14.6 193) scale(0.79)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.37s;--delay:-1.74s"><g transform="translate(239.2 193) scale(0.7)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(205.1 193) scale(0.7)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.38s;--delay:-1.77s"><g transform="translate(90.2 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(44 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.72s;--delay:-0.81s"><g transform="translate(338 193) scale(0.66)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(277.6 193) scale(0.66)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.59s;--delay:-0.42s"><g transform="translate(93.9 193) scale(0.67)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(49.7 193) scale(0.67)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.39s;--delay:-0.83s"><g transform="translate(403.4 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(347.4 193) scale(0.75)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.88s;--delay:-3.44s"><g transform="translate(136.3 193) scale(0.71)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(77.4 193) scale(0.71)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.72s;--delay:-2.01s"><g transform="translate(298.2 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(247.8 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.96s;--delay:-1.65s"><g transform="translate(299.9 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(245.1 193) scale(0.69)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.35s;--delay:-1.62s"><g transform="translate(273.6 193) scale(0.71)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(230.5 193) scale(0.71)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.65s;--delay:-2.15s"><g transform="translate(363.9 193) scale(0.7)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(309.3 193) scale(0.7)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.47s;--delay:-1.80s"><g transform="translate(405.9 193) scale(0.78)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(362.3 193) scale(0.78)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.07s;--delay:-1.93s"><g transform="translate(338 193) scale(0.7)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(303.3 193) scale(0.7)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.80s;--delay:-2.61s"><g transform="translate(83.4 193) scale(0.71)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(44.9 193) scale(0.71)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.27s;--delay:-2.61s"><g transform="translate(37.5 193) scale(0.74)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(-12 193) scale(0.74)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.70s;--delay:-2.49s"><g transform="translate(318.9 193) scale(0.87)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(238.2 193) scale(0.87)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.73s;--delay:-1.62s"><g transform="translate(388.2 193) scale(0.93)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(314.9 193) scale(0.93)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.11s;--delay:-0.33s"><g transform="translate(24.2 193) scale(0.86)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(-32.7 193) scale(0.86)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.05s;--delay:-2.57s"><g transform="translate(271.8 193) scale(0.84)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(208.2 193) scale(0.84)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.84s;--delay:-2.41s"><g transform="translate(70.4 193) scale(0.92)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(7.3 193) scale(0.92)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.48s;--delay:-3.43s"><g transform="translate(369.3 193) scale(0.94)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(290.3 193) scale(0.94)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.17s;--delay:-1.63s"><g transform="translate(365.8 193) scale(0.83)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(297.7 193) scale(0.83)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.76s;--delay:-1.71s"><g transform="translate(137.4 193) scale(0.93)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(70.1 193) scale(0.93)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.82s;--delay:-0.45s"><g transform="translate(413.9 193) scale(0.88)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(343.5 193) scale(0.88)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.56s;--delay:-1.77s"><g transform="translate(87.8 193) scale(0.85)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(35.1 193) scale(0.85)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.60s;--delay:-1.29s"><g transform="translate(284.2 193) scale(0.95)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(202.6 193) scale(0.95)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.89s;--delay:-1.49s"><g transform="translate(257.3 193) scale(0.86)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(192.3 193) scale(0.86)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.05s;--delay:-1.04s"><g transform="translate(321.4 193) scale(0.94)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(242.4 193) scale(0.94)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.09s;--delay:-3.03s"><g transform="translate(271.9 193) scale(0.99)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(215.1 193) scale(0.99)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.84s;--delay:-0.49s"><g transform="translate(409.1 193) scale(0.89)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(350.1 193) scale(0.89)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.37s;--delay:-3.30s"><g transform="translate(286.8 193) scale(0.86)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(225.5 193) scale(0.86)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.94s;--delay:-1.16s"><g transform="translate(91.1 193) scale(0.98)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(34.6 193) scale(0.98)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.04s;--delay:-0.55s"><g transform="translate(286.5 193) scale(0.92)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(210.7 193) scale(0.92)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:3.24s;--delay:-2.76s"><g transform="translate(123.4 193) scale(0.9)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(56 193) scale(0.9)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:2.70s;--delay:-0.35s"><g transform="translate(60.2 193) scale(0.9)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(-19.3 193) scale(0.9)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:5.20s;--delay:-0.42s"><g transform="translate(405 193) scale(1.9)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(285 193) scale(1.9)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+    <g style="--dur:6.70s;--delay:-3.69s"><g transform="translate(239 193) scale(1.9)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-in"/></g><g transform="translate(151 193) scale(1.9)"><use href="#splash" x="-30" y="-30" width="60" height="36" class="sp-out"/></g></g>
+  </g>
+
+  <!-- Leaping fish, back to front, clipped at the waterline -->
+  <g clip-path="url(#air)">
+    <!-- far -->
+    <g transform="translate(226.7 216.3) scale(-1 1)" style="--dx:37.7px;--h:48.4px;--a:49.3deg;--dur:2.31s;--delay:-0.29s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.20)"/></g></g></g>
+    <g transform="translate(204.3 216.9) scale(-1 1)" style="--dx:39.8px;--h:80.8px;--a:50.6deg;--dur:3.25s;--delay:-0.21s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.21)"/></g></g></g>
+    <g transform="translate(395.6 219.1) scale(-1 1)" style="--dx:44.3px;--h:62.7px;--a:54.5deg;--dur:3.25s;--delay:-2.52s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.24)"/></g></g></g>
+    <g transform="translate(70.4 217.2) scale(-1 1)" style="--dx:34.3px;--h:96.7px;--a:49.8deg;--dur:3.81s;--delay:-3.27s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.21)"/></g></g></g>
+    <g transform="translate(236.4 215.5) scale(-1 1)" style="--dx:47.6px;--h:79.4px;--a:44.9deg;--dur:3.22s;--delay:-0.85s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.19)"/></g></g></g>
+    <g transform="translate(146.4 216.8) scale(-1 1)" style="--dx:29.8px;--h:55.9px;--a:54.2deg;--dur:2.71s;--delay:-2.44s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.21)"/></g></g></g>
+    <g transform="translate(216.4 218.9) scale(-1 1)" style="--dx:32.4px;--h:90.5px;--a:48.4deg;--dur:3.39s;--delay:-0.43s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.24)"/></g></g></g>
+    <g transform="translate(403.8 219.2) scale(-1 1)" style="--dx:47.4px;--h:47.8px;--a:50.2deg;--dur:2.36s;--delay:-0.71s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.25)"/></g></g></g>
+    <g transform="translate(43.9 218.5) scale(-1 1)" style="--dx:35.6px;--h:76.8px;--a:56.2deg;--dur:3.09s;--delay:-0.01s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.23)"/></g></g></g>
+    <g transform="translate(427.3 221.2) scale(-1 1)" style="--dx:49.7px;--h:67.1px;--a:49.6deg;--dur:2.41s;--delay:-1.69s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.28)"/></g></g></g>
+    <g transform="translate(345.5 219) scale(-1 1)" style="--dx:32.7px;--h:82.3px;--a:50.5deg;--dur:3.11s;--delay:-1.00s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.24)"/></g></g></g>
+    <g transform="translate(216.1 216.4) scale(-1 1)" style="--dx:39.9px;--h:92.7px;--a:57.8deg;--dur:3.01s;--delay:-0.25s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.20)"/></g></g></g>
+    <g transform="translate(264.7 219) scale(-1 1)" style="--dx:35.2px;--h:58.6px;--a:44deg;--dur:3.50s;--delay:-0.73s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.24)"/></g></g></g>
+    <g transform="translate(331.9 219.5) scale(-1 1)" style="--dx:28.6px;--h:57.7px;--a:55deg;--dur:3.63s;--delay:-1.83s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.25)"/></g></g></g>
+    <g transform="translate(28.2 218.2) scale(-1 1)" style="--dx:33.5px;--h:96.2px;--a:53.5deg;--dur:2.69s;--delay:-1.80s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.23)"/></g></g></g>
+    <g transform="translate(62.3 220.7) scale(-1 1)" style="--dx:49.4px;--h:89.9px;--a:55.9deg;--dur:3.88s;--delay:-0.79s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.27)"/></g></g></g>
+    <g transform="translate(420 216.6) scale(-1 1)" style="--dx:47.5px;--h:91px;--a:44.6deg;--dur:3.39s;--delay:-0.02s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.20)"/></g></g></g>
+    <g transform="translate(203.1 214.7) scale(-1 1)" style="--dx:30px;--h:91.4px;--a:58deg;--dur:3.12s;--delay:-2.77s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.17)"/></g></g></g>
+    <g transform="translate(303.2 218.5) scale(-1 1)" style="--dx:28.4px;--h:95.1px;--a:56.9deg;--dur:2.97s;--delay:-0.49s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.23)"/></g></g></g>
+    <g transform="translate(320.8 220.3) scale(-1 1)" style="--dx:49.3px;--h:49.6px;--a:49deg;--dur:3.57s;--delay:-0.16s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.26)"/></g></g></g>
+    <g transform="translate(220.3 220.2) scale(-1 1)" style="--dx:38.9px;--h:57.5px;--a:52.4deg;--dur:2.50s;--delay:-1.61s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.26)"/></g></g></g>
+    <g transform="translate(300.1 216) scale(-1 1)" style="--dx:29.6px;--h:89.7px;--a:59.7deg;--dur:3.44s;--delay:-3.35s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.19)"/></g></g></g>
+    <g transform="translate(134.1 213.9) scale(-1 1)" style="--dx:24.1px;--h:49.2px;--a:52.6deg;--dur:2.53s;--delay:-0.93s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.16)"/></g></g></g>
+    <g transform="translate(254.3 219.7) scale(-1 1)" style="--dx:39.1px;--h:63.8px;--a:46deg;--dur:3.79s;--delay:-0.19s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.25)"/></g></g></g>
+    <g transform="translate(353.3 214.2) scale(-1 1)" style="--dx:30.2px;--h:64.4px;--a:57.5deg;--dur:3.69s;--delay:-1.19s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.16)"/></g></g></g>
+    <g transform="translate(355.9 217.2) scale(-1 1)" style="--dx:37.3px;--h:76.2px;--a:59.4deg;--dur:2.47s;--delay:-0.39s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.21)"/></g></g></g>
+    <g transform="translate(393.2 219.2) scale(-1 1)" style="--dx:34px;--h:71.4px;--a:57.7deg;--dur:2.59s;--delay:-2.20s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.25)"/></g></g></g>
+    <g transform="translate(248 220.4) scale(-1 1)" style="--dx:45px;--h:89.3px;--a:48.6deg;--dur:2.60s;--delay:-1.75s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.27)"/></g></g></g>
+    <g transform="translate(247.4 215.8) scale(-1 1)" style="--dx:49.3px;--h:77.4px;--a:52.2deg;--dur:2.60s;--delay:-2.15s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.19)"/></g></g></g>
+    <g transform="translate(52.7 216.9) scale(-1 1)" style="--dx:24.3px;--h:88.9px;--a:47.4deg;--dur:2.33s;--delay:-1.72s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.21)"/></g></g></g>
+    <g transform="translate(130.8 219.5) scale(-1 1)" style="--dx:48px;--h:92.2px;--a:47.9deg;--dur:2.56s;--delay:-0.51s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.25)"/></g></g></g>
+    <g transform="translate(296.6 216) scale(-1 1)" style="--dx:27.6px;--h:68.9px;--a:56.8deg;--dur:3.52s;--delay:-3.39s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.19)"/></g></g></g>
+    <g transform="translate(225.7 215.5) scale(-1 1)" style="--dx:47px;--h:73.3px;--a:44.7deg;--dur:2.67s;--delay:-1.64s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.19)"/></g></g></g>
+    <g transform="translate(333.5 218.8) scale(-1 1)" style="--dx:25.5px;--h:62.9px;--a:50.1deg;--dur:3.67s;--delay:-1.13s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.24)"/></g></g></g>
+    <g transform="translate(219.8 215.7) scale(-1 1)" style="--dx:25.9px;--h:72.3px;--a:53.7deg;--dur:3.02s;--delay:-2.64s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.19)"/></g></g></g>
+    <g transform="translate(148 214) scale(-1 1)" style="--dx:41px;--h:62.2px;--a:53.2deg;--dur:2.95s;--delay:-0.32s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.16)"/></g></g></g>
+    <g transform="translate(227.4 221.1) scale(-1 1)" style="--dx:45.8px;--h:84.1px;--a:57.4deg;--dur:2.54s;--delay:-1.12s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.28)"/></g></g></g>
+    <g transform="translate(104.5 218.3) scale(-1 1)" style="--dx:23.1px;--h:53.1px;--a:58.9deg;--dur:2.34s;--delay:-2.06s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.23)"/></g></g></g>
+    <g transform="translate(293.4 221.2) scale(-1 1)" style="--dx:23.3px;--h:78.1px;--a:47.9deg;--dur:3.26s;--delay:-0.06s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.28)"/></g></g></g>
+    <g transform="translate(325.7 216.8) scale(-1 1)" style="--dx:45.4px;--h:75.4px;--a:53.4deg;--dur:2.31s;--delay:-0.95s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.21)"/></g></g></g>
+    <g transform="translate(209.6 215.4) scale(-1 1)" style="--dx:34.8px;--h:91.8px;--a:47.3deg;--dur:3.85s;--delay:-3.74s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.18)"/></g></g></g>
+    <g transform="translate(161.8 215.3) scale(-1 1)" style="--dx:37.1px;--h:60.5px;--a:50.8deg;--dur:3.02s;--delay:-2.24s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.18)"/></g></g></g>
+    <g transform="translate(136.6 214.1) scale(-1 1)" style="--dx:46.4px;--h:71.7px;--a:48.6deg;--dur:3.02s;--delay:-0.85s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.16)"/></g></g></g>
+    <g transform="translate(349.1 219.1) scale(-1 1)" style="--dx:44.3px;--h:75.4px;--a:46.2deg;--dur:2.42s;--delay:-1.61s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.24)"/></g></g></g>
+    <g transform="translate(355.4 215.9) scale(-1 1)" style="--dx:26.5px;--h:85.1px;--a:56.1deg;--dur:3.22s;--delay:-1.13s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.19)"/></g></g></g>
+    <g transform="translate(44.9 217) scale(-1 1)" style="--dx:23.9px;--h:60.2px;--a:54deg;--dur:2.99s;--delay:-0.87s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.21)"/></g></g></g>
+    <g transform="translate(102.6 214.8) scale(-1 1)" style="--dx:47.1px;--h:45.9px;--a:46.2deg;--dur:3.24s;--delay:-1.70s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.17)"/></g></g></g>
+    <g transform="translate(228.8 217.2) scale(-1 1)" style="--dx:41.1px;--h:79.6px;--a:44.3deg;--dur:3.86s;--delay:-2.10s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.21)"/></g></g></g>
+    <g transform="translate(314.3 217.8) scale(-1 1)" style="--dx:42.3px;--h:69.1px;--a:55.2deg;--dur:2.52s;--delay:-0.87s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.22)"/></g></g></g>
+    <g transform="translate(419 219.1) scale(-1 1)" style="--dx:32.4px;--h:87.4px;--a:57.2deg;--dur:2.63s;--delay:-0.62s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.24)"/></g></g></g>
+    <g transform="translate(413.6 218.1) scale(-1 1)" style="--dx:25.3px;--h:52px;--a:45.9deg;--dur:3.57s;--delay:-2.26s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.23)"/></g></g></g>
+    <g transform="translate(300.7 217.5) scale(-1 1)" style="--dx:49.8px;--h:92.7px;--a:56.8deg;--dur:3.41s;--delay:-2.54s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.22)"/></g></g></g>
+    <g transform="translate(338.9 218.3) scale(-1 1)" style="--dx:43.1px;--h:80.4px;--a:59.5deg;--dur:2.92s;--delay:-1.96s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.23)"/></g></g></g>
+    <g transform="translate(390.3 215.6) scale(-1 1)" style="--dx:31.6px;--h:54.4px;--a:51.9deg;--dur:3.12s;--delay:-0.19s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.19)"/></g></g></g>
+    <g transform="translate(121.8 221.2) scale(-1 1)" style="--dx:26.9px;--h:92.6px;--a:59.5deg;--dur:3.22s;--delay:-1.43s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.28)"/></g></g></g>
+    <g transform="translate(421.4 214.4) scale(-1 1)" style="--dx:30.9px;--h:60.1px;--a:54deg;--dur:3.72s;--delay:-3.57s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.17)"/></g></g></g>
+    <!-- mid -->
+    <g transform="translate(308.1 232.3) scale(-1 1)" style="--dx:45.9px;--h:111.4px;--a:45.5deg;--dur:2.97s;--delay:-2.52s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.46)"/></g></g></g>
+    <g transform="translate(86.4 224.9) scale(-1 1)" style="--dx:74px;--h:134.1px;--a:57.7deg;--dur:3.73s;--delay:-1.38s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.34)"/></g></g></g>
+    <g transform="translate(420.7 227.9) scale(-1 1)" style="--dx:79.8px;--h:134.8px;--a:54.3deg;--dur:2.98s;--delay:-1.18s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.39)"/></g></g></g>
+    <g transform="translate(131.6 233.1) scale(-1 1)" style="--dx:52.3px;--h:123.5px;--a:52deg;--dur:2.91s;--delay:-1.52s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.47)"/></g></g></g>
+    <g transform="translate(279.6 224.6) scale(-1 1)" style="--dx:57.6px;--h:97.2px;--a:47.8deg;--dur:3.47s;--delay:-2.10s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.33)"/></g></g></g>
+    <g transform="translate(358.9 233) scale(-1 1)" style="--dx:67.4px;--h:161.3px;--a:47.5deg;--dur:3.79s;--delay:-1.85s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.47)"/></g></g></g>
+    <g transform="translate(60.7 228.5) scale(-1 1)" style="--dx:70.5px;--h:99.9px;--a:50.8deg;--dur:2.39s;--delay:-1.83s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.39)"/></g></g></g>
+    <g transform="translate(293 224.1) scale(-1 1)" style="--dx:57.9px;--h:133.6px;--a:47.3deg;--dur:2.71s;--delay:-0.44s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.32)"/></g></g></g>
+    <g transform="translate(304.7 231.5) scale(-1 1)" style="--dx:54.9px;--h:135.8px;--a:53deg;--dur:2.72s;--delay:-1.70s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.44)"/></g></g></g>
+    <g transform="translate(331.1 226.5) scale(-1 1)" style="--dx:73.4px;--h:86.5px;--a:53deg;--dur:3.62s;--delay:-2.51s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.36)"/></g></g></g>
+    <g transform="translate(247.2 230.9) scale(-1 1)" style="--dx:60.8px;--h:145px;--a:58.5deg;--dur:3.33s;--delay:-1.64s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.43)"/></g></g></g>
+    <g transform="translate(241.4 225.5) scale(-1 1)" style="--dx:60.2px;--h:94.6px;--a:50.2deg;--dur:2.72s;--delay:-0.72s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.35)"/></g></g></g>
+    <g transform="translate(249.2 231.5) scale(-1 1)" style="--dx:74.2px;--h:105.6px;--a:55.6deg;--dur:2.93s;--delay:-2.75s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.44)"/></g></g></g>
+    <g transform="translate(290 225.4) scale(-1 1)" style="--dx:76.9px;--h:144.5px;--a:46.8deg;--dur:2.98s;--delay:-2.51s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.35)"/></g></g></g>
+    <g transform="translate(250.5 230.7) scale(-1 1)" style="--dx:52.6px;--h:102.5px;--a:46.1deg;--dur:3.16s;--delay:-2.87s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.43)"/></g></g></g>
+    <g transform="translate(213.2 228.6) scale(-1 1)" style="--dx:51.3px;--h:124.4px;--a:55.7deg;--dur:2.42s;--delay:-0.30s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.40)"/></g></g></g>
+    <g transform="translate(282.7 229.5) scale(-1 1)" style="--dx:79.6px;--h:79.6px;--a:52.1deg;--dur:3.43s;--delay:-1.09s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.41)"/></g></g></g>
+    <g transform="translate(412.3 226.7) scale(-1 1)" style="--dx:75.9px;--h:123.2px;--a:47deg;--dur:2.89s;--delay:-1.84s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.37)"/></g></g></g>
+    <g transform="translate(407.4 232.3) scale(-1 1)" style="--dx:69.3px;--h:99.4px;--a:48.8deg;--dur:3.16s;--delay:-1.44s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.46)"/></g></g></g>
+    <g transform="translate(236.4 232.2) scale(-1 1)" style="--dx:55.6px;--h:88.4px;--a:54.5deg;--dur:2.80s;--delay:-0.09s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.45)"/></g></g></g>
+    <g transform="translate(252.6 232.6) scale(-1 1)" style="--dx:74.5px;--h:85px;--a:49.2deg;--dur:3.71s;--delay:-0.92s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.46)"/></g></g></g>
+    <g transform="translate(302.2 226.8) scale(-1 1)" style="--dx:63.7px;--h:143.2px;--a:55.1deg;--dur:3.46s;--delay:-1.95s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.37)"/></g></g></g>
+    <g transform="translate(393.2 223) scale(-1 1)" style="--dx:60.9px;--h:145.3px;--a:46.2deg;--dur:3.59s;--delay:-2.86s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.31)"/></g></g></g>
+    <g transform="translate(242.7 232.9) scale(-1 1)" style="--dx:70.6px;--h:83.3px;--a:48.3deg;--dur:3.81s;--delay:-1.94s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.47)"/></g></g></g>
+    <g transform="translate(69.5 229.1) scale(-1 1)" style="--dx:78.2px;--h:109.4px;--a:56.3deg;--dur:3.56s;--delay:-0.30s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.40)"/></g></g></g>
+    <g transform="translate(321.2 225.6) scale(-1 1)" style="--dx:52.3px;--h:104.6px;--a:48.8deg;--dur:3.20s;--delay:-2.51s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.35)"/></g></g></g>
+    <g transform="translate(298.7 225.2) scale(-1 1)" style="--dx:78.3px;--h:96.8px;--a:44.6deg;--dur:2.70s;--delay:-1.37s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.34)"/></g></g></g>
+    <g transform="translate(153.4 230.6) scale(-1 1)" style="--dx:51.5px;--h:117.7px;--a:47.3deg;--dur:3.72s;--delay:-1.16s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.43)"/></g></g></g>
+    <g transform="translate(381 225.8) scale(-1 1)" style="--dx:40.6px;--h:107.4px;--a:58.5deg;--dur:3.36s;--delay:-2.24s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.35)"/></g></g></g>
+    <g transform="translate(27.4 233.7) scale(-1 1)" style="--dx:46.6px;--h:98.4px;--a:52.7deg;--dur:2.44s;--delay:-1.33s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.48)"/></g></g></g>
+    <g transform="translate(243.5 226.3) scale(-1 1)" style="--dx:42.7px;--h:109.5px;--a:57.2deg;--dur:3.37s;--delay:-1.74s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.36)"/></g></g></g>
+    <g transform="translate(96 230.6) scale(-1 1)" style="--dx:57.8px;--h:100.4px;--a:45.4deg;--dur:2.38s;--delay:-1.77s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.43)"/></g></g></g>
+    <g transform="translate(345.5 222.6) scale(-1 1)" style="--dx:75.4px;--h:137.8px;--a:45.7deg;--dur:2.72s;--delay:-0.81s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.30)"/></g></g></g>
+    <g transform="translate(99.4 223.9) scale(-1 1)" style="--dx:55.3px;--h:99px;--a:50.2deg;--dur:2.59s;--delay:-0.42s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.32)"/></g></g></g>
+    <g transform="translate(410.4 230.7) scale(-1 1)" style="--dx:69.9px;--h:116.2px;--a:52.8deg;--dur:2.39s;--delay:-0.83s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.43)"/></g></g></g>
+    <g transform="translate(143.7 226.9) scale(-1 1)" style="--dx:73.7px;--h:105.7px;--a:59.4deg;--dur:3.88s;--delay:-3.44s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.37)"/></g></g></g>
+    <g transform="translate(304.5 225.2) scale(-1 1)" style="--dx:63.1px;--h:124.5px;--a:51.7deg;--dur:3.72s;--delay:-2.01s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.34)"/></g></g></g>
+    <g transform="translate(306.7 225.5) scale(-1 1)" style="--dx:68.5px;--h:92.8px;--a:49.1deg;--dur:2.96s;--delay:-1.65s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.35)"/></g></g></g>
+    <g transform="translate(279 226.7) scale(-1 1)" style="--dx:53.8px;--h:114.3px;--a:47.6deg;--dur:3.35s;--delay:-1.62s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.37)"/></g></g></g>
+    <g transform="translate(370.7 225.9) scale(-1 1)" style="--dx:68.2px;--h:91.3px;--a:53.3deg;--dur:2.65s;--delay:-2.15s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.35)"/></g></g></g>
+    <g transform="translate(411.4 232.9) scale(-1 1)" style="--dx:54.5px;--h:158.7px;--a:55.2deg;--dur:2.47s;--delay:-1.80s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.47)"/></g></g></g>
+    <g transform="translate(342.3 225.9) scale(-1 1)" style="--dx:43.3px;--h:97.6px;--a:57.1deg;--dur:3.07s;--delay:-1.93s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.35)"/></g></g></g>
+    <g transform="translate(88.2 227) scale(-1 1)" style="--dx:48px;--h:90.4px;--a:47.6deg;--dur:2.80s;--delay:-2.61s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.37)"/></g></g></g>
+    <g transform="translate(43.7 229.8) scale(-1 1)" style="--dx:61.9px;--h:143.3px;--a:47.7deg;--dur:3.27s;--delay:-2.61s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.42)"/></g></g></g>
+    <!-- tarpon -->
+    <g transform="translate(420 258) scale(-1 1)" style="--dx:150px;--h:196px;--a:40deg;--dur:5.20s;--delay:-0.42s"><g class="ly"><g class="lxr"><use href="#tarpon" x="-104" y="-64" width="204" height="100" transform="scale(0.62)"/></g></g></g>
+    <g transform="translate(250 248) scale(-1 1)" style="--dx:110px;--h:152px;--a:42deg;--dur:6.70s;--delay:-3.69s"><g class="ly"><g class="lxr"><use href="#tarpon" x="-104" y="-64" width="204" height="100" transform="scale(0.46)"/></g></g></g>
+    <!-- near -->
+    <g transform="translate(329 241.3) scale(-1 1)" style="--dx:100.8px;--h:147.2px;--a:52deg;--dur:3.70s;--delay:-2.49s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.60)"/></g></g></g>
+    <g transform="translate(397.4 246.7) scale(-1 1)" style="--dx:91.7px;--h:140.5px;--a:48.8deg;--dur:3.73s;--delay:-1.62s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.69)"/></g></g></g>
+    <g transform="translate(31.4 240.2) scale(-1 1)" style="--dx:71.2px;--h:184.2px;--a:46.9deg;--dur:3.11s;--delay:-0.33s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.58)"/></g></g></g>
+    <g transform="translate(279.7 238.6) scale(-1 1)" style="--dx:79.5px;--h:164.4px;--a:48.7deg;--dur:3.05s;--delay:-2.57s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.56)"/></g></g></g>
+    <g transform="translate(78.3 246) scale(-1 1)" style="--dx:78.9px;--h:201.9px;--a:59.9deg;--dur:3.84s;--delay:-2.41s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.68)"/></g></g></g>
+    <g transform="translate(379.1 247.5) scale(-1 1)" style="--dx:98.7px;--h:185.9px;--a:58.9deg;--dur:3.48s;--delay:-3.43s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.70)"/></g></g></g>
+    <g transform="translate(374.3 238) scale(-1 1)" style="--dx:85.1px;--h:130.6px;--a:48.5deg;--dur:3.17s;--delay:-1.63s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.55)"/></g></g></g>
+    <g transform="translate(145.8 246.6) scale(-1 1)" style="--dx:84.1px;--h:186.5px;--a:54.6deg;--dur:2.76s;--delay:-1.71s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.69)"/></g></g></g>
+    <g transform="translate(422.7 242.2) scale(-1 1)" style="--dx:88.1px;--h:156.3px;--a:53.9deg;--dur:3.82s;--delay:-0.45s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.62)"/></g></g></g>
+    <g transform="translate(94.4 239.4) scale(-1 1)" style="--dx:65.8px;--h:183px;--a:57.1deg;--dur:2.56s;--delay:-1.77s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.57)"/></g></g></g>
+    <g transform="translate(294.4 248.3) scale(-1 1)" style="--dx:102px;--h:180.3px;--a:58.3deg;--dur:3.60s;--delay:-1.29s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.71)"/></g></g></g>
+    <g transform="translate(265.4 240.1) scale(-1 1)" style="--dx:81.2px;--h:190.9px;--a:57.2deg;--dur:3.89s;--delay:-1.49s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.58)"/></g></g></g>
+    <g transform="translate(331.3 247.4) scale(-1 1)" style="--dx:98.7px;--h:154.9px;--a:46.4deg;--dur:3.05s;--delay:-1.04s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.70)"/></g></g></g>
+    <g transform="translate(279 252) scale(-1 1)" style="--dx:70.9px;--h:150.9px;--a:56.6deg;--dur:3.09s;--delay:-3.03s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.77)"/></g></g></g>
+    <g transform="translate(416.5 243) scale(-1 1)" style="--dx:73.8px;--h:166.5px;--a:44.4deg;--dur:3.84s;--delay:-0.49s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.63)"/></g></g></g>
+    <g transform="translate(294.5 240.3) scale(-1 1)" style="--dx:76.6px;--h:195.1px;--a:58.2deg;--dur:3.37s;--delay:-3.30s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.58)"/></g></g></g>
+    <g transform="translate(98.2 251.2) scale(-1 1)" style="--dx:70.7px;--h:188px;--a:48.2deg;--dur:2.94s;--delay:-1.16s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.76)"/></g></g></g>
+    <g transform="translate(296 245.3) scale(-1 1)" style="--dx:94.8px;--h:146px;--a:49.9deg;--dur:3.04s;--delay:-0.55s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.67)"/></g></g></g>
+    <g transform="translate(131.9 243.5) scale(-1 1)" style="--dx:84.3px;--h:193.6px;--a:51.1deg;--dur:3.24s;--delay:-2.76s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.64)"/></g></g></g>
+    <g transform="translate(70.1 244.1) scale(-1 1)" style="--dx:99.4px;--h:135.3px;--a:52.8deg;--dur:2.70s;--delay:-0.35s"><g class="ly"><g class="lxr"><use href="#mullet" x="-62" y="-26" width="118" height="44" transform="scale(0.65)"/></g></g></g>
+  </g>
+
+  <!-- Foreground water lip -->
+  <path fill="#0480b6" opacity="0.85" d="M0 196 q20 -6 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 V204 H0 Z"/>
+  <path fill="none" stroke="#d6f3fd" stroke-width="1.4" stroke-linecap="round" opacity="0.8" d="M0 196 q20 -6 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0"/>
+</svg>
