@@ -175,9 +175,8 @@ export default function RootLayout({
                 ))}
               </div>
               <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400">
-                Public data: NWS · NOAA CO-OPS · NDBC. Scores are heuristics, not a
-                guarantee. Regulations change — always confirm current limits with
-                the FWC. Fish responsibly.
+                Scores are heuristics, not a guarantee. Regulations change — always
+                confirm current limits with the FWC. Fish responsibly.
               </p>
             </footer>
           </div>
