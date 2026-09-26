@@ -62,6 +62,7 @@ export const viewport: Viewport = {
 const NAV = [
   { href: "/", label: "Now" },
   { href: "/sightings", label: "Sightings" },
+  { href: "/beaches", label: "Beaches" },
   { href: "/guide", label: "Guide" },
   { href: "/gear", label: "Gear" },
   { href: "/charters", label: "Charters" },
@@ -69,6 +70,7 @@ const NAV = [
 ];
 
 const FOOTER_LINKS = [
+  { href: "/beaches", label: "Beach guides" },
   { href: "/guide/biology", label: "Migration biology" },
   { href: "/guide/locations", label: "Inlet guides" },
   { href: "/guide/regulations", label: "FWC regulations" },

@@ -107,6 +107,9 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: "Northeast Florida",
+        paragraphs: [
+          "Start with the dedicated beach guides for early-season timing:",
+        ],
         bullets: [
           "Mickler's Landing (Ponte Vedra) — the site's priority beach; long, clean surf that loads up early in the season.",
           "Jacksonville Beach & Mayport — pier and jetty structure at the St. Johns River mouth.",
@@ -115,6 +118,9 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: "The Space Coast",
+        paragraphs: [
+          "Mid-corridor choke points — open each beach page for photos, access, and tactics:",
+        ],
         bullets: [
           "Ponce Inlet — a legendary funnel where bait bottlenecks and predators wait.",
           "Cocoa Beach — miles of wadeable surf; watch the bird activity.",
@@ -123,10 +129,19 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: "Treasure Coast & Southeast",
+        paragraphs: [
+          "Later-season stations as pods push south — guides cover Fort Pierce through Miami Beach.",
+        ],
         bullets: [
           "Fort Pierce Inlet — strong current and deep cuts hold big predators.",
           "Jupiter Inlet — clear water and a well-known tarpon corridor.",
           "Fort Lauderdale & Miami Beach — the tail end of the run as pods push south later in fall.",
+        ],
+      },
+      {
+        heading: "Beach-by-beach guides",
+        paragraphs: [
+          "Every station on the live map has its own page with a photo, SEO-ready overview, access notes, and angler tips. Browse the full list on the beaches hub, or jump from a map pin.",
         ],
       },
       {
@@ -136,7 +151,7 @@ export const GUIDES: Guide[] = [
         ],
       },
     ],
-    related: ["tactics", "biology", "charters-guide"],
+    related: ["tactics", "biology", "beaches-hub"],
   },
   {
     slug: "regulations",
@@ -263,6 +278,8 @@ export function relatedLink(
       return { href: "/gear", label: "Mullet Run Gear Guide" };
     case "charters-guide":
       return { href: "/charters", label: "Find a Mullet Run Charter" };
+    case "beaches-hub":
+      return { href: "/beaches", label: "All Mullet Run Beach Guides" };
     default:
       return null;
   }

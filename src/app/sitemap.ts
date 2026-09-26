@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { GUIDES } from "@/lib/content/guides";
+import { BEACH_CONTENT } from "@/lib/content/beaches";
 
 const BASE = "https://floridamulletrun.com";
 
@@ -13,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes = [
     "",
     "/sightings",
+    "/beaches",
     "/guide",
     "/gear",
     "/charters",
@@ -23,7 +25,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: highFrequency.has(path)
       ? ("daily" as const)
       : ("weekly" as const),
-    priority: path === "" ? 1 : path === "/sightings" ? 0.9 : 0.7,
+    priority:
+      path === "" ? 1 : path === "/sightings" ? 0.9 : path === "/beaches" ? 0.85 : 0.7,
+  }));
+
+  const beachRoutes = BEACH_CONTENT.map((b) => ({
+    url: `${BASE}/beaches/${b.slug}`,
+    lastModified: new Date(b.updated),
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
   }));
 
   const guideRoutes = GUIDES.map((g) => ({
@@ -33,5 +43,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...guideRoutes];
+  return [...staticRoutes, ...beachRoutes, ...guideRoutes];
 }

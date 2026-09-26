@@ -54,8 +54,8 @@ export default function GuideHubPage() {
           Ready to get on the fish?
         </h2>
         <p className="mt-1 text-sm text-slate-500">
-          Check live conditions, gear up, or book a captain who’s already on the
-          bait.
+          Check live conditions, open a beach guide, gear up, or book a captain
+          who&apos;s already on the bait.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
@@ -63,6 +63,12 @@ export default function GuideHubPage() {
             className="rounded-lg bg-ocean-600 px-3 py-2 text-xs font-bold text-white hover:bg-ocean-700"
           >
             Live conditions
+          </Link>
+          <Link
+            href="/beaches"
+            className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200"
+          >
+            Beach guides
           </Link>
           <Link
             href="/gear"
