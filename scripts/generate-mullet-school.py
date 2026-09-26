@@ -274,7 +274,7 @@ DEFS = """
 
 def build():
     o = []
-    o.append(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-labelledby="title desc">')
+    o.append(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby="title desc">')
     o.append('  <title id="title">Mullet blitz: a school of mullet leaping to escape predators</title>')
     o.append('  <desc id="desc">Over a hundred silver mullet leap from the Atlantic surf at sunrise, fleeing a tarpon, sharks and jacks chasing them in from the right.</desc>')
     o.append(STYLE)

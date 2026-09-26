@@ -42,3 +42,30 @@ export const FAQ: FaqItem[] = [
       "Watch the water and the sky: nervous, showering bait at the surface and diving birds mean a pod is under attack. On this site, cross-check the live opportunity score for wind, tide, water temperature, and season, then read the crowdsourced sightings for your stretch of coast before you commit to a drive.",
   },
 ];
+
+/**
+ * FAQ tuned for the "Florida mullet tracker" landing page — same facts as
+ * the core FAQ, worded around the live tracker product and how to use it.
+ */
+export const TRACKER_FAQ: FaqItem[] = [
+  {
+    question: "What is the Florida mullet tracker?",
+    answer:
+      "The Florida mullet tracker is a live dashboard for the fall bait migration along Florida's Atlantic coast. It scores each beach from public wind, tide, and buoy data, plots crowdsourced school sightings on a map, and highlights the next best fishing window — from Northeast Florida through the Space Coast and south to Miami.",
+  },
+  {
+    question: "How does the Florida mullet tracker score a beach?",
+    answer:
+      "Each station gets a transparent 0–100 opportunity score built from season timing, wind direction and speed, recent NE-to-E wind pattern, and tide stage. Sightings are shown next to the score but are not part of it yet, so the rating stays grounded in free public data even when reports are sparse.",
+  },
+  {
+    question: "Where are the mullet right now in Florida?",
+    answer:
+      "Open the live migration map on the tracker and scan recent crowd reports station by station. The run moves north to south, so Northeast Florida beaches usually light up first, then Ponce Inlet, Cocoa Beach, Sebastian Inlet, Fort Pierce, Jupiter, and eventually Fort Lauderdale and Miami Beach. Pair the map with each beach's opportunity score before you drive.",
+  },
+  {
+    question: "When should I check the Florida mullet tracker during the run?",
+    answer:
+      "Check in the morning before you leave and again after the first cold front or wind shift. The tracker refreshes coastal conditions throughout the day and surfaces the next best window over the coming ~48 hours, so you can time falling tides and favorable NE-through-E wind instead of guessing from social media alone.",
+  },
+];

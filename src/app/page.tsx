@@ -64,7 +64,13 @@ export default async function DashboardPage({
         <p className="mt-1 text-sm text-slate-500">
           Where are the mullet right now? Live opportunity scores, coastal
           conditions, and crowdsourced sightings tracking the fall migration
-          from Northeast Florida to Miami.
+          from Northeast Florida to Miami.{" "}
+          <Link
+            href="/florida-mullet-tracker"
+            className="font-semibold text-ocean-600 hover:text-ocean-700"
+          >
+            Open the Florida mullet tracker →
+          </Link>
         </p>
       </header>
 
