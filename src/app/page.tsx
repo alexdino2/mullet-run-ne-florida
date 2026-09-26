@@ -14,6 +14,7 @@ import { SightingList } from "@/components/SightingList";
 import { AlertRulesTable } from "@/components/AlertRulesTable";
 import { AdSlot } from "@/components/AdSlot";
 import { FaqSection } from "@/components/FaqSection";
+import { HomeHero } from "@/components/HomeHero";
 import { GUIDES } from "@/lib/content/guides";
 
 export const dynamic = "force-dynamic";
@@ -27,11 +28,27 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionHeading({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+}) {
   return (
-    <h2 className="mb-2 mt-6 text-xs font-bold uppercase tracking-widest text-slate-400">
-      {children}
-    </h2>
+    <div className="mb-3 flex items-end justify-between gap-4">
+      <div>
+        <h2 className="font-display text-lg font-bold tracking-tight text-ocean-950">
+          {title}
+        </h2>
+        {description ? (
+          <p className="mt-0.5 text-sm text-slate-500">{description}</p>
+        ) : null}
+      </div>
+      {action}
+    </div>
   );
 }
 
@@ -56,176 +73,141 @@ export default async function DashboardPage({
   });
 
   return (
-    <div>
-      <header className="mb-4">
-        <h1 className="text-xl font-bold leading-tight text-slate-900">
-          Florida Mullet Run Tracker
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Where are the mullet right now? Live opportunity scores, coastal
-          conditions, and crowdsourced sightings tracking the fall migration
-          from Northeast Florida to Miami.
-        </p>
-      </header>
+    <div className="home-page">
+      <HomeHero />
 
-      <BeachSwitcher beaches={beaches} currentId={selected.id} />
+      <section id="tracker" className="home-section scroll-mt-28">
+        <SectionHeading
+          title="Today’s opportunity"
+          description="Pick a station. Scores refresh from NWS, NOAA tides, and buoy data."
+        />
 
-        <div className="mt-4 flex flex-col items-center">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-slate-900">
-            <Link
-              href={`/beaches/${selected.id}`}
-              className="hover:text-ocean-700"
-            >
+        <BeachSwitcher beaches={beaches} currentId={selected.id} />
+
+        <div className="home-score mt-5">
+          <div className="home-score__meta">
+            <h3 className="font-display text-2xl font-bold tracking-tight text-ocean-950">
               {selected.name}
+            </h3>
+            <p className="mt-1 text-xs text-slate-400">
+              Updated {generated}
+              {data.conditions.sources.length > 0
+                ? ` · ${data.conditions.sources.join(", ")}`
+                : " · sources unavailable"}
+            </p>
+          </div>
+
+          <div className="home-score__gauge">
+            <ScoreGauge score={data.score.score} rating={data.score.rating} />
+          </div>
+
+          <p className="home-score__summary">{data.score.summary}</p>
+        </div>
+
+        <div className="mt-5">
+          <NextWindowCard window={data.nextWindow} />
+        </div>
+      </section>
+
+      <section className="home-section">
+        <SectionHeading
+          title="Live migration map"
+          description="Crowd reports and conditions along Florida’s Atlantic coast."
+          action={
+            <Link
+              href="/sightings"
+              className="shrink-0 rounded-lg bg-ocean-700 px-3 py-2 text-xs font-bold text-white hover:bg-ocean-800"
+            >
+              Report bait
             </Link>
-          </h2>
-          {selected.id === "micklers" && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
-              ★ Priority
-            </span>
-          )}
-        </div>
-        <p className="text-xs text-slate-400">
-          Updated {generated} · sources: {data.conditions.sources.join(", ") || "none available"}
-          {" · "}
-          <Link
-            href={`/beaches/${selected.id}`}
-            className="font-medium text-ocean-600 hover:text-ocean-700"
-          >
-            beach guide
-          </Link>
-        </p>
-
-        <div className="mt-3">
-          <ScoreGauge score={data.score.score} rating={data.score.rating} />
-        </div>
-        <p className="mt-2 max-w-xs text-center text-sm font-medium text-slate-600">
-          {data.score.summary}
-        </p>
-      </div>
-
-      <div className="mt-5">
-        <NextWindowCard window={data.nextWindow} />
-      </div>
-
-      <div className="mt-6 flex items-end justify-between gap-4">
-        <div>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
-            Live migration map
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Recent crowd reports and live conditions along Florida’s Atlantic
-            coast.
-          </p>
-        </div>
-        <Link
-          href="/sightings"
-          className="shrink-0 rounded-lg bg-ocean-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-ocean-700"
-        >
-          + Report bait
-        </Link>
-      </div>
-      <div className="mt-3">
+          }
+        />
         <MapSection />
-      </div>
+      </section>
 
       <AdSlot label="Advertisement" />
 
-      <SectionTitle>Current conditions</SectionTitle>
-      <ConditionsGrid conditions={data.conditions} />
+      <section className="home-section">
+        <SectionHeading
+          title="Current conditions"
+          description={`What’s driving the score at ${selected.name}.`}
+        />
+        <ConditionsGrid conditions={data.conditions} />
+      </section>
 
-      <SectionTitle>Why this score</SectionTitle>
-      <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-        <ScoreBreakdown components={data.score.components} />
-      </div>
+      <section className="home-section">
+        <SectionHeading title="Why this score" />
+        <div className="rounded-xl bg-white/80 p-4 ring-1 ring-ocean-100 backdrop-blur-sm">
+          <ScoreBreakdown components={data.score.components} />
+        </div>
+      </section>
 
-      <div className="mt-6 flex items-center justify-between">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
-          Recent sightings · {selected.name}
-        </h2>
-        <Link
-          href="/sightings"
-          className="text-xs font-semibold text-ocean-600 hover:text-ocean-700"
-        >
-          Add / view all →
-        </Link>
-      </div>
-      <div className="mt-2">
+      <section className="home-section">
+        <SectionHeading
+          title={`Recent sightings · ${selected.name}`}
+          action={
+            <Link
+              href="/sightings"
+              className="text-xs font-semibold text-ocean-700 hover:text-ocean-800"
+            >
+              View all →
+            </Link>
+          }
+        />
         <SightingList
           sightings={data.recentSightings}
           beaches={beaches}
           emptyHint="No sightings logged here yet — be the first to report a school."
         />
-      </div>
+      </section>
 
-      <SectionTitle>Learn the run</SectionTitle>
-      <div className="grid grid-cols-2 gap-3">
-        <Link
-          href="/beaches"
-          className="group col-span-2 rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100 transition hover:ring-ocean-300"
-        >
-          <div className="flex items-center gap-1.5">
-            <span aria-hidden>🏖️</span>
-            <span className="text-[10px] font-bold uppercase tracking-wide text-ocean-600">
-              Locations
-            </span>
-          </div>
-          <p className="mt-1 text-sm font-bold leading-snug text-slate-900 group-hover:text-ocean-700">
-            Beach-by-beach mullet run guides
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            Photos, access tips, and tactics for every station on the map.
-          </p>
-        </Link>
-        {GUIDES.map((g) => (
-          <Link
-            key={g.slug}
-            href={`/guide/${g.slug}`}
-            className="group rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100 transition hover:ring-ocean-300"
-          >
-            <div className="flex items-center gap-1.5">
-              <span aria-hidden>{g.emoji}</span>
-              <span className="text-[10px] font-bold uppercase tracking-wide text-ocean-600">
+      <section className="home-section">
+        <SectionHeading
+          title="Learn the run"
+          description="Biology, inlets, regulations, and tactics for the fall migration."
+        />
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {GUIDES.map((g) => (
+            <Link
+              key={g.slug}
+              href={`/guide/${g.slug}`}
+              className="group border-b border-ocean-100 py-3 transition hover:border-ocean-300 sm:border sm:rounded-xl sm:border-ocean-100 sm:bg-white/70 sm:px-4 sm:py-3 sm:hover:border-ocean-300"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-wider text-ocean-600">
                 {g.category}
               </span>
-            </div>
-            <p className="mt-1 text-sm font-bold leading-snug text-slate-900 group-hover:text-ocean-700">
-              {g.title}
-            </p>
-          </Link>
-        ))}
-      </div>
+              <p className="mt-0.5 font-display text-base font-bold leading-snug text-ocean-950 group-hover:text-ocean-700">
+                {g.title}
+              </p>
+            </Link>
+          ))}
+        </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-3">
-        <Link
-          href="/gear"
-          className="rounded-xl bg-ocean-600 p-3 text-center text-xs font-bold text-white shadow-sm hover:bg-ocean-700"
-        >
-          🎣 Gear
-        </Link>
-        <Link
-          href="/charters"
-          className="rounded-xl bg-ocean-600 p-3 text-center text-xs font-bold text-white shadow-sm hover:bg-ocean-700"
-        >
-          ⛵ Charters
-        </Link>
-        <Link
-          href="/insider"
-          className="rounded-xl bg-amber-500 p-3 text-center text-xs font-bold text-white shadow-sm hover:bg-amber-600"
-        >
-          ★ Insider
-        </Link>
-      </div>
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
+          <Link href="/beaches" className="text-ocean-700 hover:text-ocean-900">
+            Beach guides
+          </Link>
+          <Link href="/gear" className="text-ocean-700 hover:text-ocean-900">
+            Gear
+          </Link>
+          <Link href="/charters" className="text-ocean-700 hover:text-ocean-900">
+            Charters
+          </Link>
+          <Link href="/insider" className="text-amber-700 hover:text-amber-800">
+            Insider
+          </Link>
+        </div>
+      </section>
 
       <FaqSection heading="Where are the mullet? FAQ" />
 
-      <SectionTitle>Alert rules (for future notifications)</SectionTitle>
-      <AlertRulesTable rules={rules} beaches={beaches} />
-      <p className="mt-2 text-xs text-slate-400">
-        These rules define when notifications will fire once a delivery channel
-        is connected. The hourly refresh already evaluates them.
-      </p>
+      <section className="home-section home-section--muted">
+        <SectionHeading
+          title="Alert rules"
+          description="Evaluated hourly; delivery channels come next."
+        />
+        <AlertRulesTable rules={rules} beaches={beaches} />
+      </section>
     </div>
   );
 }

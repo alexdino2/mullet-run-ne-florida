@@ -23,7 +23,20 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-system)", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: [
+          "var(--font-body)",
+          "var(--font-system)",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+        display: [
+          "var(--font-display)",
+          "var(--font-body)",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
       },
     },
   },
