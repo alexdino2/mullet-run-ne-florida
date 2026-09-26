@@ -5,17 +5,266 @@
 :root {
   --font-system: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
+  --surface-wash: linear-gradient(
+    180deg,
+    #e8f4fa 0%,
+    #f1f7fa 28%,
+    #f8fafc 100%
+  );
+  --hero-min-height: min(88vh, 720px);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply text-slate-900 antialiased;
+  background: var(--surface-wash);
+  font-family: var(--font-body), var(--font-system), sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-body), var(--font-system),
+    sans-serif;
 }
 
 /* Keep the Leaflet map controls above nothing weird and sized for touch. */
 .leaflet-container {
-  font-family: var(--font-system);
+  font-family: var(--font-body), var(--font-system);
+}
+
+/* ——— Home page ——— */
+
+.home-page {
+  position: relative;
+}
+
+.home-section {
+  margin-top: 2.25rem;
+}
+
+.home-section--muted {
+  opacity: 0.92;
+}
+
+.home-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: home-rise 0.7s var(--ease-out-soft) both;
+  animation-delay: 0.05s;
+}
+
+.home-score__meta {
+  max-width: 20rem;
+}
+
+.home-score__gauge {
+  margin-top: 0.75rem;
+  animation: home-gauge-in 0.9s var(--ease-out-soft) both;
+  animation-delay: 0.15s;
+}
+
+.home-score__summary {
+  margin-top: 0.75rem;
+  max-width: 22rem;
+  font-size: 0.925rem;
+  line-height: 1.45;
+  color: #475569;
+}
+
+/* ——— Hero ——— */
+
+.home-hero {
+  min-height: var(--hero-min-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: linear-gradient(180deg, #0a2d44 0%, #0f5479 42%, #c97858 78%, #f0d2a8 100%);
+}
+
+.home-hero__visual {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  /* Match sunrise wash while the SVG iframe paints */
+  background: linear-gradient(
+    180deg,
+    #0a2d44 0%,
+    #0f5479 45%,
+    #d4895f 78%,
+    #f5d9b0 100%
+  );
+}
+
+.home-hero__svg {
+  position: absolute;
+  border: 0;
+  pointer-events: none;
+  /* Cover the plane; SVG viewBox is 400×320 — scale to fill width */
+  left: 50%;
+  top: 46%;
+  width: 118%;
+  height: auto;
+  aspect-ratio: 400 / 320;
+  min-height: 100%;
+  transform: translate(-50%, -50%) scale(1.02);
+  animation: home-visual-settle 1.4s var(--ease-out-soft) both;
+}
+
+.home-hero__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 45, 68, 0.15) 0%,
+    rgba(10, 45, 68, 0.05) 35%,
+    rgba(10, 45, 68, 0.55) 68%,
+    rgba(8, 32, 48, 0.88) 100%
+  );
+}
+
+.home-hero__content {
+  position: relative;
+  z-index: 2;
+  padding: 1.5rem 1rem 2rem;
+  max-width: 28rem;
+}
+
+.home-hero__brand {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(1.85rem, 7vw, 2.65rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(8, 32, 48, 0.25);
+  animation: home-rise 0.8s var(--ease-out-soft) both;
+}
+
+.home-hero__headline {
+  margin-top: 0.65rem;
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(1.15rem, 4.2vw, 1.45rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #d6f3fd;
+  animation: home-rise 0.8s var(--ease-out-soft) 0.1s both;
+}
+
+.home-hero__support {
+  margin-top: 0.55rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(226, 241, 248, 0.88);
+  max-width: 22rem;
+  animation: home-rise 0.8s var(--ease-out-soft) 0.18s both;
+}
+
+.home-hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.15rem;
+  animation: home-rise 0.8s var(--ease-out-soft) 0.26s both;
+}
+
+.home-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease, transform 0.2s var(--ease-out-soft);
+}
+
+.home-hero__cta:active {
+  transform: translateY(1px);
+}
+
+.home-hero__cta--primary {
+  background: #fff;
+  color: #0a2d44;
+}
+
+.home-hero__cta--primary:hover {
+  background: #d6f3fd;
+}
+
+.home-hero__cta--ghost {
+  background: transparent;
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+}
+
+.home-hero__cta--ghost:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes home-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-visual-settle {
+  from {
+    opacity: 0.65;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+}
+
+@keyframes home-gauge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (min-width: 640px) {
+  .home-hero__content {
+    padding: 2rem 1.5rem 2.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .home-hero__brand,
+  .home-hero__headline,
+  .home-hero__support,
+  .home-hero__ctas,
+  .home-hero__svg,
+  .home-score,
+  .home-score__gauge {
+    animation: none !important;
+  }
 }

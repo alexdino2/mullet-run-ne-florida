@@ -1,8 +1,21 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import Script from "next/script";
+import { Figtree, Syne } from "next/font/google";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
 import "./globals.css";
+
+const figtree = Figtree({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const syne = Syne({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://floridamulletrun.com"),
@@ -115,7 +128,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${figtree.variable} ${syne.variable}`}>
       <Script
         id="adsbygoogle-init"
         async
@@ -135,14 +148,11 @@ export default function RootLayout({
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
           />
-          <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-slate-50 shadow-sm">
+          <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-transparent shadow-sm ring-1 ring-ocean-900/5">
             <header className="sticky top-0 z-[500] border-b border-ocean-800 bg-ocean-900 text-white">
               <div className="flex items-center justify-between px-4 py-3">
                 <Link href="/" className="flex shrink-0 items-center gap-2">
-                  <span className="text-xl" aria-hidden>
-                    🐟
-                  </span>
-                  <span className="text-base font-bold tracking-tight">
+                  <span className="font-display text-base font-bold tracking-tight">
                     Florida <span className="text-ocean-300">Mullet Run</span>
                   </span>
                 </Link>
