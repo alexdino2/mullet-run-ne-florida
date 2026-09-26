@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { monetization, adsEnabled } from "@/lib/monetization";
 
 interface AdSlotProps {
-  /** AdSense ad-unit id (data-ad-slot). Defaults to `NEXT_PUBLIC_ADS_SLOT`. */
+  /** AdSense ad-unit id (data-ad-slot). Defaults to `monetization.adsSlot`. */
   slot?: string;
   /** Short label describing where the unit lives. */
   label?: string;
@@ -17,12 +17,10 @@ const isDev = process.env.NODE_ENV !== "production";
 /**
  * A single in-page display-ad unit.
  *
- * Renders a responsive AdSense unit when an ad-unit id is available (via the
- * `slot` prop or `NEXT_PUBLIC_ADS_SLOT`). Without one it renders nothing in
- * production — Auto ads, driven by the loader script in the root layout, fill
- * the page instead — and a labeled placeholder in development so the layout
- * stays visible. Swapping in Raptive/Mediavine later only touches this
- * component.
+ * Renders a responsive AdSense unit using the `slot` prop, or the site's
+ * default in-content unit. If ads are ever unconfigured it renders nothing in
+ * production and a labeled placeholder in development. Swapping in
+ * Raptive/Mediavine later only touches this component.
  */
 export function AdSlot({ slot, label = "Advertisement", className }: AdSlotProps) {
   const adSlot = slot ?? monetization.adsSlot;

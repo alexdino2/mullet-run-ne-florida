@@ -21,6 +21,9 @@ function opt(value: string | undefined): string | undefined {
 /** The site's approved Google AdSense publisher (client) id. */
 export const ADSENSE_CLIENT = "ca-pub-4183912956441070";
 
+/** AdSense ad unit "FMR – In-content responsive" (responsive display). */
+export const ADSENSE_IN_CONTENT_SLOT = "2953754323";
+
 export const monetization = {
   /**
    * Display-ad publisher/client ID. Defaults to the approved AdSense account;
@@ -34,11 +37,10 @@ export const monetization = {
 
   /**
    * Default AdSense ad-unit id (`data-ad-slot`) for in-page `<AdSlot>` units.
-   * Until one is created in AdSense → Ads → By ad unit, in-page slots render
-   * nothing and Auto ads (enabled from the AdSense dashboard) place ads
-   * site-wide through the loader script in the root layout.
+   * `NEXT_PUBLIC_ADS_SLOT` overrides it; individual placements can pass their
+   * own `slot` to report separately in AdSense.
    */
-  adsSlot: opt(process.env.NEXT_PUBLIC_ADS_SLOT),
+  adsSlot: opt(process.env.NEXT_PUBLIC_ADS_SLOT) ?? ADSENSE_IN_CONTENT_SLOT,
 
   /** Amazon Associates store tag appended to product/search links. */
   amazonTag: opt(process.env.NEXT_PUBLIC_AMAZON_AFFILIATE_TAG),
