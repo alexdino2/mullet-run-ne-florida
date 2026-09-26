@@ -87,7 +87,7 @@ export default async function DashboardPage({
           )}
         </div>
         <p className="text-xs text-slate-400">
-          Updated {generated} · sources: {data.conditions.sources.join(", ") || "none available"}
+          Updated {generated}
           {" · "}
           <Link
             href={`/beaches/${selected.id}`}
