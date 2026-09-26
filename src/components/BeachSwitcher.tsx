@@ -7,9 +7,12 @@ import type { Beach } from "@/lib/types";
 export function BeachSwitcher({
   beaches,
   currentId,
+  basePath = "/",
 }: {
   beaches: Beach[];
   currentId: string;
+  /** Path that owns the beach query param (e.g. `/florida-mullet-tracker`). */
+  basePath?: string;
 }) {
   const router = useRouter();
   return (
@@ -25,7 +28,7 @@ export function BeachSwitcher({
                   beach_id: b.id,
                   source: "beach_switcher",
                 });
-                router.push(`/?beach=${b.id}`);
+                router.push(`${basePath}?beach=${b.id}`);
               }}
               className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
                 active

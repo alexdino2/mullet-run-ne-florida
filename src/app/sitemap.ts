@@ -7,12 +7,13 @@ const BASE = "https://floridamulletrun.com";
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
-  // Home and the live sightings map change constantly during the run and are
-  // the primary ranking targets, so crawl them more aggressively.
-  const highFrequency = new Set(["", "/sightings"]);
+  // Home, the tracker landing, and the live sightings map change constantly
+  // during the run and are the primary ranking targets.
+  const highFrequency = new Set(["", "/florida-mullet-tracker", "/sightings"]);
 
   const staticRoutes = [
     "",
+    "/florida-mullet-tracker",
     "/sightings",
     "/beaches",
     "/guide",
@@ -26,7 +27,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       ? ("daily" as const)
       : ("weekly" as const),
     priority:
-      path === "" ? 1 : path === "/sightings" ? 0.9 : path === "/beaches" ? 0.85 : 0.7,
+      path === ""
+        ? 1
+        : path === "/florida-mullet-tracker"
+          ? 0.95
+          : path === "/sightings"
+            ? 0.9
+            : path === "/beaches"
+              ? 0.85
+              : 0.7,
   }));
 
   const beachRoutes = BEACH_CONTENT.map((b) => ({

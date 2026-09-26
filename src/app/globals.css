@@ -5,17 +5,271 @@
 :root {
   --font-system: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     Helvetica, Arial, sans-serif;
+  --tracker-surface: linear-gradient(
+    180deg,
+    #e6f3f7 0%,
+    #eef6f9 32%,
+    #f8fafc 100%
+  );
+  --tracker-hero-min-height: min(88vh, 720px);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply text-slate-900 antialiased;
+  font-family: var(--font-body), var(--font-system), sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-body), var(--font-system),
+    sans-serif;
 }
 
 /* Keep the Leaflet map controls above nothing weird and sized for touch. */
 .leaflet-container {
-  font-family: var(--font-system);
+  font-family: var(--font-body), var(--font-system);
+}
+
+/* ——— Florida mullet tracker landing ——— */
+
+.tracker-page {
+  position: relative;
+  margin: -1rem -1rem 0;
+  padding: 0 1rem 1rem;
+  background: var(--tracker-surface);
+}
+
+.tracker-section {
+  margin-top: 2.25rem;
+}
+
+.tracker-section--muted {
+  opacity: 0.92;
+}
+
+.tracker-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: tracker-rise 0.7s var(--ease-out-soft) both;
+  animation-delay: 0.05s;
+}
+
+.tracker-score__meta {
+  max-width: 20rem;
+}
+
+.tracker-score__gauge {
+  margin-top: 0.75rem;
+  animation: tracker-gauge-in 0.9s var(--ease-out-soft) both;
+  animation-delay: 0.15s;
+}
+
+.tracker-score__summary {
+  margin-top: 0.75rem;
+  max-width: 22rem;
+  font-size: 0.925rem;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.tracker-hero {
+  min-height: var(--tracker-hero-min-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  /* Cool Atlantic dusk — teal into deep gulf blue into pale seafoam */
+  background: linear-gradient(
+    180deg,
+    #062536 0%,
+    #0a4a63 38%,
+    #1a7a8c 72%,
+    #b7dce6 100%
+  );
+}
+
+.tracker-hero__visual {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    #062536 0%,
+    #0a4a63 40%,
+    #1a7a8c 74%,
+    #c5e4ec 100%
+  );
+}
+
+.tracker-hero__svg {
+  position: absolute;
+  border: 0;
+  pointer-events: none;
+  left: 50%;
+  top: 46%;
+  width: 118%;
+  height: auto;
+  aspect-ratio: 400 / 320;
+  min-height: 100%;
+  transform: translate(-50%, -50%) scale(1.02);
+  animation: tracker-visual-settle 1.4s var(--ease-out-soft) both;
+}
+
+.tracker-hero__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(6, 37, 54, 0.2) 0%,
+    rgba(6, 37, 54, 0.05) 34%,
+    rgba(6, 37, 54, 0.58) 68%,
+    rgba(4, 28, 42, 0.9) 100%
+  );
+}
+
+.tracker-hero__content {
+  position: relative;
+  z-index: 2;
+  padding: 1.5rem 1rem 2rem;
+  max-width: 28rem;
+}
+
+.tracker-hero__brand {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(1.85rem, 7vw, 2.65rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(4, 28, 42, 0.28);
+  animation: tracker-rise 0.8s var(--ease-out-soft) both;
+}
+
+.tracker-hero__headline {
+  margin-top: 0.65rem;
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(1.15rem, 4.2vw, 1.45rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #b0e8fb;
+  animation: tracker-rise 0.8s var(--ease-out-soft) 0.1s both;
+}
+
+.tracker-hero__support {
+  margin-top: 0.55rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(226, 241, 248, 0.9);
+  max-width: 22rem;
+  animation: tracker-rise 0.8s var(--ease-out-soft) 0.18s both;
+}
+
+.tracker-hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.15rem;
+  animation: tracker-rise 0.8s var(--ease-out-soft) 0.26s both;
+}
+
+.tracker-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    border-color 0.2s ease, transform 0.2s var(--ease-out-soft);
+}
+
+.tracker-hero__cta:active {
+  transform: translateY(1px);
+}
+
+.tracker-hero__cta--primary {
+  background: #fff;
+  color: #062536;
+}
+
+.tracker-hero__cta--primary:hover {
+  background: #d6f3fd;
+}
+
+.tracker-hero__cta--ghost {
+  background: transparent;
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+}
+
+.tracker-hero__cta--ghost:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes tracker-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tracker-visual-settle {
+  from {
+    opacity: 0.65;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+}
+
+@keyframes tracker-gauge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (min-width: 640px) {
+  .tracker-hero__content {
+    padding: 2rem 1.5rem 2.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .tracker-hero__brand,
+  .tracker-hero__headline,
+  .tracker-hero__support,
+  .tracker-hero__ctas,
+  .tracker-hero__svg,
+  .tracker-score,
+  .tracker-score__gauge {
+    animation: none !important;
+  }
 }
