@@ -17,7 +17,6 @@ import { FaqSection } from "@/components/FaqSection";
 import { TrackerHero } from "@/components/TrackerHero";
 import { TRACKER_FAQ } from "@/lib/content/faq";
 import { GUIDES } from "@/lib/content/guides";
-import { ratingClasses, ratingLabel } from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -98,7 +97,6 @@ export default async function FloridaMulletTrackerPage({
     hour: "numeric",
     minute: "2-digit",
   });
-  const { hex } = ratingClasses(data.score.rating);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -169,13 +167,7 @@ export default async function FloridaMulletTrackerPage({
             <ScoreGauge score={data.score.score} rating={data.score.rating} />
           </div>
 
-          <p className="tracker-score__summary">
-            <span className="font-semibold" style={{ color: hex }}>
-              {ratingLabel(data.score.rating)}
-            </span>
-            {" — "}
-            {data.score.summary}
-          </p>
+          <p className="tracker-score__summary">{data.score.summary}</p>
         </div>
 
         <div className="mt-5">
