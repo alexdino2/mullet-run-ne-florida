@@ -28,7 +28,7 @@ export function BeachSwitcher({
                   beach_id: b.id,
                   source: "beach_switcher",
                 });
-                router.push(`${basePath}?beach=${b.id}`);
+                router.push(`${basePath}?beach=${b.id}`, { scroll: false });
               }}
               className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
                 active
