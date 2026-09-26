@@ -62,8 +62,7 @@ export default function BeachesHubPage() {
       </div>
 
       <p className="mt-4 text-sm text-slate-600">
-        Content for each beach lives in one editable file so guides stay easy to
-        update. Check{" "}
+        Pick a station for access notes, tactics, and a photo — then check{" "}
         <Link href="/" className="font-semibold text-ocean-600 hover:text-ocean-700">
           live conditions
         </Link>{" "}
