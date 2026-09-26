@@ -1,7 +1,13 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { CircleMarker, MapContainer, TileLayer, Tooltip } from "react-leaflet";
+import {
+  CircleMarker,
+  MapContainer,
+  Popup,
+  TileLayer,
+  Tooltip,
+} from "react-leaflet";
 import { captureEvent } from "@/lib/analytics";
 import type { BeachSummary, Sighting } from "@/lib/types";
 import { ratingClasses } from "@/lib/ui";
@@ -124,6 +130,27 @@ export default function BeachMap({
                 </div>
               </div>
             </Tooltip>
+            <Popup>
+              <div className="min-w-[140px] text-sm">
+                <div className="font-semibold">{s.beach.name}</div>
+                <div className="mt-0.5 text-xs text-slate-600">
+                  Score <span className="font-bold">{s.score}</span>
+                </div>
+                <a
+                  href={`/beaches/${s.beach.id}`}
+                  className="mt-2 inline-block font-semibold text-sky-700 underline"
+                >
+                  Beach guide →
+                </a>
+                <br />
+                <a
+                  href={`/?beach=${s.beach.id}`}
+                  className="mt-1 inline-block text-xs font-medium text-slate-600 underline"
+                >
+                  Live conditions
+                </a>
+              </div>
+            </Popup>
           </CircleMarker>
         );
       })}

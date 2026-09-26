@@ -92,7 +92,7 @@ export function MapSection() {
           return (
             <Link
               key={s.beach.id}
-              href={`/?beach=${s.beach.id}`}
+              href={`/beaches/${s.beach.id}`}
               data-analytics-event="beach_selected"
               data-analytics-property-beach-id={s.beach.id}
               data-analytics-property-source="map_ranking"
@@ -106,6 +106,8 @@ export function MapSection() {
                   {s.wind
                     ? `${s.wind.directionLabel} ${s.wind.speedKt}kt`
                     : "no wind data"}
+                  {" · "}
+                  <span className="text-ocean-600">guide</span>
                 </div>
               </div>
               <span

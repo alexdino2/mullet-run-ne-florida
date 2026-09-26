@@ -70,10 +70,15 @@ export default async function DashboardPage({
 
       <BeachSwitcher beaches={beaches} currentId={selected.id} />
 
-      <div className="mt-4 flex flex-col items-center">
+        <div className="mt-4 flex flex-col items-center">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-bold text-slate-900">
-            {selected.name}
+            <Link
+              href={`/beaches/${selected.id}`}
+              className="hover:text-ocean-700"
+            >
+              {selected.name}
+            </Link>
           </h2>
           {selected.id === "micklers" && (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
@@ -83,6 +88,13 @@ export default async function DashboardPage({
         </div>
         <p className="text-xs text-slate-400">
           Updated {generated} · sources: {data.conditions.sources.join(", ") || "none available"}
+          {" · "}
+          <Link
+            href={`/beaches/${selected.id}`}
+            className="font-medium text-ocean-600 hover:text-ocean-700"
+          >
+            beach guide
+          </Link>
         </p>
 
         <div className="mt-3">
@@ -149,6 +161,23 @@ export default async function DashboardPage({
 
       <SectionTitle>Learn the run</SectionTitle>
       <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/beaches"
+          className="group col-span-2 rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100 transition hover:ring-ocean-300"
+        >
+          <div className="flex items-center gap-1.5">
+            <span aria-hidden>🏖️</span>
+            <span className="text-[10px] font-bold uppercase tracking-wide text-ocean-600">
+              Locations
+            </span>
+          </div>
+          <p className="mt-1 text-sm font-bold leading-snug text-slate-900 group-hover:text-ocean-700">
+            Beach-by-beach mullet run guides
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            Photos, access tips, and tactics for every station on the map.
+          </p>
+        </Link>
         {GUIDES.map((g) => (
           <Link
             key={g.slug}
