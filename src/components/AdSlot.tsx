@@ -40,8 +40,10 @@ export function AdSlot({ slot, label = "Advertisement", className }: AdSlotProps
     }
   }, [live, pathname]);
 
+  // `ad-slot` lets globals.css collapse the whole unit, label included, when
+  // AdSense marks it unfilled.
   const wrapper =
-    "my-6 flex flex-col items-center " + (className ? className : "");
+    "ad-slot my-6 flex flex-col items-center " + (className ? className : "");
 
   if (!live) {
     if (!isDev) return null;
