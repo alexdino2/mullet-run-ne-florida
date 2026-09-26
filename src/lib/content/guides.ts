@@ -136,7 +136,7 @@ export const GUIDES: Guide[] = [
         ],
       },
     ],
-    related: ["tactics", "biology", "charters-guide"],
+    related: ["tactics", "biology", "beaches-hub"],
   },
   {
     slug: "regulations",
@@ -263,6 +263,8 @@ export function relatedLink(
       return { href: "/gear", label: "Mullet Run Gear Guide" };
     case "charters-guide":
       return { href: "/charters", label: "Find a Mullet Run Charter" };
+    case "beaches-hub":
+      return { href: "/beaches", label: "All Mullet Run Beach Guides" };
     default:
       return null;
   }
