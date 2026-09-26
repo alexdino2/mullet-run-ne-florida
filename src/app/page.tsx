@@ -16,7 +16,6 @@ import { AdSlot } from "@/components/AdSlot";
 import { FaqSection } from "@/components/FaqSection";
 import { HomeHero } from "@/components/HomeHero";
 import { GUIDES } from "@/lib/content/guides";
-import { ratingClasses, ratingLabel } from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -72,7 +71,6 @@ export default async function DashboardPage({
     hour: "numeric",
     minute: "2-digit",
   });
-  const { hex } = ratingClasses(data.score.rating);
 
   return (
     <div className="home-page">
@@ -103,13 +101,7 @@ export default async function DashboardPage({
             <ScoreGauge score={data.score.score} rating={data.score.rating} />
           </div>
 
-          <p className="home-score__summary">
-            <span className="font-semibold" style={{ color: hex }}>
-              {ratingLabel(data.score.rating)}
-            </span>
-            {" — "}
-            {data.score.summary}
-          </p>
+          <p className="home-score__summary">{data.score.summary}</p>
         </div>
 
         <div className="mt-5">

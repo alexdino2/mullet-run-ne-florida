@@ -104,16 +104,12 @@ body {
 
 .home-hero__svg {
   position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   border: 0;
   pointer-events: none;
-  /* Cover the plane; SVG viewBox is 400×320 — scale to fill width */
-  left: 50%;
-  top: 46%;
-  width: 118%;
-  height: auto;
-  aspect-ratio: 400 / 320;
-  min-height: 100%;
-  transform: translate(-50%, -50%) scale(1.02);
+  /* SVG uses preserveAspectRatio=slice so it covers this plane */
   animation: home-visual-settle 1.4s var(--ease-out-soft) both;
 }
 
@@ -227,12 +223,12 @@ body {
 
 @keyframes home-visual-settle {
   from {
-    opacity: 0.65;
-    transform: translate(-50%, -50%) scale(1.06);
+    opacity: 0.55;
+    transform: scale(1.04);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.02);
+    transform: scale(1);
   }
 }
 
