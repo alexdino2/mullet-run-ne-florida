@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import Script from "next/script";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
+import { adsScriptSrc, monetization } from "@/lib/monetization";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
       "Live coastal conditions and a crowdsourced mullet sightings map from Northeast Florida to Miami.",
   },
   other: {
-    "google-adsense-account": "ca-pub-4183912956441070",
+    "google-adsense-account": monetization.adsClient,
   },
   category: "sports",
 };
@@ -119,13 +119,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <Script
-        id="adsbygoogle-init"
-        async
-        strategy="beforeInteractive"
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4183912956441070"
-        crossOrigin="anonymous"
-      />
+      <head>
+        {/* Google AdSense loader, exactly as AdSense issues it. A plain tag
+            (not next/script) avoids the `data-nscript` attribute AdSense
+            rejects, and loading it on every page enables Auto ads. */}
+        <script async src={adsScriptSrc} crossOrigin="anonymous" />
+      </head>
       <body className="min-h-screen">
         <PostHogAnalytics>
           <script

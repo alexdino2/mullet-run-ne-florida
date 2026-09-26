@@ -1,40 +1,52 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { monetization, adsEnabled } from "@/lib/monetization";
 
 interface AdSlotProps {
-  /** AdSense slot id (data-ad-slot). Optional while using auto/placeholder. */
+  /** AdSense ad-unit id (data-ad-slot). Defaults to `NEXT_PUBLIC_ADS_SLOT`. */
   slot?: string;
-  /** Short label describing where the unit lives, for the placeholder. */
+  /** Short label describing where the unit lives. */
   label?: string;
   className?: string;
 }
 
+const isDev = process.env.NODE_ENV !== "production";
+
 /**
- * A single display-ad unit.
+ * A single in-page display-ad unit.
  *
- * When a publisher client id is configured (`NEXT_PUBLIC_ADS_CLIENT`) this
- * renders a real AdSense unit; otherwise it shows an unobtrusive, clearly
- * labeled placeholder so the layout is designed for ads from day one without
- * shipping a fake ad. Swapping in Raptive/Mediavine later only touches this
+ * Renders a responsive AdSense unit when an ad-unit id is available (via the
+ * `slot` prop or `NEXT_PUBLIC_ADS_SLOT`). Without one it renders nothing in
+ * production — Auto ads, driven by the loader script in the root layout, fill
+ * the page instead — and a labeled placeholder in development so the layout
+ * stays visible. Swapping in Raptive/Mediavine later only touches this
  * component.
  */
 export function AdSlot({ slot, label = "Advertisement", className }: AdSlotProps) {
+  const adSlot = slot ?? monetization.adsSlot;
+  const live = adsEnabled && Boolean(adSlot);
+  // Client-side navigations between pages of the same route (e.g. one beach
+  // to another) reuse this component; re-key the unit so each page requests
+  // a fresh ad instead of keeping the previous page's.
+  const pathname = usePathname();
+
   useEffect(() => {
-    if (!adsEnabled) return;
+    if (!live) return;
     try {
       // @ts-expect-error adsbygoogle is injected by the AdSense script.
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch {
-      /* AdSense not ready yet; it retries on the next render. */
+      /* Unit already filled (e.g. Strict Mode double-effect) or blocked. */
     }
-  }, []);
+  }, [live, pathname]);
 
   const wrapper =
     "my-6 flex flex-col items-center " + (className ? className : "");
 
-  if (!adsEnabled) {
+  if (!live) {
+    if (!isDev) return null;
     return (
       <div className={wrapper} aria-hidden>
         <div className="flex min-h-[90px] w-full items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100 text-center">
@@ -52,10 +64,11 @@ export function AdSlot({ slot, label = "Advertisement", className }: AdSlotProps
         {label}
       </span>
       <ins
+        key={pathname}
         className="adsbygoogle block w-full"
         style={{ display: "block" }}
         data-ad-client={monetization.adsClient}
-        data-ad-slot={slot}
+        data-ad-slot={adSlot}
         data-ad-format="auto"
         data-full-width-responsive="true"
       />

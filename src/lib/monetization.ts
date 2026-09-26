@@ -18,16 +18,27 @@ function opt(value: string | undefined): string | undefined {
   return v ? v : undefined;
 }
 
+/** The site's approved Google AdSense publisher (client) id. */
+export const ADSENSE_CLIENT = "ca-pub-4183912956441070";
+
 export const monetization = {
   /**
-   * Display-ad publisher/client ID (e.g. Google AdSense `ca-pub-…`, or a
-   * Raptive/Mediavine site id once the traffic threshold is crossed). When
-   * unset, ad slots render as labeled placeholders.
+   * Display-ad publisher/client ID. Defaults to the approved AdSense account;
+   * `NEXT_PUBLIC_ADS_CLIENT` overrides it (e.g. for a fork or a future
+   * Raptive/Mediavine migration).
    */
   // Keep public env accesses static so Next.js replaces them at build time.
   // Aliasing `process.env` leaves a runtime `process` reference in browser
   // bundles, where the Node.js global does not exist.
-  adsClient: opt(process.env.NEXT_PUBLIC_ADS_CLIENT),
+  adsClient: opt(process.env.NEXT_PUBLIC_ADS_CLIENT) ?? ADSENSE_CLIENT,
+
+  /**
+   * Default AdSense ad-unit id (`data-ad-slot`) for in-page `<AdSlot>` units.
+   * Until one is created in AdSense → Ads → By ad unit, in-page slots render
+   * nothing and Auto ads (enabled from the AdSense dashboard) place ads
+   * site-wide through the loader script in the root layout.
+   */
+  adsSlot: opt(process.env.NEXT_PUBLIC_ADS_SLOT),
 
   /** Amazon Associates store tag appended to product/search links. */
   amazonTag: opt(process.env.NEXT_PUBLIC_AMAZON_AFFILIATE_TAG),
@@ -47,6 +58,12 @@ export const monetization = {
 } as const;
 
 export const adsEnabled = Boolean(monetization.adsClient);
+
+/** AdSense loader URL; loading it on every page also powers Auto ads. */
+export const adsScriptSrc = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${monetization.adsClient}`;
+
+/** Publisher id as `ads.txt` expects it (`pub-…`, without the `ca-` prefix). */
+export const adsPublisherId = monetization.adsClient.replace(/^ca-/, "");
 
 export const AFFILIATE_DISCLOSURE =
   "Some links on this page are affiliate links. If you buy through them we may " +
