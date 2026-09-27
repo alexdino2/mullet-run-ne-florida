@@ -51,8 +51,10 @@ export async function loadAnalytics(): Promise<void> {
   const { default: posthog } = await import("posthog-js");
   if (!posthog.__loaded) {
     posthog.init(posthogKey, {
-      api_host: posthogHost,
-      ui_host: posthogHost,
+      // Sent through the Next.js rewrites in next.config.mjs so ad blockers
+      // that block *.posthog.com don't drop events.
+      api_host: "/ingest",
+      ui_host: posthogHost.replace(".i.posthog.com", ".posthog.com"),
       defaults: "2026-05-30",
       autocapture: true,
       capture_pageview: false,
