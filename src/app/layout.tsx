@@ -150,14 +150,11 @@ export default function RootLayout({
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
           />
-          <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-slate-50 shadow-sm">
+          <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-transparent shadow-sm ring-1 ring-ocean-900/5">
             <header className="sticky top-0 z-[500] border-b border-ocean-800 bg-ocean-900 text-white">
               <div className="flex items-center justify-between px-4 py-3">
                 <Link href="/" className="flex shrink-0 items-center gap-2">
-                  <span className="text-xl" aria-hidden>
-                    🐟
-                  </span>
-                  <span className="text-base font-bold tracking-tight">
+                  <span className="font-display text-base font-bold tracking-tight">
                     Florida <span className="text-ocean-300">Mullet Run</span>
                   </span>
                 </Link>
