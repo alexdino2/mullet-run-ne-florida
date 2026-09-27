@@ -7,6 +7,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { SightingForm } from "@/components/SightingForm";
 import { SightingList } from "@/components/SightingList";
 import { DailySightingChecks } from "@/components/DailySightingChecks";
+import { AdSlot } from "@/components/AdSlot";
 import { FaqSection } from "@/components/FaqSection";
 
 export const dynamic = "force-dynamic";
@@ -14,14 +15,14 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Where Are the Mullet Right Now? Live Florida Sightings Map",
   description:
-    "Live crowdsourced map of where the mullet run is right now along Florida's Atlantic coast. See the latest bait-school sightings from Northeast Florida to Miami and report the ones you find.",
+    "Live crowdsourced map of where the mullet run is right now on Florida's Atlantic and Gulf coasts. See the latest bait-school sightings from Jacksonville to Miami and Pensacola to Marco Island and report the ones you find.",
   alternates: { canonical: "/sightings" },
   openGraph: {
     type: "website",
     url: "/sightings",
     title: "Where Are the Mullet Right Now? Live Florida Sightings Map",
     description:
-      "Crowdsourced Florida mullet run sightings, updated as anglers report bait schools from Northeast Florida to Miami.",
+      "Crowdsourced Florida mullet run sightings, updated as anglers report bait schools on both Florida coasts.",
   },
 };
 
@@ -54,8 +55,9 @@ export default async function SightingsPage({
         </Link>
       </div>
       <p className="mt-1 text-sm text-slate-500">
-        A live, crowdsourced map of the Florida mullet run along the Atlantic
-        coast — from Northeast Florida to Miami. Spot a school? Log it below so
+        A live, crowdsourced map of the Florida mullet run on both coasts —
+        the Atlantic from Jacksonville to Miami and the Gulf from Pensacola to
+        Marco Island. Spot a school? Log it below so
         other anglers know where the bait is. Sightings are tracked and shown
         here, but don’t affect the opportunity score yet — the score uses public
         data only while we gather more reports.
@@ -91,6 +93,8 @@ export default async function SightingsPage({
       <div className="mt-4">
         <SightingForm beaches={beaches} defaultBeachId={defaultBeachId} />
       </div>
+
+      <AdSlot label="Advertisement" />
 
       <h2 className="mb-2 mt-6 text-xs font-bold uppercase tracking-widest text-slate-400">
         Daily beach checks

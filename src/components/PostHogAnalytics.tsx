@@ -2,42 +2,17 @@
 
 import { Suspense, useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import posthog from "posthog-js";
-import { PostHogProvider } from "posthog-js/react";
+import { captureEvent, loadAnalytics } from "@/lib/analytics";
+import { afterFirstInteraction } from "@/lib/defer";
 
-const posthogKey =
-  process.env.NEXT_PUBLIC_POSTHOG_KEY ??
-  "phc_z62VAYZou8K5H3nziNjcaxQjagDYFHZnmGdSBzHDGt2m";
-const posthogHost =
-  process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
-
-if (typeof window !== "undefined" && posthogKey && !posthog.__loaded) {
-  posthog.init(posthogKey, {
-    api_host: posthogHost,
-    ui_host: posthogHost,
-    defaults: "2026-05-30",
-    autocapture: true,
-    capture_pageview: false,
-    capture_pageleave: true,
-    capture_dead_clicks: true,
-    capture_exceptions: true,
-    capture_performance: true,
-    rageclick: true,
-    person_profiles: "always",
-    session_recording: {
-      maskAllInputs: true,
-    },
-  });
-}
+const POSTHOG_FALLBACK_DELAY_MS = 3000;
 
 function PageViewTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (!posthogKey || !posthog.__loaded) return;
-
-    posthog.capture("$pageview", {
+    captureEvent("$pageview", {
       $current_url: window.location.href,
       $pathname: pathname,
     });
@@ -48,8 +23,6 @@ function PageViewTracker() {
 
 function InteractionTracker() {
   useEffect(() => {
-    if (!posthogKey || !posthog.__loaded) return;
-
     const captureClick = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
@@ -66,7 +39,7 @@ function InteractionTracker() {
               value,
             ]),
         );
-        posthog.capture(tracked.dataset.analyticsEvent, properties);
+        captureEvent(tracked.dataset.analyticsEvent, properties);
       }
 
       const anchor = target.closest<HTMLAnchorElement>("a[href]");
@@ -78,14 +51,14 @@ function InteractionTracker() {
         destination.protocol === "https:"
       ) {
         if (destination.origin !== window.location.origin) {
-          posthog.capture("outbound_link_clicked", {
+          captureEvent("outbound_link_clicked", {
             destination_host: destination.host,
             destination_path: destination.pathname,
             link_text: anchor.textContent?.trim().slice(0, 100),
           });
         }
       } else if (destination.protocol === "mailto:") {
-        posthog.capture("email_link_clicked", {
+        captureEvent("email_link_clicked", {
           link_text: anchor.textContent?.trim().slice(0, 100),
         });
       }
@@ -95,7 +68,7 @@ function InteractionTracker() {
       const details = event.target;
       if (!(details instanceof HTMLDetailsElement) || !details.open) return;
 
-      posthog.capture("faq_opened", {
+      captureEvent("faq_opened", {
         question: details.querySelector("summary")?.textContent?.trim(),
       });
     };
@@ -112,14 +85,23 @@ function InteractionTracker() {
   return null;
 }
 
+/**
+ * PostHog page views and interaction events. posthog-js itself is loaded
+ * after the first interaction or three idle seconds (see `loadAnalytics`);
+ * events captured before then are queued, not lost.
+ */
 export function PostHogAnalytics({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    afterFirstInteraction(POSTHOG_FALLBACK_DELAY_MS).then(loadAnalytics);
+  }, []);
+
   return (
-    <PostHogProvider client={posthog}>
+    <>
       <Suspense fallback={null}>
         <PageViewTracker />
       </Suspense>
       <InteractionTracker />
       {children}
-    </PostHogProvider>
+    </>
   );
 }

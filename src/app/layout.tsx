@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import Script from "next/script";
 import { Figtree, Syne } from "next/font/google";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
+import { AdSenseLoader } from "@/components/AdSenseLoader";
+import { monetization } from "@/lib/monetization";
+import { EARLY_ERROR_BUFFER_SCRIPT } from "@/lib/early-errors";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 
@@ -56,13 +58,16 @@ export const metadata: Metadata = {
     locale: "en_US",
     title: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
     description:
-      "Live coastal conditions and a crowdsourced mullet sightings map from Northeast Florida to Miami.",
+      "Live coastal conditions and a crowdsourced mullet sightings map for Florida's Atlantic and Gulf coasts.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
     description:
-      "Live coastal conditions and a crowdsourced mullet sightings map from Northeast Florida to Miami.",
+      "Live coastal conditions and a crowdsourced mullet sightings map for Florida's Atlantic and Gulf coasts.",
+  },
+  other: {
+    "google-adsense-account": monetization.adsClient,
   },
   category: "sports",
 };
@@ -102,7 +107,7 @@ const orgJsonLd = {
   name: "Florida Mullet Run",
   url: SITE_URL,
   description:
-    "Live Florida mullet run tracker with a crowdsourced sightings map, daily opportunity scores, and inlet guides from Northeast Florida to Miami.",
+    "Live Florida mullet run tracker with a crowdsourced sightings map, daily opportunity scores, and inlet and pass guides for Florida's Atlantic and Gulf coasts.",
   areaServed: { "@type": "State", name: "Florida" },
   sameAs: ["https://www.instagram.com/floridamulletrun/"],
 };
@@ -131,13 +136,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${figtree.variable} ${syne.variable}`}>
-      <Script
-        id="adsbygoogle-init"
-        async
-        strategy="beforeInteractive"
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4183912956441070"
-        crossOrigin="anonymous"
-      />
+      <head>
+        <script
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: EARLY_ERROR_BUFFER_SCRIPT }}
+        />
+      </head>
       <body className="min-h-screen bg-slate-50 font-sans">
         <PostHogAnalytics>
           <script
@@ -185,9 +189,8 @@ export default function RootLayout({
                 ))}
               </div>
               <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400">
-                Public data: NWS · NOAA CO-OPS · NDBC. Scores are heuristics, not a
-                guarantee. Regulations change — always confirm current limits with
-                the FWC. Fish responsibly.
+                Scores are heuristics, not a guarantee. Regulations change — always
+                confirm current limits with the FWC. Fish responsibly.
               </p>
               <p className="mt-3 text-center">
                 <a
@@ -202,6 +205,9 @@ export default function RootLayout({
             </footer>
           </div>
         </PostHogAnalytics>
+        {/* Third-party ads and analytics load after the first interaction
+            or a few idle seconds, keeping them off the mobile critical path. */}
+        <AdSenseLoader />
       </body>
     </html>
   );

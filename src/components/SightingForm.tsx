@@ -147,18 +147,29 @@ export function SightingForm({
     >
       <div>
         <label className="mb-1 block text-sm font-semibold text-slate-700">
-          Beach
+          Beach, pass, or river
         </label>
         <select
           value={beachId}
           onChange={(e) => setBeachId(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-ocean-500 focus:outline-none focus:ring-1 focus:ring-ocean-500"
         >
-          {beaches.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
+          {(["atlantic", "gulf"] as const).map((coast) => {
+            const list = beaches.filter((b) => (b.coast ?? "atlantic") === coast);
+            if (list.length === 0) return null;
+            return (
+              <optgroup
+                key={coast}
+                label={coast === "gulf" ? "Gulf Coast & Panhandle" : "Atlantic Coast"}
+              >
+                {list.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </optgroup>
+            );
+          })}
         </select>
       </div>
 

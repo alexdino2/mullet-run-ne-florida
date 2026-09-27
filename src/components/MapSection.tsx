@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import type { BeachSummary, Sighting } from "@/lib/types";
+import type { BeachSummary, Coast, Sighting } from "@/lib/types";
 import { ratingClasses } from "@/lib/ui";
 
 const BeachMap = dynamic(() => import("./BeachMap"), {
@@ -16,8 +16,10 @@ const BeachMap = dynamic(() => import("./BeachMap"), {
 });
 
 export function MapSection({
+  coast,
   selectedSummary,
 }: {
+  coast?: Coast;
   selectedSummary?: BeachSummary;
 } = {}) {
   const [summaries, setSummaries] = useState<BeachSummary[] | null>(null);
@@ -27,7 +29,7 @@ export function MapSection({
   useEffect(() => {
     let active = true;
     Promise.all([
-      fetch("/api/summaries").then((response) => {
+      fetch(coast ? `/api/summaries?coast=${coast}` : "/api/summaries").then((response) => {
         if (!response.ok) throw new Error("Summary request failed");
         return response.json();
       }),
@@ -44,7 +46,7 @@ export function MapSection({
     return () => {
       active = false;
     };
-  }, []);
+  }, [coast]);
 
   const displayedSummaries = useMemo(() => {
     if (!summaries) return null;
@@ -69,10 +71,13 @@ export function MapSection({
   );
   const recentSightings = useMemo(() => {
     const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const onCoast = new Set((summaries ?? []).map((s) => s.beach.id));
     return sightings.filter(
-      (sighting) => new Date(sighting.observed_at).getTime() >= cutoff,
+      (sighting) =>
+        new Date(sighting.observed_at).getTime() >= cutoff &&
+        (!coast || onCoast.has(sighting.beach_id)),
     );
-  }, [sightings]);
+  }, [sightings, summaries, coast]);
 
   return (
     <div className="space-y-3">

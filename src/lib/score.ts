@@ -29,7 +29,7 @@ import { isFavorableEasterlyDirection } from "@/lib/wind";
  * enough have been collected to be predictive.
  */
 
-const NEUTRAL = 0.45;
+export const NEUTRAL = 0.45;
 
 export const WEIGHTS = {
   season: 30,
@@ -39,11 +39,11 @@ export const WEIGHTS = {
   windSpeed: 18,
 } as const;
 
-function clamp01(n: number): number {
+export function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
 }
 
-function dayOfYear(d: Date): number {
+export function dayOfYear(d: Date): number {
   const start = Date.UTC(d.getUTCFullYear(), 0, 0);
   const diff = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - start;
   return Math.floor(diff / 86400000);
@@ -152,14 +152,14 @@ export function recentEasterlyFactor(
   return { factor: NEUTRAL, estimated: true };
 }
 
-function ratingFor(score: number): ScoreResult["rating"] {
+export function ratingFor(score: number): ScoreResult["rating"] {
   if (score >= 80) return "prime";
   if (score >= 60) return "good";
   if (score >= 40) return "fair";
   return "poor";
 }
 
-function pts(weight: number, factor: number): number {
+export function pts(weight: number, factor: number): number {
   return Math.round(weight * factor);
 }
 
@@ -258,6 +258,7 @@ export function computeScore(input: ScoreInputs): ScoreResult {
   );
 
   return {
+    model: "atlantic-surf",
     score,
     rating: ratingFor(score),
     components,
@@ -265,7 +266,7 @@ export function computeScore(input: ScoreInputs): ScoreResult {
   };
 }
 
-function clampScore(n: number): number {
+export function clampScore(n: number): number {
   return Math.max(0, Math.min(100, Math.round(n)));
 }
 
@@ -299,7 +300,7 @@ function seasonReason(now: Date, factor: number): string {
   return "Shoulder of the fall run window.";
 }
 
-function relTime(iso: string, now: Date): string {
+export function relTime(iso: string, now: Date): string {
   const mins = Math.round((new Date(iso).getTime() - now.getTime()) / 60000);
   if (mins <= 0) return "now";
   if (mins < 60) return `in ${mins} min`;
@@ -308,7 +309,7 @@ function relTime(iso: string, now: Date): string {
   return m ? `in ${h}h ${m}m` : `in ${h}h`;
 }
 
-function buildSummary(components: ScoreComponent[], score: number): string {
+export function buildSummary(components: ScoreComponent[], score: number): string {
   const sorted = [...components].sort((a, b) => b.points - a.points);
   const drivers = sorted.filter((c) => c.factor >= 0.7).slice(0, 2);
   const limiter = [...components]

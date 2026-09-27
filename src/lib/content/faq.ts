@@ -19,12 +19,12 @@ export const FAQ: FaqItem[] = [
   {
     question: "Where are the mullet right now in Florida?",
     answer:
-      "The mullet run moves north to south down Florida's Atlantic coast through the fall, so the freshest answer is the live sightings map on this site. Anglers report schools as they spot them, station by station — from Mickler's Landing and Jacksonville Beach in Northeast Florida down through Ponce Inlet, Cocoa Beach, Sebastian Inlet, Fort Pierce, and Jupiter to Fort Lauderdale and Miami Beach. Check the map plus each beach's live opportunity score to see where bait and predators are stacking up today.",
+      "On the Atlantic side the mullet run moves north to south down the beaches through the fall; on the Gulf side schools leave bays and rivers through the passes, starting in the Panhandle and Big Bend and finishing around Charlotte Harbor, Naples, and Marco Island. The freshest answer is the live sightings map on this site. Anglers report schools as they spot them, station by station — from Mickler's Landing and Jacksonville Beach in Northeast Florida down through Ponce Inlet, Cocoa Beach, Sebastian Inlet, Fort Pierce, and Jupiter to Fort Lauderdale and Miami Beach. On the Gulf, check the passes — Pensacola, Destin, Egmont Key, Boca Grande — and the Big Bend river mouths. Check the map plus each station's live score to see where bait and predators are stacking up today.",
   },
   {
     question: "When is the Florida mullet run in 2026?",
     answer:
-      "The run usually starts in late August to early September in Northeast and Central Florida, peaks from mid-September through October, and can linger into late November in South Florida. The exact timing shifts every year with the weather — cooling nearshore water toward the upper 60s Fahrenheit and the first autumn cold fronts are the main triggers.",
+      "The run usually starts in late August to early September in Northeast and Central Florida, peaks from mid-September through October, and can linger into late November in South Florida. On the Gulf coast it runs later — October and November in the Panhandle and Big Bend, into December around Charlotte Harbor and Naples. The exact timing shifts every year with the weather — cooling nearshore water toward the upper 60s Fahrenheit and the first autumn cold fronts are the main triggers.",
   },
   {
     question: "What are the best places to see the mullet run?",
@@ -41,6 +41,11 @@ export const FAQ: FaqItem[] = [
     answer:
       "Watch the water and the sky: nervous, showering bait at the surface and diving birds mean a pod is under attack. On this site, cross-check the live opportunity score for wind, tide, water temperature, and season, then read the crowdsourced sightings for your stretch of coast before you commit to a drive.",
   },
+  {
+    question: "Is there a mullet run on Florida's Gulf Coast?",
+    answer:
+      "Yes, but it looks different. Gulf mullet spend the summer in bays, marsh, and spring-fed rivers, then leave through passes and river mouths to spawn offshore. The biggest exits come when a cold front drops the pressure, north wind flushes water out of the bays, the water cools, and a strong outgoing tide lines up near a new or full moon. This site scores every Gulf station on those triggers, from Pensacola Pass to Marco Island.",
+  },
 ];
 
 /**
@@ -51,12 +56,12 @@ export const TRACKER_FAQ: FaqItem[] = [
   {
     question: "What is the Florida mullet tracker?",
     answer:
-      "The Florida mullet tracker is a live dashboard for the fall bait migration along Florida's Atlantic coast. It scores each beach from public wind, tide, and buoy data, plots crowdsourced school sightings on a map, and highlights the next best fishing window — from Northeast Florida through the Space Coast and south to Miami.",
+      "The Florida mullet tracker is a live dashboard for the fall bait migration on both Florida coasts. It scores each station from public wind, tide, pressure, water temperature, and river data, plots crowdsourced school sightings on a map, and highlights the next best window — Atlantic beaches from Northeast Florida to Miami, and Gulf passes and river mouths from Pensacola to Marco Island.",
   },
   {
     question: "How does the Florida mullet tracker score a beach?",
     answer:
-      "Each station gets a transparent 0–100 opportunity score built from season timing, wind direction and speed, recent NE-to-E wind pattern, and tide stage. Sightings are shown next to the score but are not part of it yet, so the rating stays grounded in free public data even when reports are sparse.",
+      "Each station gets a transparent 0–100 score. Atlantic beaches are scored on season timing, wind direction and speed, the recent NE-to-E wind pattern, and tide stage. Gulf passes use an exit score built from cold fronts (pressure drops), north wind, cooling water, outgoing tide strength, the moon, and river flow. Sightings are shown next to the score but are not part of it yet, so the rating stays grounded in free public data even when reports are sparse.",
   },
   {
     question: "Where are the mullet right now in Florida?",
