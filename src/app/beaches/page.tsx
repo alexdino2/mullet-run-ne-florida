@@ -7,6 +7,7 @@ import {
   beachPath,
 } from "@/lib/content/beaches";
 import { AdSlot } from "@/components/AdSlot";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Florida Mullet Run Beaches — Inlet & Surf Guides",
@@ -31,14 +32,14 @@ export default function BeachesHubPage() {
     name: "Florida Mullet Run Beaches",
     description:
       "Guides for every Atlantic beach station tracked on the Florida Mullet Run live map.",
-    url: "https://floridamulletrun.com/beaches",
+    url: `${SITE_URL}/beaches`,
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: BEACH_CONTENT.length,
       itemListElement: BEACH_CONTENT.map((b, i) => ({
         "@type": "ListItem",
         position: i + 1,
-        url: `https://floridamulletrun.com${beachPath(b.slug)}`,
+        url: `${SITE_URL}${beachPath(b.slug)}`,
         name: b.headline,
       })),
     },

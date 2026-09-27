@@ -12,6 +12,7 @@ import {
 import { getSightingsForBeach } from "@/lib/sightings";
 import { AdSlot } from "@/components/AdSlot";
 import { SightingList } from "@/components/SightingList";
+import { SITE_URL } from "@/lib/site";
 
 export function generateStaticParams() {
   return BEACH_CONTENT.map((b) => ({ slug: b.slug }));
@@ -86,8 +87,8 @@ export default async function BeachPage({
     .map((id) => getBeachContentById(id))
     .filter((b): b is NonNullable<typeof b> => Boolean(b));
 
-  const pageUrl = `https://floridamulletrun.com${beachPath(content.slug)}`;
-  const imageUrl = `https://floridamulletrun.com${content.image.src}`;
+  const pageUrl = `${SITE_URL}${beachPath(content.slug)}`;
+  const imageUrl = `${SITE_URL}${content.image.src}`;
 
   const jsonLd = [
     {
@@ -133,13 +134,13 @@ export default async function BeachPage({
           "@type": "ListItem",
           position: 1,
           name: "Home",
-          item: "https://floridamulletrun.com/",
+          item: `${SITE_URL}/`,
         },
         {
           "@type": "ListItem",
           position: 2,
           name: "Beaches",
-          item: "https://floridamulletrun.com/beaches",
+          item: `${SITE_URL}/beaches`,
         },
         {
           "@type": "ListItem",
