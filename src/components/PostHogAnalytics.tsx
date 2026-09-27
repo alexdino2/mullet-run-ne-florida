@@ -5,6 +5,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { captureEvent, loadAnalytics } from "@/lib/analytics";
 import { afterFirstInteraction } from "@/lib/defer";
 
+const POSTHOG_FALLBACK_DELAY_MS = 3000;
+
 function PageViewTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -85,12 +87,12 @@ function InteractionTracker() {
 
 /**
  * PostHog page views and interaction events. posthog-js itself is loaded
- * after the first interaction or a few idle seconds (see `loadAnalytics`);
+ * after the first interaction or three idle seconds (see `loadAnalytics`);
  * events captured before then are queued, not lost.
  */
 export function PostHogAnalytics({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    afterFirstInteraction().then(loadAnalytics);
+    afterFirstInteraction(POSTHOG_FALLBACK_DELAY_MS).then(loadAnalytics);
   }, []);
 
   return (

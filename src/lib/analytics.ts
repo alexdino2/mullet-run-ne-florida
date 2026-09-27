@@ -1,4 +1,5 @@
 import type { PostHog } from "posthog-js";
+import { flushEarlyErrors } from "@/lib/early-errors";
 
 export type AnalyticsProperties = Record<
   string,
@@ -71,6 +72,7 @@ export async function loadAnalytics(): Promise<void> {
   }
 
   client = posthog;
+  flushEarlyErrors(posthog);
   for (const { event, properties, timestamp } of queue.splice(0)) {
     posthog.capture(event, properties, { timestamp });
   }

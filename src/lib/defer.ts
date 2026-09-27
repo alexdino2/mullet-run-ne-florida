@@ -14,21 +14,24 @@ const INTERACTION_EVENTS = [
   "mousemove",
 ] as const;
 
-/** How long after `load` to wait before loading anyway without interaction. */
-const FALLBACK_DELAY_MS = 5000;
+/** Default time after `load` to wait before loading without interaction. */
+const DEFAULT_FALLBACK_DELAY_MS = 5000;
 
-let ready: Promise<void> | null = null;
+const readinessByDelay = new Map<number, Promise<void>>();
 
 /**
- * Resolves once, on the first user interaction or `FALLBACK_DELAY_MS` after
- * the window `load` event, whichever comes first. Shared by every caller so
- * all deferred scripts start together.
+ * Resolves once, on the first user interaction or `fallbackDelayMs` after
+ * the window `load` event, whichever comes first. Callers using the same
+ * fallback share one promise and start together.
  */
-export function afterFirstInteraction(): Promise<void> {
+export function afterFirstInteraction(
+  fallbackDelayMs = DEFAULT_FALLBACK_DELAY_MS,
+): Promise<void> {
   if (typeof window === "undefined") return new Promise(() => {});
-  if (ready) return ready;
+  const existing = readinessByDelay.get(fallbackDelayMs);
+  if (existing) return existing;
 
-  ready = new Promise<void>((resolve) => {
+  const ready = new Promise<void>((resolve) => {
     let timer: number | undefined;
 
     const trigger = () => {
@@ -41,7 +44,7 @@ export function afterFirstInteraction(): Promise<void> {
     };
 
     function startTimer() {
-      timer = window.setTimeout(trigger, FALLBACK_DELAY_MS);
+      timer = window.setTimeout(trigger, fallbackDelayMs);
     }
 
     for (const event of INTERACTION_EVENTS) {
@@ -52,6 +55,7 @@ export function afterFirstInteraction(): Promise<void> {
     else window.addEventListener("load", startTimer);
   });
 
+  readinessByDelay.set(fallbackDelayMs, ready);
   return ready;
 }
 
