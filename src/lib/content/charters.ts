@@ -1,3 +1,5 @@
+import type { Coast } from "@/lib/types";
+
 /**
  * Charter directory data (Phase 2 lead generation).
  *
@@ -11,10 +13,8 @@
 /** Anchor id of the captain listing form on /charters. */
 export const CHARTER_FORM_ID = "list-your-charter";
 
-export type CharterCoast = "atlantic" | "gulf";
-
 export const CHARTER_COASTS: {
-  id: CharterCoast;
+  id: Coast;
   name: string;
   blurb: string;
 }[] = [
@@ -34,7 +34,7 @@ export const CHARTER_COASTS: {
 
 export interface CharterRegion {
   id: string;
-  coast: CharterCoast;
+  coast: Coast;
   name: string;
   /** What the run fishes like here — the pitch to anglers. */
   fishery: string;

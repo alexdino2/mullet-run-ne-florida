@@ -3,6 +3,32 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GUIDES, getGuide, relatedLink } from "@/lib/content/guides";
 import { AdSlot } from "@/components/AdSlot";
+import { SITE_URL } from "@/lib/site";
+
+const INLINE_LINK = /\[([^\]]+)\]\((\/[^)\s]*)\)/g;
+
+/** Render guide copy, turning inline `[label](/path)` markup into links. */
+function renderInline(text: string): React.ReactNode[] {
+  const nodes: React.ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(INLINE_LINK)) {
+    const [raw, label, href] = match;
+    const start = match.index ?? 0;
+    if (start > last) nodes.push(text.slice(last, start));
+    nodes.push(
+      <Link
+        key={start}
+        href={href}
+        className="font-semibold text-ocean-600 underline decoration-ocean-200 underline-offset-2 hover:text-ocean-700"
+      >
+        {label}
+      </Link>,
+    );
+    last = start + raw.length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+}
 
 export function generateStaticParams() {
   return GUIDES.map((g) => ({ slug: g.slug }));
@@ -48,7 +74,7 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
     articleSection: guide.category,
     author: { "@type": "Organization", name: "Florida Mullet Run" },
     publisher: { "@type": "Organization", name: "Florida Mullet Run" },
-    mainEntityOfPage: `https://floridamulletrun.com/guide/${guide.slug}`,
+    mainEntityOfPage: `${SITE_URL}/guide/${guide.slug}`,
     video: videos.map((video) => ({
       "@type": "VideoObject",
       name: video.title,
@@ -102,7 +128,7 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
             )}
             {section.paragraphs?.map((p, j) => (
               <p key={j} className="mt-2 text-[15px] leading-relaxed text-slate-700">
-                {p}
+                {renderInline(p)}
               </p>
             ))}
             {section.bullets && (
@@ -113,7 +139,7 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
                     className="flex gap-2 text-[15px] leading-relaxed text-slate-700"
                   >
                     <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ocean-400" />
-                    <span>{b}</span>
+                    <span>{renderInline(b)}</span>
                   </li>
                 ))}
               </ul>

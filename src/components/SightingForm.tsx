@@ -33,6 +33,8 @@ export function SightingForm({
   const [observedAt, setObservedAt] = useState("");
   const [maxTime, setMaxTime] = useState("");
   const [notes, setNotes] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [instagramHandle, setInstagramHandle] = useState("");
   const [location, setLocation] = useState<{
     lat: number;
     lon: number;
@@ -98,6 +100,8 @@ export function SightingForm({
           lat: location?.lat,
           lon: location?.lon,
           location_accuracy_m: location?.accuracy,
+          source_url: instagramUrl,
+          source_handle: instagramHandle,
         }),
       });
       const data = await res.json();
@@ -113,6 +117,8 @@ export function SightingForm({
       setStatus("ok");
       setMessage("Sighting logged. Tight lines! 🎣");
       setNotes("");
+      setInstagramUrl("");
+      setInstagramHandle("");
       setLocation(null);
       setObservedAt(localNow());
       captureEvent("sighting_submitted", {
@@ -120,6 +126,7 @@ export function SightingForm({
         school_size: size,
         has_location: Boolean(location),
         has_notes: Boolean(notes.trim()),
+        has_instagram_source: Boolean(instagramUrl.trim()),
       });
       router.refresh();
     } catch {
@@ -134,23 +141,35 @@ export function SightingForm({
 
   return (
     <form
+      id="report-sighting"
       onSubmit={submit}
       className="space-y-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100"
     >
       <div>
         <label className="mb-1 block text-sm font-semibold text-slate-700">
-          Beach
+          Beach, pass, or river
         </label>
         <select
           value={beachId}
           onChange={(e) => setBeachId(e.target.value)}
           className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-ocean-500 focus:outline-none focus:ring-1 focus:ring-ocean-500"
         >
-          {beaches.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
+          {(["atlantic", "gulf"] as const).map((coast) => {
+            const list = beaches.filter((b) => (b.coast ?? "atlantic") === coast);
+            if (list.length === 0) return null;
+            return (
+              <optgroup
+                key={coast}
+                label={coast === "gulf" ? "Gulf Coast & Panhandle" : "Atlantic Coast"}
+              >
+                {list.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </optgroup>
+            );
+          })}
         </select>
       </div>
 
@@ -247,6 +266,53 @@ export function SightingForm({
           className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-ocean-500 focus:outline-none focus:ring-1 focus:ring-ocean-500"
         />
       </div>
+
+      <fieldset className="space-y-3 rounded-lg border border-fuchsia-100 bg-fuchsia-50/50 p-3">
+        <legend className="px-1 text-sm font-semibold text-slate-700">
+          Instagram source{" "}
+          <span className="font-normal text-slate-400">(optional)</span>
+        </legend>
+        <p className="text-xs leading-relaxed text-slate-500">
+          Connecting someone else&apos;s public post preserves their attribution
+          and links visitors to the original. Posts remain unverified until
+          reviewed.
+        </p>
+        <div>
+          <label
+            htmlFor="instagram-url"
+            className="mb-1 block text-xs font-semibold text-slate-600"
+          >
+            Public post or Reel URL
+          </label>
+          <input
+            id="instagram-url"
+            type="url"
+            inputMode="url"
+            value={instagramUrl}
+            onChange={(e) => setInstagramUrl(e.target.value)}
+            placeholder="https://www.instagram.com/reel/…/"
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-ocean-500 focus:outline-none focus:ring-1 focus:ring-ocean-500"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="instagram-handle"
+            className="mb-1 block text-xs font-semibold text-slate-600"
+          >
+            Original account
+          </label>
+          <input
+            id="instagram-handle"
+            type="text"
+            value={instagramHandle}
+            onChange={(e) => setInstagramHandle(e.target.value)}
+            disabled={!instagramUrl.trim()}
+            maxLength={31}
+            placeholder="@account"
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-ocean-500 focus:outline-none focus:ring-1 focus:ring-ocean-500 disabled:bg-slate-100"
+          />
+        </div>
+      </fieldset>
 
       <button
         type="submit"

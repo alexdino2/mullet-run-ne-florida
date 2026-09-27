@@ -1,5 +1,6 @@
 import { CHARTER_REGIONS } from "@/lib/content/charters";
-import { renderCharterLeadEmail } from "@/lib/email/charter-lead";
+import { sendEmail } from "@/lib/email/resend";
+import { charterLeadEmail } from "@/lib/email/templates";
 import { monetization } from "@/lib/monetization";
 
 /**
@@ -67,46 +68,17 @@ const TIMEOUT_MS = 8_000;
 
 /** Email the listings inbox via Resend. Returns false when unset or failed. */
 export async function notifyCharterLead(lead: CharterLead): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.RESEND_FROM_EMAIL?.trim();
-  if (!apiKey || !from) return false;
-
   const to =
     process.env.CHARTER_LEADS_NOTIFY_EMAIL?.trim() ||
     monetization.charterContactEmail;
-  const {
-    subject,
-    html,
-    text: plain,
-  } = renderCharterLeadEmail(lead, regionName(lead.region_id));
-
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to: [to],
-        reply_to: lead.email,
-        subject,
-        html,
-        text: plain,
-      }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    if (!res.ok) {
-      console.error(
-        `[charter-leads] Resend failed: ${res.status} ${await res.text()}`,
-      );
-    }
-    return res.ok;
-  } catch (err) {
-    console.error("[charter-leads] Resend error", err);
-    return false;
-  }
+  const result = await sendEmail({
+    ...charterLeadEmail(lead, regionName(lead.region_id)),
+    to,
+    replyTo: lead.email,
+  });
+  if (!result.ok)
+    console.error(`[charter-leads] email not sent: ${result.error}`);
+  return result.ok;
 }
 
 /** Create the captain as a HubSpot contact. No-op when unset. */
