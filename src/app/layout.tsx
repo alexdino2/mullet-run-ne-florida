@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { monetization } from "@/lib/monetization";
@@ -180,7 +179,6 @@ export default function RootLayout({
         {/* Third-party ads and analytics load after the first interaction
             or a few idle seconds, keeping them off the mobile critical path. */}
         <AdSenseLoader />
-        <GoogleAnalytics />
       </body>
     </html>
   );
