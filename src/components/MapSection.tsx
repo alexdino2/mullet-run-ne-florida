@@ -15,7 +15,11 @@ const BeachMap = dynamic(() => import("./BeachMap"), {
   ),
 });
 
-export function MapSection() {
+export function MapSection({
+  selectedSummary,
+}: {
+  selectedSummary?: BeachSummary;
+} = {}) {
   const [summaries, setSummaries] = useState<BeachSummary[] | null>(null);
   const [sightings, setSightings] = useState<Sighting[]>([]);
   const [error, setError] = useState(false);
@@ -42,9 +46,26 @@ export function MapSection() {
     };
   }, []);
 
+  const displayedSummaries = useMemo(() => {
+    if (!summaries) return null;
+    if (!selectedSummary) return summaries;
+
+    const selectedIndex = summaries.findIndex(
+      (summary) => summary.beach.id === selectedSummary.beach.id,
+    );
+    if (selectedIndex === -1) return [selectedSummary, ...summaries];
+
+    const merged = [...summaries];
+    merged[selectedIndex] = selectedSummary;
+    return merged;
+  }, [summaries, selectedSummary]);
+
   const ranked = useMemo(
-    () => (summaries ? [...summaries].sort((a, b) => b.score - a.score) : []),
-    [summaries],
+    () =>
+      displayedSummaries
+        ? [...displayedSummaries].sort((a, b) => b.score - a.score)
+        : [],
+    [displayedSummaries],
   );
   const recentSightings = useMemo(() => {
     const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -73,9 +94,9 @@ export function MapSection() {
           </span>
         </div>
         <div className="h-80 w-full">
-          {summaries && !error ? (
+          {displayedSummaries && !error ? (
             <BeachMap
-              summaries={summaries}
+              summaries={displayedSummaries}
               sightings={recentSightings}
             />
           ) : (

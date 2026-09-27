@@ -188,7 +188,16 @@ export default async function FloridaMulletTrackerPage({
             </Link>
           }
         />
-        <MapSection />
+        <MapSection
+          selectedSummary={{
+            beach: data.beach,
+            score: data.score.score,
+            rating: data.score.rating,
+            summary: data.score.summary,
+            wind: data.conditions.wind,
+            waterTempF: data.conditions.waterTempF,
+          }}
+        />
       </section>
 
       <AdSlot label="Advertisement" />

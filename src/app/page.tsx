@@ -133,7 +133,16 @@ export default async function DashboardPage({
         </Link>
       </div>
       <div className="mt-3">
-        <MapSection />
+        <MapSection
+          selectedSummary={{
+            beach: data.beach,
+            score: data.score.score,
+            rating: data.score.rating,
+            summary: data.score.summary,
+            wind: data.conditions.wind,
+            waterTempF: data.conditions.waterTempF,
+          }}
+        />
       </div>
 
       <AdSlot label="Advertisement" />
