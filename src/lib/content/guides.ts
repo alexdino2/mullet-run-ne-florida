@@ -72,7 +72,7 @@ export const GUIDES: Guide[] = [
         heading: "The route: north to south",
         paragraphs: [
           "The run generally starts in northern and central Florida in late August to early September, builds through mid-September and October, and can stretch into late November depending on how fast the water cools. Schools push south along the Atlantic beaches and through the inlets — the Space Coast, Sebastian, Jupiter, and on toward South Florida — before mature adults move well offshore to spawn.",
-          "That north-to-south progression is exactly why this site's opportunity score weights the season window differently by latitude: the Northeast Florida beaches peak earlier than Miami.",
+          "That north-to-south progression is exactly why this site's opportunity score weights the season window differently by latitude: the Northeast Florida beaches peak earlier than Miami. The Gulf coast runs on a different pattern — see the Gulf Coast guide.",
         ],
       },
       {
@@ -108,6 +108,9 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: "Northeast Florida",
+        paragraphs: [
+          "Start with the dedicated beach guides for early-season timing:",
+        ],
         bullets: [
           "[Mickler's Landing](/beaches/micklers) (Ponte Vedra) — the site's priority beach; long, clean surf that loads up early in the season.",
           "[Jacksonville Beach](/beaches/jax-beach) & [Mayport](/beaches/mayport) — pier and jetty structure at the St. Johns River mouth.",
@@ -116,6 +119,9 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: "The Space Coast",
+        paragraphs: [
+          "Mid-corridor choke points — open each beach page for photos, access, and tactics:",
+        ],
         bullets: [
           "[Ponce Inlet](/beaches/ponce-inlet) — a legendary funnel where bait bottlenecks and predators wait.",
           "[Cocoa Beach](/beaches/cocoa-beach) — miles of wadeable surf; watch the bird activity.",
@@ -124,10 +130,19 @@ export const GUIDES: Guide[] = [
       },
       {
         heading: "Treasure Coast & Southeast",
+        paragraphs: [
+          "Later-season stations as pods push south — guides cover Fort Pierce through Miami Beach.",
+        ],
         bullets: [
           "[Fort Pierce Inlet](/beaches/fort-pierce) — strong current and deep cuts hold big predators.",
           "[Jupiter Inlet](/beaches/jupiter-inlet) — clear water and a well-known tarpon corridor.",
           "[Fort Lauderdale](/beaches/fort-lauderdale) & [Miami Beach](/beaches/miami-beach) — the tail end of the run as pods push south later in fall.",
+        ],
+      },
+      {
+        heading: "Beach-by-beach guides",
+        paragraphs: [
+          "Every station on the live map has its own page with a photo, SEO-ready overview, access notes, and angler tips. Browse the full list on the beaches hub, or jump from a map pin.",
         ],
       },
       {
@@ -138,6 +153,75 @@ export const GUIDES: Guide[] = [
       },
     ],
     related: ["tactics", "biology", "beaches-hub"],
+  },
+  {
+    slug: "gulf-coast",
+    title: "The Gulf Coast Mullet Run: How It Differs and How We Score It",
+    category: "Locations",
+    emoji: "🌅",
+    summary:
+      "On the Gulf, mullet don't parade down the beach — they stage in bays and rivers, then leave through the passes. Here's what triggers the exit, where it happens, and how the Gulf score works.",
+    updated: "2026-09-27",
+    readMinutes: 7,
+    sections: [
+      {
+        paragraphs: [
+          "On Florida's Atlantic side the fall run is a moving river of bait that slides south along one long beach after another. The Gulf side is built differently: shallow bays, barrier islands, marsh, and spring-fed rivers. Mullet spend the summer feeding in that protected water, and the run is really a series of exits — schools leaving bays and river mouths through a handful of passes on their way to spawn far offshore over the continental shelf.",
+          "That is why the Gulf stations on this site are mostly passes and river mouths, and why they use a different score from the Atlantic beaches.",
+        ],
+      },
+      {
+        heading: "What triggers a Gulf exit",
+        paragraphs: [
+          "No single cue sends the fish out. The biggest movements tend to come when several line up at once:",
+        ],
+        bullets: [
+          "A cold front: pressure drops sharply ahead of it, and fishermen have long called these fall fronts \"northers.\"",
+          "North wind behind the front, which blows offshore along the Gulf coast and pushes water out of the bays — a wind-driven ebb the fish can ride through the passes.",
+          "Cooling water: shallow bays that sat in the upper 80s in late summer drop fast once the first strong fronts arrive.",
+          "A strong outgoing tide, strongest around the spring tides that come with new and full moons.",
+          "A freshwater pulse: heavy rain before or with a front can freshen a river mouth quickly and flush staged fish downstream.",
+          "Shorter days, which set the season: they bring the fish into spawning condition weeks before the weather gives the final push.",
+        ],
+      },
+      {
+        heading: "Region by region",
+        paragraphs: [
+          "Panhandle (Pensacola to Apalachicola): deep passes drain big river-fed bays — Pensacola Bay, Choctawhatchee Bay through Destin's East Pass, St. Andrew Bay, and Apalachicola Bay. North winds behind a front are easy to see here in the outflow.",
+          "Big Bend (St. Marks to Homosassa): there are no long sandy beaches. Mullet hold in the deep holes and lower reaches of rivers like the St. Marks, Steinhatchee, Suwannee, Crystal, and Homosassa, then leave together, straight offshore, when temperature and moon line up.",
+          "Tampa Bay to Charlotte Harbor: schools work through the bays and leave through high-current passes such as Egmont Key, Longboat Pass, Venice, and Boca Grande Pass, often hugging the barrier islands south before turning offshore. This stretch produces the large majority of Florida's commercial striped mullet landings.",
+          "Southwest Florida (Captiva to Marco Island): the latest leg of the run, with passes draining Pine Island Sound, mangrove backwaters, and the edge of the Ten Thousand Islands.",
+        ],
+      },
+      {
+        heading: "How the Gulf score works",
+        paragraphs: [
+          "Each Gulf station gets a 0–100 exit score from free public data, updated hourly. Like the Atlantic score, every part is shown in the \"why this score\" breakdown:",
+        ],
+        bullets: [
+          "Season window — the Panhandle and Big Bend peak in October and November; the window slides later the farther south you go.",
+          "Cold front — the largest 24-hour pressure fall in the last two days, from the station's own barometer (with a weather-model fallback).",
+          "North-wind flush — current wind and the share of the last 12 hours from NW through NE.",
+          "Water cooling — the two-day water temperature change plus how far the water has fallen out of the 80s.",
+          "Outgoing tide strength — tide stage from NOAA predictions, weighted by how close today's range is to the next spring tide.",
+          "Moon phase — days from the nearest new or full moon.",
+          "River flush — at passes and river mouths with a USGS gauge, today's flow against the two-week median, or a sudden drop in salinity.",
+        ],
+      },
+      {
+        paragraphs: [
+          "The \"next best window\" looks two days ahead using forecast wind and forecast pressure, so a front on its way shows up before it arrives. Water temperature and river flow are held at today's values because there is no reliable forecast for them.",
+          "These weights are a research-based starting point, not a trained model. The site logs every station's inputs every hour; once a season of sightings has built up, the weights will be checked against what actually happened. Your reports on the sightings page are what make that possible.",
+        ],
+      },
+      {
+        heading: "Rules still apply",
+        paragraphs: [
+          "Mullet are managed by the Florida Fish and Wildlife Conservation Commission, with gear limits, size and bag rules, and commercial closures that protect the spawning run. Check the regulations guide and confirm current limits with the FWC before you throw a net.",
+        ],
+      },
+    ],
+    related: ["locations", "biology", "regulations", "tactics"],
   },
   {
     slug: "regulations",

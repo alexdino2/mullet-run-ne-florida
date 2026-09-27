@@ -1,6 +1,24 @@
 export type SchoolSize = "small" | "medium" | "large" | "huge";
 
 export type AlertChannel = "none" | "email" | "sms" | "push";
+export type SightingSource = "eyewitness" | "instagram";
+export type VerificationStatus = "unverified" | "verified";
+
+export type Coast = "atlantic" | "gulf";
+
+export type RegionId =
+  | "northeast-florida"
+  | "space-coast"
+  | "treasure-coast"
+  | "southeast-florida"
+  | "panhandle"
+  | "big-bend"
+  | "tampa-bay"
+  | "sarasota-charlotte"
+  | "southwest-florida";
+
+/** Beaches are where bait runs the surf; passes and river mouths are exits. */
+export type StationType = "beach" | "pass" | "river";
 
 export interface Beach {
   id: string;
@@ -8,9 +26,18 @@ export interface Beach {
   lat: number;
   lon: number;
   priority: number;
+  /** NOAA CO-OPS station used for high/low tide predictions. */
   tide_station: string | null;
+  /** NDBC station (buoy or NOS/C-MAN) for wind, pressure, and water temp. */
   buoy_station: string | null;
   nws_note: string | null;
+  coast: Coast;
+  region: RegionId;
+  station_type: StationType;
+  /** Optional second NDBC station used only when the primary has no water temp. */
+  temp_buoy_station: string | null;
+  /** Optional USGS river gauge feeding this pass or river mouth. */
+  usgs_site: string | null;
 }
 
 export interface Sighting {
@@ -23,6 +50,10 @@ export interface Sighting {
   lat: number | null;
   lon: number | null;
   location_accuracy_m: number | null;
+  source_type: SightingSource;
+  source_url: string | null;
+  source_handle: string | null;
+  verification_status: VerificationStatus;
   created_at: string;
 }
 
@@ -74,6 +105,8 @@ export interface TideState {
   stage: TideStage;
   nextEvent?: TideEvent;
   events: TideEvent[];
+  /** Range near `atMs` relative to the biggest range in the window (0..1). */
+  rangeRatio?: number;
 }
 
 export interface Conditions {
@@ -82,8 +115,21 @@ export interface Conditions {
   waterTempF?: number;
   waveHeightFt?: number;
   tide?: TideState;
-  /** Fraction 0..1 of recent buoy observations blowing out of the NE quadrant. */
-  recentNeFraction?: number;
+  /** Fraction 0..1 of recent observations blowing from NE through E. */
+  recentEasterlyFraction?: number;
+  /** Latest sea-level pressure (hPa). */
+  pressureHpa?: number;
+  /**
+   * Largest 24-hour pressure fall seen over the last ~48 hours, in hPa
+   * (positive number = pressure dropped). The signature of a cold front.
+   */
+  pressureDrop24hHpa?: number;
+  /** Water temp change over the last ~48 hours in °F (negative = cooling). */
+  waterTempChange48hF?: number;
+  /** Fraction 0..1 of recent hours with a north-sector (NW–NE) breeze. */
+  recentNortherlyFraction?: number;
+  moon?: MoonState;
+  river?: RiverState;
   /** Source labels for transparency in the UI. */
   sources: string[];
   observedAt: string;
@@ -100,6 +146,8 @@ export interface ScoreComponent {
 }
 
 export interface ScoreResult {
+  /** Which scoring model produced this result. */
+  model?: "atlantic-surf" | "gulf-trigger";
   score: number; // 0..100
   rating: "poor" | "fair" | "good" | "prime";
   components: ScoreComponent[];
@@ -110,6 +158,31 @@ export interface HourlyForecast {
   time: string; // ISO
   wind?: WindObservation;
   airTempF?: number;
+  /** Sea-level pressure (hPa), when the forecast source provides it. */
+  pressureHpa?: number;
+}
+
+export interface MoonState {
+  /** 0 = new, 0.5 = full, cycles to 1. */
+  phase: number;
+  /** Illuminated fraction 0..1. */
+  illumination: number;
+  name: string;
+  /** Days to the nearest new or full moon (spring tides). */
+  daysFromSyzygy: number;
+}
+
+export interface RiverState {
+  site: string;
+  label: string;
+  /** Latest 24-hour mean discharge (cubic feet per second). */
+  dischargeCfs?: number;
+  /** Latest 24-hour mean relative to the prior two-week median. */
+  dischargeRatio?: number;
+  /** Latest specific conductance (µS/cm), a salinity proxy at tidal gauges. */
+  conductance?: number;
+  /** Conductance change over ~48h as a fraction (negative = freshening). */
+  conductanceChange?: number;
 }
 
 export interface OpportunityWindow {

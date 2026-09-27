@@ -33,15 +33,27 @@ export default function BeachMap({
   summaries: BeachSummary[];
   sightings: Sighting[];
 }) {
-  const center: [number, number] = [27.8, -81.45];
   const beaches = new Map(
     summaries.map((summary) => [summary.beach.id, summary.beach]),
   );
+  // Fit whichever coast is shown; fall back to the whole state.
+  const pts = summaries
+    .map((s) => [s.beach.lat, s.beach.lon] as [number, number])
+    .filter(([a, b]) => Number.isFinite(a) && Number.isFinite(b));
+  const bounds: [[number, number], [number, number]] = pts.length
+    ? [
+        [Math.min(...pts.map((p) => p[0])), Math.min(...pts.map((p) => p[1]))],
+        [Math.max(...pts.map((p) => p[0])), Math.max(...pts.map((p) => p[1]))],
+      ]
+    : [
+        [24.5, -87.6],
+        [31, -80],
+      ];
 
   return (
     <MapContainer
-      center={center}
-      zoom={6}
+      bounds={bounds}
+      boundsOptions={{ padding: [18, 18] }}
       scrollWheelZoom={false}
       style={{ height: "100%", width: "100%" }}
       className="z-0"
@@ -92,6 +104,17 @@ export default function BeachMap({
                 </div>
                 <div>{new Date(sighting.observed_at).toLocaleString()}</div>
                 {sighting.notes && <div className="mt-1">{sighting.notes}</div>}
+                {sighting.source_type === "instagram" &&
+                  sighting.source_url && (
+                    <a
+                      href={sighting.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-block font-semibold text-fuchsia-700 underline"
+                    >
+                      Instagram source ↗
+                    </a>
+                  )}
               </div>
             </Tooltip>
           </CircleMarker>
@@ -106,7 +129,7 @@ export default function BeachMap({
           <CircleMarker
             key={s.beach.id}
             center={[s.beach.lat, s.beach.lon]}
-            radius={s.beach.id === "micklers" ? 14 : 11}
+            radius={s.beach.id === "micklers" ? 14 : s.beach.station_type === "beach" ? 11 : 10}
             pathOptions={{
               color: hex,
               weight: 4,
@@ -125,6 +148,11 @@ export default function BeachMap({
             <Tooltip direction="top" offset={[0, -6]} opacity={1}>
               <div className="text-center">
                 <div className="font-semibold">{s.beach.name}</div>
+                {s.beach.station_type !== "beach" && (
+                  <div className="text-[10px] uppercase tracking-wide text-slate-500">
+                    {s.beach.station_type === "pass" ? "Pass / inlet" : "River mouth"}
+                  </div>
+                )}
                 <div>
                   Score <span className="font-bold">{s.score}</span>
                 </div>

@@ -41,9 +41,30 @@ export function SightingList({
             <div className="mt-0.5 flex items-center gap-2 text-sm text-slate-600">
               <span aria-hidden>{size.emoji}</span>
               <span className="font-medium">{size.label} school</span>
+              {s.verification_status === "verified" && (
+                <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                  Verified
+                </span>
+              )}
             </div>
             {s.notes && (
               <p className="mt-1 text-sm text-slate-500">“{s.notes}”</p>
+            )}
+            {s.source_type === "instagram" && s.source_url && (
+              <a
+                href={s.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-analytics-event="instagram_sighting_opened"
+                data-analytics-property-beach-id={s.beach_id}
+                className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-fuchsia-700 hover:text-fuchsia-800"
+              >
+                <span aria-hidden>◎</span>
+                {s.source_handle
+                  ? `View @${s.source_handle} on Instagram`
+                  : "View original on Instagram"}
+                <span aria-hidden>↗</span>
+              </a>
             )}
           </li>
         );

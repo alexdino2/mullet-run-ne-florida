@@ -5,6 +5,7 @@ import type {
 } from "@/lib/types";
 import { safeFetchText } from "@/lib/data/http";
 import { getServerSupabase, hasServiceRole } from "@/lib/supabase/server";
+import { SITE_URL } from "@/lib/site";
 
 const NEWS_ENDPOINT = "https://news.google.com/rss/search";
 const REPORT_MAX_AGE_MS = 48 * 60 * 60 * 1000;
@@ -80,7 +81,7 @@ export async function checkBeachForSightings(
       Accept: "application/rss+xml, application/xml, text/xml",
       "User-Agent":
         process.env.NWS_USER_AGENT ??
-        "FloridaMulletRun/1.0 (https://floridamulletrun.com)",
+        `FloridaMulletRun/1.0 (${SITE_URL})`,
     },
   });
   const checkedAt = now.toISOString();
