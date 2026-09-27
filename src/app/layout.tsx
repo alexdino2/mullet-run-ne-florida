@@ -28,6 +28,7 @@ export const metadata: Metadata = {
   applicationName: "Florida Mullet Run",
   keywords: [
     "florida mullet run",
+    "florida mullet tracker",
     "mullet run 2026",
     "where are the mullet",
     "where is the mullet run right now",
@@ -83,6 +84,7 @@ const NAV = [
 ];
 
 const FOOTER_LINKS = [
+  { href: "/florida-mullet-tracker", label: "Florida mullet tracker" },
   { href: "/beaches", label: "Beach guides" },
   { href: "/guide/biology", label: "Migration biology" },
   { href: "/guide/locations", label: "Inlet guides" },
@@ -136,7 +138,7 @@ export default function RootLayout({
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4183912956441070"
         crossOrigin="anonymous"
       />
-      <body className="min-h-screen">
+      <body className="min-h-screen bg-slate-50 font-sans">
         <PostHogAnalytics>
           <script
             type="application/ld+json"
