@@ -158,8 +158,9 @@ ever sees the public anon key (protected by Row Level Security).
 | `ALERT_EMAIL_TO` | Railway | Comma-separated recipients for alerts and job failures |
 | `NWS_USER_AGENT` | optional | Contact string sent to `api.weather.gov` per their etiquette |
 | `NEXT_PUBLIC_POSTHOG_KEY` | optional | Override the built-in PostHog project API key |
-| `NEXT_PUBLIC_POSTHOG_HOST` | optional | PostHog ingestion host; defaults to `https://us.i.posthog.com` |
-| `NEXT_PUBLIC_ADS_CLIENT` | optional | Display-ad publisher id (AdSense `ca-pub-…`); empty renders labeled ad placeholders |
+| `NEXT_PUBLIC_POSTHOG_HOST` | optional | PostHog region host that `/ingest` proxies to; defaults to `https://us.i.posthog.com` |
+| `NEXT_PUBLIC_ADS_CLIENT` | optional | Overrides the AdSense publisher id (defaults to the approved `ca-pub-4183912956441070`) |
+| `NEXT_PUBLIC_ADS_SLOT` | optional | Overrides the AdSense ad-unit id for in-page `<AdSlot>` units (defaults to the `2953754323` in-content unit) |
 | `NEXT_PUBLIC_AMAZON_AFFILIATE_TAG` | optional | Amazon Associates tag appended to gear links; empty links stay un-tagged |
 | `NEXT_PUBLIC_CHARTER_CONTACT_EMAIL` | optional | Address captains email to claim a charter listing |
 | `NEXT_PUBLIC_INSIDER_WAITLIST_URL` | optional | Hosted waitlist form for Insider; falls back to a mailto |
@@ -311,7 +312,8 @@ Console and Bing Webmaster Tools.
 
 | Feature | Where | How |
 | ------- | ----- | --- |
-| **Display ads** | `<AdSlot>` across pages | Real AdSense units when `NEXT_PUBLIC_ADS_CLIENT` is set; labeled placeholders otherwise. Swap the component's body for Raptive/Mediavine after crossing their traffic thresholds. |
+| **Display ads** | `<AdSenseLoader>` in the root layout + `<AdSlot>` across pages | The AdSense script loads on every page, after the visitor's first interaction or 5 s after load so it stays off the mobile critical path ([`src/lib/defer.ts`](src/lib/defer.ts); PostHog uses the same trigger). Auto ads (toggled in the AdSense dashboard) cover the whole site. `<AdSlot>` renders the responsive in-content unit (`2953754323`, overridable per placement via `slot` or site-wide via `NEXT_PUBLIC_ADS_SLOT`). Swap the component's body for Raptive/Mediavine after crossing their traffic thresholds. |
+| **`ads.txt`** | `/ads.txt` | Public authorized-sellers declaration for the verified AdSense publisher ([`src/app/ads.txt/route.ts`](src/app/ads.txt/route.ts)); available before display-ad units are enabled so AdSense can crawl it during site verification. |
 | **Affiliate gear** | `/gear` | Curated tackle catalog ([`src/lib/content/gear.ts`](src/lib/content/gear.ts)); links carry the Amazon Associates tag when configured, with an FTC disclosure and `rel="sponsored nofollow"`. |
 | **Charter lead-gen** | `/charters` | Inlet directory where verified captains claim a listing (Phase 2). |
 | **Insider membership** | `/insider` | Subscription waitlist for real-time alerts and member perks (Phase 3). |

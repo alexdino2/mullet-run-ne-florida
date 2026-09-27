@@ -161,9 +161,6 @@ export default async function FloridaMulletTrackerPage({
             </p>
             <p className="mt-1 text-xs text-slate-400">
               Updated {generated}
-              {data.conditions.sources.length > 0
-                ? ` · ${data.conditions.sources.join(", ")}`
-                : " · sources unavailable"}
               {" · "}
               <Link
                 href={`/beaches/${selected.id}`}

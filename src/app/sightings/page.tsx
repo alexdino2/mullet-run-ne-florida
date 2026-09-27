@@ -7,6 +7,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { SightingForm } from "@/components/SightingForm";
 import { SightingList } from "@/components/SightingList";
 import { DailySightingChecks } from "@/components/DailySightingChecks";
+import { AdSlot } from "@/components/AdSlot";
 import { FaqSection } from "@/components/FaqSection";
 
 export const dynamic = "force-dynamic";
@@ -92,6 +93,8 @@ export default async function SightingsPage({
       <div className="mt-4">
         <SightingForm beaches={beaches} defaultBeachId={defaultBeachId} />
       </div>
+
+      <AdSlot label="Advertisement" />
 
       <h2 className="mb-2 mt-6 text-xs font-bold uppercase tracking-widest text-slate-400">
         Daily beach checks
