@@ -1,6 +1,8 @@
 export type SchoolSize = "small" | "medium" | "large" | "huge";
 
 export type AlertChannel = "none" | "email" | "sms" | "push";
+export type SightingSource = "eyewitness" | "instagram";
+export type VerificationStatus = "unverified" | "verified";
 
 export interface Beach {
   id: string;
@@ -23,6 +25,10 @@ export interface Sighting {
   lat: number | null;
   lon: number | null;
   location_accuracy_m: number | null;
+  source_type: SightingSource;
+  source_url: string | null;
+  source_handle: string | null;
+  verification_status: VerificationStatus;
   created_at: string;
 }
 

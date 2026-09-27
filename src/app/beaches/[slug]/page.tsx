@@ -9,7 +9,9 @@ import {
   getBeachContent,
   getBeachContentById,
 } from "@/lib/content/beaches";
+import { getSightingsForBeach } from "@/lib/sightings";
 import { AdSlot } from "@/components/AdSlot";
+import { SightingList } from "@/components/SightingList";
 
 export function generateStaticParams() {
   return BEACH_CONTENT.map((b) => ({ slug: b.slug }));
@@ -70,11 +72,16 @@ function BulletList({ items }: { items: string[] }) {
   );
 }
 
-export default function BeachPage({ params }: { params: { slug: string } }) {
+export default async function BeachPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   const content = getBeachContent(params.slug);
   if (!content) notFound();
 
   const station = FALLBACK_BEACHES.find((b) => b.id === content.id);
+  const sightings = await getSightingsForBeach(content.id, 6);
   const nearby = content.nearby
     .map((id) => getBeachContentById(id))
     .filter((b): b is NonNullable<typeof b> => Boolean(b));
@@ -211,7 +218,7 @@ export default function BeachPage({ params }: { params: { slug: string } }) {
           Live score for {station?.name ?? "this beach"}
         </Link>
         <Link
-          href="/sightings"
+          href={`/sightings?beach=${content.id}#report-sighting`}
           className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200"
         >
           Report a sighting
@@ -263,6 +270,33 @@ export default function BeachPage({ params }: { params: { slug: string } }) {
           )}
         </section>
       </div>
+
+      <section className="mt-8 border-t border-slate-200 pt-5">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">
+              Recent sightings
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Eyewitness and attributed Instagram reports connected to this
+              beach.
+            </p>
+          </div>
+          <Link
+            href={`/sightings?beach=${content.id}#report-sighting`}
+            className="shrink-0 text-xs font-bold text-ocean-600 hover:text-ocean-700"
+          >
+            Add one →
+          </Link>
+        </div>
+        <div className="mt-3">
+          <SightingList
+            sightings={sightings}
+            beaches={station ? [station] : FALLBACK_BEACHES}
+            emptyHint={`No sightings connected to ${station?.name ?? content.headline} yet.`}
+          />
+        </div>
+      </section>
 
       {nearby.length > 0 && (
         <div className="mt-8 border-t border-slate-200 pt-4">
