@@ -1,5 +1,6 @@
 /**
- * Railway job runner. Each Railway cron service runs one job and exits:
+ * Railway job runner. Each Railway cron service runs one job and exits
+ * (service settings are documented in the README):
  *
  *   npx tsx worker/run.ts refresh          # hourly: scores, cache, feature log, alerts
  *   npx tsx worker/run.ts sighting-checks  # daily: public news scan

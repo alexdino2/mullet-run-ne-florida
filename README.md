@@ -224,12 +224,16 @@ statements are idempotent.
 
 Recurring work runs on Railway, not Vercel Cron, so request handlers stay
 short. Railway project **florida-mullet-run** has two cron services built from
-this repo, each configured by a file in [`worker/`](worker):
+this repo (settings live on the services; Railway's config-file format is
+deprecated):
 
-| Service | Config | Schedule (UTC) | Command |
-| ------- | ------ | -------------- | ------- |
-| `refresh` | `worker/railway.refresh.json` | `7 * * * *` (hourly) | `npx tsx worker/run.ts refresh` |
-| `sighting-checks` | `worker/railway.sighting-checks.json` | `13 11 * * *` (daily) | `npx tsx worker/run.ts sighting-checks` |
+| Service | Schedule (UTC) | Start command | Build command |
+| ------- | -------------- | ------------- | ------------- |
+| `refresh` | `7 * * * *` (hourly) | `npx tsx worker/run.ts refresh` | `echo` (no Next.js build) |
+| `sighting-checks` | `13 11 * * *` (daily) | `npx tsx worker/run.ts sighting-checks` | `echo` (no Next.js build) |
+
+Both use restart policy `NEVER` and watch `src/lib/**`, `worker/**`, and the
+package files, so site-only changes don't rebuild them.
 
 The refresh scores all 33 stations, upserts `mw_conditions_cache`, writes one
 `mw_feature_log` row per station for the hour, and emails matching alert rules
