@@ -3,8 +3,8 @@
  *
  * Gulf stations are mostly passes and river mouths rather than surf beaches:
  * mullet stage in the bays and rivers, then leave through these gaps when a
- * front, cooling water, and a strong outgoing tide line up. Photos are not
- * sourced yet, so pages render a map-style header instead of an image.
+ * front, cooling water, and a strong outgoing tide line up. Photos are
+ * Wikimedia Commons images under CC BY / CC BY-SA, credited on each page.
  */
 import type { BeachContent } from "@/lib/content/beaches";
 
@@ -23,6 +23,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Panhandle",
     updated: UPDATED,
     keywords: ["pensacola mullet run", "pensacola pass fishing", "fort pickens fishing", "panhandle mullet run"],
+    image: {
+      src: "/images/beaches/pensacola-pass.jpg",
+      alt: "White sand and Gulf water on the Fort Pickens end of Santa Rosa Island near Pensacola Pass",
+      width: 1200,
+      height: 900,
+      credit: "Ebyabe",
+      license: "CC BY-SA 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:GINS_FL_Fort_Pickens_beach02.jpg",
+    },
     about: [
       "Pensacola Pass is the main exit for a large bay system fed by the Escambia, Blackwater, and Yellow rivers. When fall fronts push north wind down the bay, the outgoing water carries staged mullet through the pass and along the Fort Pickens shoreline.",
       "The Fort Pickens area of Gulf Islands National Seashore gives shore anglers access to the east side of the pass; the Perdido Key side is reached from the west. Boat traffic and current are both heavy here.",
@@ -56,6 +66,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Panhandle",
     updated: UPDATED,
     keywords: ["navarre beach mullet run", "navarre pier fishing", "santa rosa island fishing", "panhandle surf fishing mullet"],
+    image: {
+      src: "/images/beaches/navarre-beach.jpg",
+      alt: "Navarre Beach Fishing Pier reaching into the Gulf of Mexico",
+      width: 1200,
+      height: 803,
+      credit: "Taminar",
+      license: "CC BY-SA 4.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Navarre_Beach_Pier_IGP2095.jpg",
+    },
     about: [
       "Navarre sits between Pensacola Pass and Destin's East Pass. Mullet leaving either bay system move along this surf, and the pier gives a high vantage point over the bar and trough.",
       "Unlike the passes, Navarre is a beach station: the fish are moving along the shoreline rather than exiting a single gap, so wind and tide timing matter as much as the front itself.",
@@ -88,6 +108,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Panhandle",
     updated: UPDATED,
     keywords: ["destin mullet run", "east pass destin fishing", "destin jetties fishing", "choctawhatchee bay mullet"],
+    image: {
+      src: "/images/beaches/destin-east-pass.jpg",
+      alt: "Okaloosa Island surf just west of Destin's East Pass",
+      width: 1200,
+      height: 800,
+      credit: "logopop",
+      license: "CC BY-SA 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Okaloosa_Island,_FL,_USA_-_panoramio_(1).jpg",
+    },
     about: [
       "East Pass is the only connection between Choctawhatchee Bay and the Gulf, so everything leaving the bay funnels through it. The Choctawhatchee River feeds the bay from the east, and a rise in river flow after heavy rain adds to the outflow.",
       "Jetties line the pass, and Norriego Point sits on the harbor side. Expect heavy boat traffic in season.",
@@ -121,6 +151,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Panhandle",
     updated: UPDATED,
     keywords: ["panama city beach mullet run", "st andrews state park jetties", "st andrew pass fishing", "panama city mullet"],
+    image: {
+      src: "/images/beaches/st-andrew-pass.jpg",
+      alt: "Emerald Gulf water off St. Andrews State Park near St. Andrew Pass",
+      width: 1200,
+      height: 800,
+      credit: "Royalbroil",
+      license: "CC BY-SA 4.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Emerald_Coast_Waters_from_St_Andrews_State_Park.jpg",
+    },
     about: [
       "St. Andrew Pass drains St. Andrew Bay and its arms. The state park jetties on the west side give anglers a walkable platform right over moving water.",
       "Shell Island lies across the pass to the east and is reached by boat or shuttle.",
@@ -153,6 +193,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Panhandle",
     updated: UPDATED,
     keywords: ["cape san blas mullet run", "st joseph peninsula fishing", "port st joe mullet", "cape san blas surf fishing"],
+    image: {
+      src: "/images/beaches/cape-san-blas.jpg",
+      alt: "Dunes and surf at St. Joseph Peninsula State Park, north of Cape San Blas",
+      width: 1200,
+      height: 900,
+      credit: "Ebyabe",
+      license: "CC BY-SA 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:St_Joseph_Peninsula_FL_SP_beach_north01.jpg",
+    },
     about: [
       "Cape San Blas wraps around St. Joseph Bay, a clear, grass-lined bay without a big river feeding it. Mullet leaving the bay and moving along the coast pass the cape and the peninsula surf.",
       "It is a beach station on the map: the fish travel the shoreline, so tide and wind timing matter alongside the front.",
@@ -185,6 +235,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Panhandle",
     updated: UPDATED,
     keywords: ["st george island mullet run", "sikes cut fishing", "apalachicola bay mullet", "forgotten coast mullet run"],
+    image: {
+      src: "/images/beaches/st-george-island.jpg",
+      alt: "Gulf surf along the beach at St. George Island State Park",
+      width: 1200,
+      height: 900,
+      credit: "Ebyabe",
+      license: "CC BY-SA 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:PC_St_George_Island_SP07.jpg",
+    },
     about: [
       "Apalachicola Bay is fed by the Apalachicola River, the largest river in Florida by flow. When a front drives north wind down the bay, a lot of water leaves through Sikes Cut and the other passes around the barrier islands.",
       "The cut sits at the gated west end of the island and is mostly fished by boat. Shore anglers use the bridge, the island's public accesses, and the state park on the east end.",
@@ -218,6 +278,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Big Bend",
     updated: UPDATED,
     keywords: ["st marks mullet run", "st marks river fishing", "apalachee bay mullet", "wakulla mullet"],
+    image: {
+      src: "/images/beaches/st-marks.jpg",
+      alt: "Sunrise over Apalachee Bay at St. Marks National Wildlife Refuge",
+      width: 1200,
+      height: 711,
+      credit: "James Leon Young",
+      license: "CC BY-SA 4.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Red_clouds_at_sunrise_over_Apalachee_Bay_St._Marks_NWR_2020-07-22.jpg",
+    },
     about: [
       "St. Marks marks the start of the Big Bend's marsh coast. Mullet gather in the lower rivers and the marsh creeks through the summer, then leave for Apalachee Bay and the Gulf when fall fronts and cooling water arrive.",
       "The town is part of the story of Florida's mullet fishery — commercial netting families here were among those most affected by the 1994 net limitation amendment.",
@@ -251,6 +321,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Big Bend",
     updated: UPDATED,
     keywords: ["steinhatchee mullet run", "steinhatchee river fishing", "deadman bay mullet", "big bend mullet run"],
+    image: {
+      src: "/images/beaches/steinhatchee.jpg",
+      alt: "Boats along the Steinhatchee River",
+      width: 1200,
+      height: 900,
+      credit: "Ebyabe",
+      license: "CC BY-SA 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Steinhatchee_FL_River_west01.jpg",
+    },
     about: [
       "Steinhatchee is best known for summer scallops, but the river and its marsh hold mullet well into fall. Fish stage in the lower river and move out over the flats when the water cools and a front passes.",
       "The river gauge here is tidal, so the score watches salinity: a sudden freshening after rain is one of the flush triggers.",
@@ -284,6 +364,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Big Bend",
     updated: UPDATED,
     keywords: ["cedar key mullet run", "suwannee river mullet", "cedar key fishing", "big bend mullet"],
+    image: {
+      src: "/images/beaches/cedar-key-suwannee.jpg",
+      alt: "Beach and Dock Street waterfront at Cedar Key",
+      width: 1200,
+      height: 900,
+      credit: "Ebyabe",
+      license: "CC BY-SA 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Cedar_Key_Dock_Street01.jpg",
+    },
     about: [
       "The Suwannee is one of Florida's largest rivers, and its mouth north of Cedar Key is prime Big Bend staging water. Here mullet do not run a beach; they hold in the river and its creeks, then leave for the Gulf when temperature and moon line up.",
       "Cedar Key's piers and bridges give shore anglers a view over the surrounding flats and channels.",
@@ -317,6 +407,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Big Bend",
     updated: UPDATED,
     keywords: ["crystal river mullet run", "crystal river fishing", "crystal bay mullet", "citrus county mullet"],
+    image: {
+      src: "/images/beaches/crystal-river.jpg",
+      alt: "Walkway and bridge over the water at Crystal River Preserve State Park",
+      width: 1200,
+      height: 900,
+      credit: "LittleT889",
+      license: "CC BY-SA 4.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Crystal_River_Preserve_State_Park_2.jpg",
+    },
     about: [
       "Springs keep Crystal River's water temperature steady year-round, which makes the Gulf side the thing to watch. As fall fronts chill the shallow bay outside, mullet that summered in the river and marsh move offshore.",
       "The river is heavily used by manatees and paddlers; slow down and follow the posted zones.",
@@ -350,6 +450,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Big Bend",
     updated: UPDATED,
     keywords: ["homosassa mullet run", "homosassa river fishing", "homosassa bay mullet", "big bend mullet run"],
+    image: {
+      src: "/images/beaches/homosassa.jpg",
+      alt: "Monkey Island on the Homosassa River",
+      width: 1200,
+      height: 900,
+      credit: "ChrisNovak",
+      license: "CC BY-SA 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Monkey_Island_on_Homosassa_River,_Florida_USA,_Jan_2013.jpg",
+    },
     about: [
       "Homosassa is the southern edge of the Big Bend's marsh coast. Mullet stage in the deep holes of the river and the bay's creeks, then leave together when the water cools and a strong tide pulls them out.",
       "The river mouth opens onto shallow, rocky flats, so the tide matters for both the fish and your boat.",
@@ -383,6 +493,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Tampa Bay",
     updated: UPDATED,
     keywords: ["tampa bay mullet run", "egmont key fishing", "fort de soto fishing", "tampa bay mullet"],
+    image: {
+      src: "/images/beaches/egmont-fort-desoto.jpg",
+      alt: "Aerial view of Fort De Soto Park at the mouth of Tampa Bay",
+      width: 1200,
+      height: 675,
+      credit: "Catherine Amoo",
+      license: "CC BY-SA 4.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Fort_de_Soto_Beach.jpg",
+    },
     about: [
       "Tampa Bay's mullet leave through the bay mouth around Egmont Key and the passes of Fort De Soto. From there many hug the barrier islands south before heading offshore.",
       "Fort De Soto Park's Gulf and Bay piers are the main shore access; Egmont Key itself is reached only by boat or ferry.",
@@ -416,6 +536,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Tampa Bay",
     updated: UPDATED,
     keywords: ["anna maria island mullet run", "passage key inlet fishing", "bean point fishing", "anna maria mullet"],
+    image: {
+      src: "/images/beaches/anna-maria.jpg",
+      alt: "Gulf beach on Anna Maria Island",
+      width: 1200,
+      height: 900,
+      credit: "Bfpage",
+      license: "CC BY 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:My_Day_on_Anna_Maria_Island_-_Nov_30_2009_028.JPG",
+    },
     about: [
       "Passage Key Inlet is the southern exit from lower Tampa Bay. Mullet leaving the bay and those hugging the barrier islands southbound both pass the north end of the island.",
       "Bean Point and the island's piers give shore anglers several ways to watch the inlet.",
@@ -448,6 +578,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Sarasota & Charlotte Harbor",
     updated: UPDATED,
     keywords: ["longboat pass fishing", "longboat pass mullet", "coquina beach fishing", "sarasota mullet run"],
+    image: {
+      src: "/images/beaches/longboat-pass.jpg",
+      alt: "Coquina Beach jetty at Longboat Pass, south end of Anna Maria Island",
+      width: 1200,
+      height: 675,
+      credit: "Gregory Urbano",
+      license: "CC BY 2.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Longboat_Pass_Coquina_Jetty_(38954573295).jpg",
+    },
     about: [
       "Longboat Pass carries water between Sarasota Bay and the Gulf. On strong fall ebbs, bait leaving the bay and schools traveling the beaches meet at the pass.",
       "Coquina Beach and the bridge area give shore access on the north side.",
@@ -480,6 +620,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Sarasota & Charlotte Harbor",
     updated: UPDATED,
     keywords: ["venice jetty fishing", "venice inlet mullet", "venice mullet run", "sarasota county mullet run"],
+    image: {
+      src: "/images/beaches/venice-inlet.jpg",
+      alt: "Angler on the Venice Inlet jetty as a boat heads out at sunset",
+      width: 1200,
+      height: 900,
+      credit: "Yinzer1",
+      license: "CC BY 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Venice_Jettys.jpg",
+    },
     about: [
       "Venice Inlet connects Roberts Bay and the Intracoastal to the Gulf. Its North and South jetties give shore anglers direct access to moving water.",
       "In the fall, mullet traveling the beaches from the north and schools leaving the local bays both pass the jetties.",
@@ -512,6 +662,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Sarasota & Charlotte Harbor",
     updated: UPDATED,
     keywords: ["stump pass fishing", "stump pass mullet", "englewood mullet run", "lemon bay mullet"],
+    image: {
+      src: "/images/beaches/stump-pass.jpg",
+      alt: "Sea oats and Gulf water at Stump Pass Beach State Park",
+      width: 1200,
+      height: 900,
+      credit: "Ebyabe",
+      license: "CC BY-SA 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Stump_Pass_Beach_SP_beach02.jpg",
+    },
     about: [
       "Stump Pass is the outlet for much of Lemon Bay. It shifts with storms and dredging, so its bars change from year to year.",
       "Shore access is through Stump Pass Beach State Park, with a walk to the pass itself.",
@@ -544,6 +704,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Sarasota & Charlotte Harbor",
     updated: UPDATED,
     keywords: ["boca grande mullet run", "boca grande pass fishing", "charlotte harbor mullet", "gasparilla island fishing"],
+    image: {
+      src: "/images/beaches/boca-grande-pass.jpg",
+      alt: "Port Boca Grande Lighthouse on Gasparilla Island beside Boca Grande Pass",
+      width: 1200,
+      height: 900,
+      credit: "Ebyabe",
+      license: "CC BY-SA 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Gasparilla_Island_SP_lighthouse02.jpg",
+    },
     about: [
       "Charlotte Harbor is fed by the Peace and Myakka rivers and drains mainly through Boca Grande Pass. The coast from Tampa Bay to Charlotte Harbor accounts for the large majority of Florida's commercial striped mullet landings, so fall mullet movement here is heavy.",
       "The pass is deep and fast, and it is best known worldwide for tarpon. Gasparilla Island State Park sits at the south tip beside the lighthouse.",
@@ -577,6 +747,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Southwest Florida",
     updated: UPDATED,
     keywords: ["redfish pass fishing", "captiva mullet run", "pine island sound mullet", "southwest florida mullet run"],
+    image: {
+      src: "/images/beaches/redfish-pass.jpg",
+      alt: "Captiva Pass and North Captiva Island seen from Cayo Costa; Redfish Pass is at North Captiva's southern tip",
+      width: 1200,
+      height: 858,
+      credit: "James St. John",
+      license: "CC BY 2.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Captiva_Pass_%26_North_Captiva_Island_(view_from_Cayo_Costa_Island,_Florida,_USA)_2_(23769694284).jpg",
+    },
     about: [
       "Redfish Pass links Pine Island Sound to the Gulf. On fall ebbs the sound's mullet leave through it and the neighboring passes.",
       "The north tip of Captiva gives limited shore access; most anglers fish it by boat.",
@@ -609,6 +789,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Southwest Florida",
     updated: UPDATED,
     keywords: ["sanibel mullet run", "blind pass fishing", "sanibel fishing", "captiva beach fishing"],
+    image: {
+      src: "/images/beaches/sanibel.jpg",
+      alt: "Sanibel Lighthouse at the east end of Sanibel Island",
+      width: 1200,
+      height: 800,
+      credit: "Pete Markham",
+      license: "CC BY-SA 2.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Florida_Trip_-_March_2019_-_Sanibel_Lighthouse_(33724041868).jpg",
+    },
     about: [
       "Sanibel's Gulf beaches face the traffic lane for schools moving south from Charlotte Harbor and Pine Island Sound. Blind Pass, between Sanibel and Captiva, is the local exit.",
       "It is treated as a beach station on the map: watch the shoreline as much as the pass.",
@@ -641,6 +831,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Southwest Florida",
     updated: UPDATED,
     keywords: ["wiggins pass fishing", "wiggins pass mullet", "delnor wiggins fishing", "naples mullet run"],
+    image: {
+      src: "/images/beaches/wiggins-pass.jpg",
+      alt: "Beach at Delnor-Wiggins Pass State Park",
+      width: 1200,
+      height: 900,
+      credit: "Ebyabe",
+      license: "CC BY-SA 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Delnor-Wiggins_SP_beach01.jpg",
+    },
     about: [
       "Wiggins Pass drains a mangrove-lined backwater system. In the fall its local mullet leave on the ebb, and schools moving down the beaches pass the state park shoreline.",
       "Delnor-Wiggins Pass State Park gives walkable access to the pass on the south side.",
@@ -673,6 +873,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Southwest Florida",
     updated: UPDATED,
     keywords: ["naples mullet run", "naples pier fishing", "naples beach fishing", "southwest florida mullet"],
+    image: {
+      src: "/images/beaches/naples.jpg",
+      alt: "Anglers at the end of the Naples Pier",
+      width: 1200,
+      height: 900,
+      credit: "quadell",
+      license: "CC BY-SA 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:End_of_the_Naples_Pier.jpeg",
+    },
     about: [
       "Naples sits near the southern end of the Gulf run. Schools that left the bays to the north move along these beaches, usually later in the season than the Panhandle and Big Bend.",
       "The Naples Pier gives a high view over the bar, and the beaches run for miles in both directions.",
@@ -705,6 +915,16 @@ export const GULF_BEACH_CONTENT: BeachContent[] = [
     region: "Southwest Florida",
     updated: UPDATED,
     keywords: ["marco island mullet run", "caxambas pass fishing", "marco island fishing", "ten thousand islands mullet"],
+    image: {
+      src: "/images/beaches/marco-island.jpg",
+      alt: "Wide Gulf beach on Marco Island",
+      width: 1200,
+      height: 803,
+      credit: "olekinderhook",
+      license: "CC BY 3.0",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Marco_Island_Beach,_Marco_Island,_Florida_-_panoramio.jpg",
+    },
     about: [
       "Caxambas Pass drains the bays and mangrove islands at the south end of Marco. It is one of the last stops for the Gulf run before the Ten Thousand Islands.",
       "Timing here is late: the score's season window runs weeks behind the Panhandle.",
