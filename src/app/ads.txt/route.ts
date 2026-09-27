@@ -9,10 +9,11 @@
  * AdSense must be able to crawl it while the site is being verified, before
  * ad units are enabled.
  */
+import { adsPublisherId } from "@/lib/monetization";
+
 export function GET() {
   // f08c47fec0942fa0 is Google's fixed ads.txt certification authority id.
-  const body =
-    "google.com, pub-4183912956441070, DIRECT, f08c47fec0942fa0\n";
+  const body = `google.com, ${adsPublisherId}, DIRECT, f08c47fec0942fa0\n`;
 
   return new Response(body, {
     status: 200,

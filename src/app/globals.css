@@ -19,3 +19,12 @@ body {
 .leaflet-container {
   font-family: var(--font-system);
 }
+
+/* Collapse AdSense units Google couldn't fill (AdSense sets
+   data-ad-status="unfilled") instead of leaving a blank labeled box. */
+ins.adsbygoogle[data-ad-status="unfilled"] {
+  display: none !important;
+}
+.ad-slot:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
+  display: none;
+}

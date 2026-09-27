@@ -8,6 +8,7 @@
 
 export interface GuideSection {
   heading?: string;
+  /** Paragraphs and bullets accept inline `[label](/path)` internal links. */
   paragraphs?: string[];
   bullets?: string[];
   video?: {
@@ -97,36 +98,36 @@ export const GUIDES: Guide[] = [
     emoji: "📍",
     summary:
       "Inlet-by-inlet breakdown of the Atlantic migration corridor, from Mickler's Landing down to Miami Beach — the choke points where predators pin the bait.",
-    updated: "2026-09-01",
+    updated: "2026-09-26",
     readMinutes: 7,
     sections: [
       {
         paragraphs: [
-          "Inlets are choke points. Moving water funnels bait through a narrow gap, and gamefish stack up to ambush it. These are the corridor's highest-percentage stops, roughly north to south — the same stations this site scores live on the home page.",
+          "Inlets are choke points. Moving water funnels bait through a narrow gap, and gamefish stack up to ambush it. These are the corridor's highest-percentage stops, roughly north to south — the same stations this site scores live on the home page. Each one links to its full beach guide, or browse [all beach guides](/beaches) by region.",
         ],
       },
       {
         heading: "Northeast Florida",
         bullets: [
-          "Mickler's Landing (Ponte Vedra) — the site's priority beach; long, clean surf that loads up early in the season.",
-          "Jacksonville Beach & Mayport — pier and jetty structure at the St. Johns River mouth.",
-          "St. Augustine Beach — approachable surf with consistent early-season pods.",
+          "[Mickler's Landing](/beaches/micklers) (Ponte Vedra) — the site's priority beach; long, clean surf that loads up early in the season.",
+          "[Jacksonville Beach](/beaches/jax-beach) & [Mayport](/beaches/mayport) — pier and jetty structure at the St. Johns River mouth.",
+          "[St. Augustine Beach](/beaches/st-augustine) — approachable surf with consistent early-season pods.",
         ],
       },
       {
         heading: "The Space Coast",
         bullets: [
-          "Ponce Inlet — a legendary funnel where bait bottlenecks and predators wait.",
-          "Cocoa Beach — miles of wadeable surf; watch the bird activity.",
-          "Sebastian Inlet — one of the state's most famous snook and tarpon inlets during the run.",
+          "[Ponce Inlet](/beaches/ponce-inlet) — a legendary funnel where bait bottlenecks and predators wait.",
+          "[Cocoa Beach](/beaches/cocoa-beach) — miles of wadeable surf; watch the bird activity.",
+          "[Sebastian Inlet](/beaches/sebastian-inlet) — one of the state's most famous snook and tarpon inlets during the run.",
         ],
       },
       {
         heading: "Treasure Coast & Southeast",
         bullets: [
-          "Fort Pierce Inlet — strong current and deep cuts hold big predators.",
-          "Jupiter Inlet — clear water and a well-known tarpon corridor.",
-          "Fort Lauderdale & Miami Beach — the tail end of the run as pods push south later in fall.",
+          "[Fort Pierce Inlet](/beaches/fort-pierce) — strong current and deep cuts hold big predators.",
+          "[Jupiter Inlet](/beaches/jupiter-inlet) — clear water and a well-known tarpon corridor.",
+          "[Fort Lauderdale](/beaches/fort-lauderdale) & [Miami Beach](/beaches/miami-beach) — the tail end of the run as pods push south later in fall.",
         ],
       },
       {
