@@ -115,7 +115,11 @@ ever sees the public anon key (protected by Row Level Security).
 | `NEXT_PUBLIC_POSTHOG_HOST` | optional | PostHog ingestion host; defaults to `https://us.i.posthog.com` |
 | `NEXT_PUBLIC_ADS_CLIENT` | optional | Display-ad publisher id (AdSense `ca-pub-…`); empty renders labeled ad placeholders |
 | `NEXT_PUBLIC_AMAZON_AFFILIATE_TAG` | optional | Amazon Associates tag appended to gear links; empty links stay un-tagged |
-| `NEXT_PUBLIC_CHARTER_CONTACT_EMAIL` | optional | Address captains email to claim a charter listing |
+| `NEXT_PUBLIC_CHARTER_CONTACT_EMAIL` | optional | Listings inbox shown as the fallback when the charter form can't submit |
+| `RESEND_API_KEY` | optional | Emails each new charter listing request to the listings inbox |
+| `RESEND_FROM_EMAIL` | optional | Verified Resend sender for those emails, e.g. `Florida Mullet Run <leads@floridamulletrun.com>` |
+| `CHARTER_LEADS_NOTIFY_EMAIL` | optional | Where charter lead emails go; defaults to `NEXT_PUBLIC_CHARTER_CONTACT_EMAIL` |
+| `HUBSPOT_ACCESS_TOKEN` | optional | HubSpot private-app token (`crm.objects.contacts.write`); creates a contact per charter lead |
 | `NEXT_PUBLIC_INSIDER_WAITLIST_URL` | optional | Hosted waitlist form for Insider; falls back to a mailto |
 | `NEXT_PUBLIC_INSIDER_CONTACT_EMAIL` | optional | Insider waitlist mailto fallback address |
 
@@ -131,6 +135,8 @@ Tables are namespaced with `mw_` so they can share a project with other apps:
 - `mw_sighting_checks` — latest daily public-web scan and report links per beach
 - `mw_alert_rules` — notification rules (seeded with examples)
 - `mw_conditions_cache` — optional cache written by the refresh job
+- `mw_charter_leads` — captain listing requests from `/charters` (insert-only
+  for the public roles; read them in the dashboard)
 
 To apply it to your **own** project, paste the SQL into the Supabase SQL
 Editor, or use the Supabase CLI:
@@ -144,11 +150,14 @@ daily checks.
 `0002_sighting_locations.sql` adds the map coordinates and statewide monitoring
 stations. Existing reports remain valid and appear at their selected beach.
 `0003_daily_sighting_checks.sql` stores one scan result per beach per UTC day.
+`0004_charter_leads.sql` stores charter listing requests; apply it before
+deploying the `/charters` listing form.
 
 **Row Level Security** is enabled on every table:
 
-- Public **read** on all tables.
-- Public **insert** on `mw_sightings` only (so the MVP works with just the anon
+- Public **read** on all tables except `mw_charter_leads`, which holds captain
+  contact details and is insert-only for the public roles.
+- Public **insert** on `mw_sightings` and `mw_charter_leads` only (so the MVP works with just the anon
   key). This is a deliberate MVP trade-off — for production, add auth or move
   sighting writes behind the service-role key and tighten this policy.
 - All other writes require the service-role key (server-side only).
@@ -252,7 +261,7 @@ per-page metadata, `Article` JSON-LD, and internal linking. A `sitemap.xml` and
 | **Display ads** | `<AdSlot>` across pages | Real AdSense units when `NEXT_PUBLIC_ADS_CLIENT` is set; labeled placeholders otherwise. Swap the component's body for Raptive/Mediavine after crossing their traffic thresholds. |
 | **`ads.txt`** | `/ads.txt` | Public authorized-sellers declaration for the verified AdSense publisher ([`src/app/ads.txt/route.ts`](src/app/ads.txt/route.ts)); available before display-ad units are enabled so AdSense can crawl it during site verification. |
 | **Affiliate gear** | `/gear` | Curated tackle catalog ([`src/lib/content/gear.ts`](src/lib/content/gear.ts)); links carry the Amazon Associates tag when configured, with an FTC disclosure and `rel="sponsored nofollow"`. |
-| **Charter lead-gen** | `/charters` | Inlet directory where verified captains claim a listing (Phase 2). |
+| **Charter lead-gen** | `/charters` | Atlantic and Gulf Coast directory where verified captains request a listing through an on-site form (Phase 2). |
 | **Insider membership** | `/insider` | Subscription waitlist for real-time alerts and member perks (Phase 3). |
 
 All monetization config lives in
