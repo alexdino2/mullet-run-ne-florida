@@ -11,10 +11,11 @@ opportunity score**, and lets you log sightings alongside it:
 
 - **River flow & salinity (Gulf)** — [USGS Water Data API](https://api.waterdata.usgs.gov/) (`ogcapi/v1`, free)
 - **Moon phase** — computed locally, no API
-- **Wind & air temp** — [National Weather Service API](https://www.weather.gov/documentation/services-web-api) (`api.weather.gov`)
-- **Wind/temp fallback** — [Open-Meteo](https://open-meteo.com/) (free, no key) fills in wind, temperature, the recent NE–E pattern, and the hourly forecast whenever `api.weather.gov` is unreachable — its edge blocks some datacenter IPs, including Vercel's serverless egress, so this keeps wind (a key signal) always present
+- **Wind (measured)** — [NDBC](https://www.ndbc.noaa.gov/) buoys and NOS/C-MAN shore stations. Every station scores wind from a real anemometer when its feed is fresh; wave-only buoys get a nearby `wind_station` instead
+- **Wind & air temp (model)** — [Open-Meteo](https://open-meteo.com/) (free, no key): current wind when no station reading is fresh, air temp, the hourly forecast, and pressure
+- **Last-resort forecast** — [National Weather Service API](https://www.weather.gov/documentation/services-web-api) (`api.weather.gov`), called only when Open-Meteo returns nothing
 - **Tides** — [NOAA CO-OPS](https://api.tidesandcurrents.noaa.gov/api/prod/) high/low predictions
-- **Buoys** — [NDBC](https://www.ndbc.noaa.gov/) real-time wind, water temp, and waves
+- **Buoys** — [NDBC](https://www.ndbc.noaa.gov/) water temp and waves
 - **Sightings** — logged manually by you (beach, time, school size, notes, and
   optional browser location). Public Instagram posts and Reels can be connected
   to a beach while preserving the original permalink and account attribution.
@@ -28,7 +29,7 @@ For each beach the app shows the current conditions, a plain-English **"why"**
 behind the score, and the **next best window**, plus a map, a recent-sightings
 list, and an alert-rules table for future notifications.
 
-> No paid services are used. NWS, CO-OPS, NDBC, and the Open-Meteo fallback are
+> No paid services are used. NWS, CO-OPS, NDBC, and Open-Meteo are
 > free/no-key. Supabase and Vercel run on their free tiers. Map tiles are free
 > OpenStreetMap.
 
@@ -93,6 +94,34 @@ live in [`src/lib/beaches.ts`](src/lib/beaches.ts), the station catalog.
 
 Missing data (e.g. an offline buoy) degrades gracefully — the affected factor
 uses a neutral value, and the score is still computed from what's available.
+
+### Score integrity
+
+- **One source order, everywhere.** Wind is taken from a measured station
+  reading first, then Open-Meteo, then NWS, and this order never depends on
+  which host is running. Before, the Railway job reached NWS while Vercel
+  couldn't, so the same beach could score 83 on the map and 60 on the dashboard.
+  `conditions.windSource` records which one was used (`station`, `model`, or
+  `forecast`), and the feature log stores it.
+- **No stale observations.** An NDBC feed whose newest row is more than 3 h old
+  is treated as offline, and "current" wind, pressure, and water readings must
+  be under 2 h old. The recent NE–E and north-wind patterns use clock-based
+  windows (18 h and 12 h) rather than a row count.
+- **Failed fetches are never cached.** A timeout or 429 is retried on the next
+  request instead of pinning neutral values for the memo TTL.
+- **Snapshots are re-scored, not replayed.** `mw_conditions_cache` stores the
+  inputs. The map re-derives tide stage, spring/neap range, moon, and season for
+  the current moment, then scores them with the current model (`rescoreSnapshot`).
+  The dashboard runs its live score through the same function. A snapshot is
+  used only if it is under 75 minutes old, carries the current
+  `SNAPSHOT_VERSION`, and matches the station's current feed IDs. Before it
+  is written, a snapshot must reproduce its score exactly after a JSON round trip.
+- **Checks** — `npx tsx scripts/check-score-integrity.ts` exercises the NDBC
+  parsing rules on synthetic feeds and confirms every station's snapshot
+  replays to its live score (`--offline` skips the live half).
+
+Bump `SNAPSHOT_VERSION` in [`src/lib/conditions.ts`](src/lib/conditions.ts)
+whenever you change how conditions are gathered.
 
 ---
 
@@ -263,7 +292,7 @@ npx tsx worker/run.ts probe boca-grande-pass,cedar-key-suwannee   # score and pr
 | Route | Method | Description |
 | ----- | ------ | ----------- |
 | `/api/conditions?beach=<id>` | GET | Full conditions, score breakdown, and next window for one beach |
-| `/api/summaries?coast=<atlantic\|gulf>` | GET | Score summary per station (map + list), served from the hourly cache |
+| `/api/summaries?coast=<atlantic\|gulf>` | GET | Score summary per station (map + list), re-scored from recent cached snapshots |
 | `/api/beaches` | GET | Beach list |
 | `/api/sightings` | GET / POST | List recent sightings / log a new one |
 | `/api/sighting-checks` | GET | Latest daily online check for every beach |
@@ -275,7 +304,7 @@ npx tsx worker/run.ts probe boca-grande-pass,cedar-key-suwannee   # score and pr
 
 - **Stations** — edit the catalog in [`src/lib/beaches.ts`](src/lib/beaches.ts)
   and mirror it in a migration (the catalog is what the app reads). Tide
-  (`tide_station`), met (`buoy_station`, `temp_buoy_station`), and river
+  (`tide_station`), met (`buoy_station`, `wind_station`, `temp_buoy_station`), and river
   (`usgs_site`) IDs are nearest working stations and can be refined.
 - **Scoring weights** — `WEIGHTS` in [`src/lib/score.ts`](src/lib/score.ts)
   (Atlantic) and `GULF_WEIGHTS` in [`src/lib/score-gulf.ts`](src/lib/score-gulf.ts).

@@ -36,6 +36,13 @@ export interface Beach {
   station_type: StationType;
   /** Optional second NDBC station used only when the primary has no water temp. */
   temp_buoy_station: string | null;
+  /**
+   * Optional NDBC/NOS station with an anemometer, used for wind ahead of
+   * `buoy_station`. Several Atlantic wave buoys (41117, 41112, 41114, 41122)
+   * have no wind sensor, which left those beaches on model wind. Code-only:
+   * the catalog in lib/beaches.ts is the source of truth, not mw_beaches.
+   */
+  wind_station?: string | null;
   /** Optional USGS river gauge feeding this pass or river mouth. */
   usgs_site: string | null;
 }
@@ -111,6 +118,11 @@ export interface TideState {
 
 export interface Conditions {
   wind?: WindObservation;
+  /**
+   * Where `wind` came from: a station observation (NDBC/NOS), the Open-Meteo
+   * model, or the NWS forecast grid — in that order of preference.
+   */
+  windSource?: "station" | "model" | "forecast";
   airTempF?: number;
   waterTempF?: number;
   waveHeightFt?: number;

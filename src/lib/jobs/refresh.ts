@@ -39,6 +39,7 @@ function featureRow(r: BeachConditions, observedHour: string) {
     score: r.score.score,
     rating: r.score.rating,
     features: {
+      wind_source: c.windSource ?? null,
       wind_dir_deg: c.wind?.directionDeg ?? null,
       wind_kt: c.wind?.speedKt ?? null,
       gust_kt: c.wind?.gustKt ?? null,
