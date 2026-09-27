@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { monetization } from "@/lib/monetization";
+import { EARLY_ERROR_BUFFER_SCRIPT } from "@/lib/early-errors";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -120,6 +121,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: EARLY_ERROR_BUFFER_SCRIPT }}
+        />
+      </head>
       <body className="min-h-screen">
         <PostHogAnalytics>
           <script
