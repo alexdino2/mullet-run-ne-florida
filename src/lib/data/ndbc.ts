@@ -103,7 +103,9 @@ export async function getBuoy(
   if (!station) return undefined;
 
   const text = await safeFetchText(
-    `https://www.ndbc.noaa.gov/data/realtime2/${station}.txt`,
+    // NDBC serves realtime files under upper-case IDs (e.g. PCLF1.txt); the
+    // NOS/C-MAN IDs used on the Gulf are stored lower-case in the catalog.
+    `https://www.ndbc.noaa.gov/data/realtime2/${station.toUpperCase()}.txt`,
     { revalidate: 1800 },
   );
   if (!text) return undefined;

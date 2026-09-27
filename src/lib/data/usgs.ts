@@ -109,10 +109,16 @@ export async function getRiver(
   if (cond.length > 0) {
     const latest = cond[cond.length - 1];
     state.conductance = Math.round(latest.v);
-    const then = cond.find((p) => p.t >= latest.t - 48 * 3600 * 1000);
-    if (then && then.v > 0 && latest.t - then.t > 24 * 3600 * 1000) {
-      state.conductanceChange =
-        Math.round(((latest.v - then.v) / then.v) * 100) / 100;
+    // Coastal gauges swing with every tide, so compare 24-hour means rather
+    // than two instantaneous readings.
+    const last = mean(cond.filter((p) => p.t > latest.t - DAY_MS).map((p) => p.v));
+    const prior = mean(
+      cond
+        .filter((p) => p.t <= latest.t - DAY_MS && p.t > latest.t - 2 * DAY_MS)
+        .map((p) => p.v),
+    );
+    if (last != null && prior != null && prior > 0) {
+      state.conductanceChange = Math.round(((last - prior) / prior) * 100) / 100;
     }
   }
 

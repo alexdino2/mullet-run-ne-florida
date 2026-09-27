@@ -56,13 +56,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     title: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
     description:
-      "Live coastal conditions and a crowdsourced mullet sightings map from Northeast Florida to Miami.",
+      "Live coastal conditions and a crowdsourced mullet sightings map for Florida's Atlantic and Gulf coasts.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
     description:
-      "Live coastal conditions and a crowdsourced mullet sightings map from Northeast Florida to Miami.",
+      "Live coastal conditions and a crowdsourced mullet sightings map for Florida's Atlantic and Gulf coasts.",
   },
   category: "sports",
 };
@@ -102,7 +102,7 @@ const orgJsonLd = {
   name: "Florida Mullet Run",
   url: SITE_URL,
   description:
-    "Live Florida mullet run tracker with a crowdsourced sightings map, daily opportunity scores, and inlet guides from Northeast Florida to Miami.",
+    "Live Florida mullet run tracker with a crowdsourced sightings map, daily opportunity scores, and inlet and pass guides for Florida's Atlantic and Gulf coasts.",
   areaServed: { "@type": "State", name: "Florida" },
   sameAs: ["https://www.instagram.com/floridamulletrun/"],
 };
