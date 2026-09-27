@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
-import { adsScriptSrc, monetization } from "@/lib/monetization";
+import { AdSenseLoader } from "@/components/AdSenseLoader";
+import { monetization } from "@/lib/monetization";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -120,12 +121,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        {/* Google AdSense loader, exactly as AdSense issues it. A plain tag
-            (not next/script) avoids the `data-nscript` attribute AdSense
-            rejects, and loading it on every page enables Auto ads. */}
-        <script async src={adsScriptSrc} crossOrigin="anonymous" />
-      </head>
       <body className="min-h-screen">
         <PostHogAnalytics>
           <script
@@ -182,6 +177,9 @@ export default function RootLayout({
             </footer>
           </div>
         </PostHogAnalytics>
+        {/* Third-party ads and analytics load after the first interaction
+            or a few idle seconds, keeping them off the mobile critical path. */}
+        <AdSenseLoader />
         <GoogleAnalytics />
       </body>
     </html>
