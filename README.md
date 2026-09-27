@@ -162,7 +162,10 @@ ever sees the public anon key (protected by Row Level Security).
 | `NEXT_PUBLIC_ADS_CLIENT` | optional | Overrides the AdSense publisher id (defaults to the approved `ca-pub-4183912956441070`) |
 | `NEXT_PUBLIC_ADS_SLOT` | optional | Overrides the AdSense ad-unit id for in-page `<AdSlot>` units (defaults to the `2953754323` in-content unit) |
 | `NEXT_PUBLIC_AMAZON_AFFILIATE_TAG` | optional | Amazon Associates tag appended to gear links; empty links stay un-tagged |
-| `NEXT_PUBLIC_CHARTER_CONTACT_EMAIL` | optional | Address captains email to claim a charter listing |
+| `NEXT_PUBLIC_CHARTER_CONTACT_EMAIL` | optional | Listings inbox shown as the fallback when the charter form can't submit |
+| `RESEND_API_KEY`, `ALERT_EMAIL_FROM` | optional | Also set on Vercel to email each new charter listing request (same values as Railway) |
+| `CHARTER_LEADS_NOTIFY_EMAIL` | optional | Where charter lead emails go; defaults to `NEXT_PUBLIC_CHARTER_CONTACT_EMAIL` |
+| `HUBSPOT_ACCESS_TOKEN` | optional | HubSpot private-app token (`crm.objects.contacts.write`); creates a contact per charter lead |
 | `NEXT_PUBLIC_INSIDER_WAITLIST_URL` | optional | Hosted waitlist form for Insider; falls back to a mailto |
 | `NEXT_PUBLIC_INSIDER_CONTACT_EMAIL` | optional | Insider waitlist mailto fallback address |
 
@@ -183,6 +186,8 @@ Tables are namespaced with `mw_` so they can share a project with other apps:
   score (the training set for a future model; server-only)
 - `mw_alert_log` — one row per alert rule, station, and day, so alert emails
   never repeat (server-only)
+- `mw_charter_leads` — captain listing requests from `/charters` (insert-only
+  for the public roles; read them in the dashboard)
 
 To apply it to your **own** project, paste the SQL into the Supabase SQL
 Editor, or use the Supabase CLI:
@@ -201,11 +206,14 @@ source handles, verification state, and duplicate prevention.
 `0005_gulf_coast_and_feature_log.sql` adds coast/region metadata, the 22 Gulf
 and Panhandle stations, the hourly feature log, and the alert log. All
 statements are idempotent.
+`0006_charter_leads.sql` stores charter listing requests; apply it before
+deploying the `/charters` listing form.
 
 **Row Level Security** is enabled on every table:
 
-- Public **read** on all tables.
-- Public **insert** on `mw_sightings` only (so the MVP works with just the anon
+- Public **read** on all tables except `mw_charter_leads`, which holds captain
+  contact details and is insert-only for the public roles.
+- Public **insert** on `mw_sightings` and `mw_charter_leads` only (so the MVP works with just the anon
   key). This is a deliberate MVP trade-off — for production, add auth or move
   sighting writes behind the service-role key and tighten this policy.
 - All other writes require the service-role key (server-side only).
@@ -315,7 +323,7 @@ Console and Bing Webmaster Tools.
 | **Display ads** | `<AdSenseLoader>` in the root layout + `<AdSlot>` across pages | The AdSense script loads on every page, after the visitor's first interaction or 5 s after load so it stays off the mobile critical path ([`src/lib/defer.ts`](src/lib/defer.ts); PostHog uses the same trigger). Auto ads (toggled in the AdSense dashboard) cover the whole site. `<AdSlot>` renders the responsive in-content unit (`2953754323`, overridable per placement via `slot` or site-wide via `NEXT_PUBLIC_ADS_SLOT`). Swap the component's body for Raptive/Mediavine after crossing their traffic thresholds. |
 | **`ads.txt`** | `/ads.txt` | Public authorized-sellers declaration for the verified AdSense publisher ([`src/app/ads.txt/route.ts`](src/app/ads.txt/route.ts)); available before display-ad units are enabled so AdSense can crawl it during site verification. |
 | **Affiliate gear** | `/gear` | Curated tackle catalog ([`src/lib/content/gear.ts`](src/lib/content/gear.ts)); links carry the Amazon Associates tag when configured, with an FTC disclosure and `rel="sponsored nofollow"`. |
-| **Charter lead-gen** | `/charters` | Inlet directory where verified captains claim a listing (Phase 2). |
+| **Charter lead-gen** | `/charters` | Atlantic and Gulf Coast directory where verified captains request a listing through an on-site form (Phase 2). |
 | **Insider membership** | `/insider` | Subscription waitlist for real-time alerts and member perks (Phase 3). |
 
 All monetization config lives in

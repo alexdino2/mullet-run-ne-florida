@@ -7,6 +7,8 @@ export interface OutgoingEmail {
   subject: string;
   html: string;
   text: string;
+  /** Where replies go, e.g. the captain who submitted a charter lead. */
+  replyTo?: string;
 }
 
 export function emailConfigured(): boolean {
@@ -41,6 +43,7 @@ export async function sendEmail(
         subject: email.subject,
         html: email.html,
         text: email.text,
+        ...(email.replyTo ? { reply_to: email.replyTo } : {}),
       }),
       signal: AbortSignal.timeout(15000),
     });

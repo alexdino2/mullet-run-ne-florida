@@ -1,5 +1,6 @@
 import { SITE_URL } from "@/lib/site";
 import { COAST_LABEL } from "@/lib/regions";
+import type { CharterLead } from "@/lib/charter-leads";
 import type { Beach, ScoreResult } from "@/lib/types";
 
 /** Email templates, kept in code and shared by the web app and the jobs. */
@@ -101,4 +102,41 @@ ${details ? `<ul style="font-size:13px">${details}</ul>` : ""}
     html,
     text: `${params.job} failed (started ${params.startedAt}).\n${params.error}\n${(params.details ?? []).join("\n")}`,
   };
+}
+
+/** Sent to the listings inbox for each captain request from /charters. */
+export function charterLeadEmail(lead: CharterLead, region: string) {
+  const rows: [string, string | null][] = [
+    ["Region", region],
+    ["Captain", lead.captain_name],
+    ["Business", lead.business_name],
+    ["Email", lead.email],
+    ["Phone", lead.phone],
+    ["Website / booking", lead.website],
+    ["USCG license #", lead.uscg_license],
+    ["Notes", lead.notes],
+  ];
+  const filled = rows.filter((row): row is [string, string] => !!row[1]);
+  const footer =
+    "Reply to this email to reach the captain. Verify the USCG license before listing.";
+
+  const subject = `Charter listing request: ${lead.business_name ?? lead.captain_name} (${region})`;
+  const table = `<table cellpadding="6" style="border-collapse:collapse;background:#fff;border-radius:12px;border:1px solid #e2e8f0;width:100%">
+${filled
+  .map(
+    ([k, v]) =>
+      `<tr><td style="color:#64748b;vertical-align:top;white-space:nowrap">${escape(k)}</td><td style="white-space:pre-wrap">${escape(v)}</td></tr>`,
+  )
+  .join("\n")}
+</table>
+<p style="margin-top:16px;font-size:13px;color:#334155">${footer}</p>`;
+  const text = [
+    `New charter listing request from ${SITE_URL}/charters`,
+    "",
+    ...filled.map(([k, v]) => `${k}: ${v}`),
+    "",
+    footer,
+  ].join("\n");
+
+  return { subject, html: layout("New charter listing request", table), text };
 }
