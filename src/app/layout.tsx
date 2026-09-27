@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import Script from "next/script";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
 import "./globals.css";
 
@@ -183,6 +184,7 @@ export default function RootLayout({
             </footer>
           </div>
         </PostHogAnalytics>
+        <GoogleAnalytics />
       </body>
     </html>
   );
