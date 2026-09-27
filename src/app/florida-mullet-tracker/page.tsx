@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getBeaches } from "@/lib/beaches";
+import { STATIONS } from "@/lib/beaches";
+import { resolveSelection } from "@/lib/selection";
+import { getRegion } from "@/lib/regions";
+import { CoastToggle } from "@/components/CoastToggle";
 import { computeBeachConditions } from "@/lib/conditions";
 import { getRecentSightings } from "@/lib/sightings";
 import { getAlertRules } from "@/lib/alerts";
@@ -29,7 +32,7 @@ export const metadata: Metadata = {
       "Florida Mullet Tracker — Live Run Scores & Sightings Map",
   },
   description:
-    "Florida mullet tracker with live opportunity scores, Atlantic coastal conditions, and a crowdsourced sightings map from Northeast Florida to Miami. See where the bait is stacking up today.",
+    "Florida mullet tracker with live opportunity scores for the Atlantic surf and the Gulf passes, coastal conditions, and a crowdsourced sightings map. See where the bait is stacking up today.",
   keywords: [
     "florida mullet tracker",
     "mullet tracker florida",
@@ -44,13 +47,13 @@ export const metadata: Metadata = {
     url: PAGE_PATH,
     title: "Florida Mullet Tracker — Live Run Scores & Sightings Map",
     description:
-      "Live opportunity scores and crowdsourced mullet sightings from Northeast Florida to Miami.",
+      "Live opportunity scores and crowdsourced mullet sightings on Florida's Atlantic and Gulf coasts.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Florida Mullet Tracker — Live Run Scores & Sightings Map",
     description:
-      "Live opportunity scores and crowdsourced mullet sightings from Northeast Florida to Miami.",
+      "Live opportunity scores and crowdsourced mullet sightings on Florida's Atlantic and Gulf coasts.",
   },
 };
 
@@ -81,11 +84,10 @@ function SectionHeading({
 export default async function FloridaMulletTrackerPage({
   searchParams,
 }: {
-  searchParams: { beach?: string };
+  searchParams: { beach?: string; coast?: string };
 }) {
-  const beaches = await getBeaches();
-  const selected =
-    beaches.find((b) => b.id === searchParams.beach) ?? beaches[0];
+  const { coast, selected, beaches } = await resolveSelection(searchParams);
+  const gulf = coast === "gulf";
 
   const sightings = await getRecentSightings(100);
   const [data, rules] = await Promise.all([
@@ -106,7 +108,7 @@ export default async function FloridaMulletTrackerPage({
     applicationCategory: "SportsApplication",
     operatingSystem: "Any",
     description:
-      "Live Florida mullet tracker with opportunity scores, coastal conditions, and a crowdsourced Atlantic sightings map.",
+      "Live Florida mullet tracker with opportunity scores, coastal conditions, and a crowdsourced sightings map for the Atlantic and Gulf coasts.",
     offers: {
       "@type": "Offer",
       price: "0",
@@ -129,9 +131,14 @@ export default async function FloridaMulletTrackerPage({
       <section id="live-tracker" className="tracker-section scroll-mt-28">
         <SectionHeading
           title="Live beach scores"
-          description="Pick a station. Scores refresh from NWS, NOAA tides, and buoy data."
+          description={
+            gulf
+              ? "Pick a pass or river mouth. Scores refresh from NOAA tides and stations, NWS, and USGS river gauges."
+              : "Pick a station. Scores refresh from NWS, NOAA tides, and buoy data."
+          }
         />
 
+        <CoastToggle current={coast} basePath={PAGE_PATH} />
         <BeachSwitcher
           beaches={beaches}
           currentId={selected.id}
@@ -148,6 +155,10 @@ export default async function FloridaMulletTrackerPage({
                 {selected.name}
               </Link>
             </h3>
+            <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              {getRegion(selected.region).label}
+              {gulf ? " · Gulf exit score" : " · Atlantic surf score"}
+            </p>
             <p className="mt-1 text-xs text-slate-400">
               Updated {generated}
               {data.conditions.sources.length > 0
@@ -178,7 +189,11 @@ export default async function FloridaMulletTrackerPage({
       <section className="tracker-section">
         <SectionHeading
           title="Live migration map"
-          description="Crowd reports and conditions along Florida’s Atlantic coast."
+          description={
+            gulf
+              ? "Crowd reports and exit scores at the Gulf passes and river mouths."
+              : "Crowd reports and conditions along Florida’s Atlantic coast."
+          }
           action={
             <Link
               href="/sightings"
@@ -188,7 +203,7 @@ export default async function FloridaMulletTrackerPage({
             </Link>
           }
         />
-        <MapSection />
+        <MapSection key={coast} coast={coast} />
       </section>
 
       <AdSlot label="Advertisement" />
@@ -198,7 +213,7 @@ export default async function FloridaMulletTrackerPage({
           title="Current conditions"
           description={`What’s driving the score at ${selected.name}.`}
         />
-        <ConditionsGrid conditions={data.conditions} />
+        <ConditionsGrid conditions={data.conditions} coast={coast} />
       </section>
 
       <section className="tracker-section">
@@ -285,11 +300,12 @@ export default async function FloridaMulletTrackerPage({
       />
 
       <section className="tracker-section tracker-section--muted">
-        <SectionHeading title="Alert rules (for future notifications)" />
-        <AlertRulesTable rules={rules} beaches={beaches} />
+        <SectionHeading title="Alert rules" />
+        <AlertRulesTable rules={rules} beaches={STATIONS} />
         <p className="mt-2 text-xs text-slate-400">
-          These rules define when notifications will fire once a delivery
-          channel is connected. The hourly refresh already evaluates them.
+          The hourly refresh checks these rules on both coasts. Email rules
+          send at most once per station per day; SMS and push are not
+          connected yet.
         </p>
       </section>
     </div>

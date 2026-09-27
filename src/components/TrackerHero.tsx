@@ -29,11 +29,11 @@ export function TrackerHero() {
           Florida Mullet Tracker
         </p>
         <h1 className="tracker-hero__headline">
-          Live bait scores from Northeast Florida to Miami
+          Live bait scores on both Florida coasts
         </h1>
         <p className="tracker-hero__support">
           Opportunity ratings, coastal conditions, and crowdsourced sightings
-          for the fall Atlantic mullet run.
+          for the fall mullet run — Atlantic surf and Gulf passes.
         </p>
         <div className="tracker-hero__ctas">
           <a

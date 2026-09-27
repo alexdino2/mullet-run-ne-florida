@@ -1,4 +1,4 @@
-import type { Conditions } from "@/lib/types";
+import type { Coast, Conditions } from "@/lib/types";
 import { formatClock } from "@/lib/ui";
 
 function Tile({
@@ -29,7 +29,17 @@ const STAGE_LABEL: Record<string, string> = {
   unknown: "—",
 };
 
-export function ConditionsGrid({ conditions }: { conditions: Conditions }) {
+function signed(n: number, unit: string): string {
+  return `${n > 0 ? "+" : n < 0 ? "−" : "±"}${Math.abs(n)}${unit}`;
+}
+
+export function ConditionsGrid({
+  conditions,
+  coast = "atlantic",
+}: {
+  conditions: Conditions;
+  coast?: Coast;
+}) {
   const { wind, tide } = conditions;
 
   const nextTide = tide?.nextEvent
@@ -37,6 +47,95 @@ export function ConditionsGrid({ conditions }: { conditions: Conditions }) {
         tide.nextEvent.time,
       )}`
     : undefined;
+
+  if (coast === "gulf") {
+    const range =
+      tide?.rangeRatio == null
+        ? undefined
+        : tide.rangeRatio >= 0.8
+          ? "spring-tide range"
+          : tide.rangeRatio <= 0.45
+            ? "neap-tide range"
+            : "mid-cycle range";
+    const river = conditions.river;
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        <Tile
+          label="Wind"
+          value={wind ? `${wind.directionLabel} ${wind.speedKt} kt` : "No data"}
+          sub={
+            conditions.recentNortherlyFraction != null
+              ? `${Math.round(conditions.recentNortherlyFraction * 100)}% NW–NE last 12h`
+              : wind?.gustKt
+                ? `gusts ${wind.gustKt} kt`
+                : undefined
+          }
+        />
+        <Tile
+          label="Tide"
+          value={STAGE_LABEL[tide?.stage ?? "unknown"]}
+          sub={[nextTide, range].filter(Boolean).join(" · ") || undefined}
+        />
+        <Tile
+          label="Water temp"
+          value={conditions.waterTempF != null ? `${conditions.waterTempF}°F` : "—"}
+          sub={
+            conditions.waterTempChange48hF != null
+              ? `${signed(conditions.waterTempChange48hF, "°F")} in 48h`
+              : undefined
+          }
+        />
+        <Tile
+          label="Pressure"
+          value={
+            conditions.pressureHpa != null
+              ? `${Math.round(conditions.pressureHpa)} hPa`
+              : "—"
+          }
+          sub={
+            conditions.pressureDrop24hHpa != null
+              ? conditions.pressureDrop24hHpa >= 1
+                ? `fell ${conditions.pressureDrop24hHpa} hPa in 24h`
+                : "steady (no front)"
+              : undefined
+          }
+        />
+        <Tile
+          label="Moon"
+          value={conditions.moon?.name ?? "—"}
+          sub={
+            conditions.moon
+              ? `${conditions.moon.daysFromSyzygy} days from new/full`
+              : undefined
+          }
+        />
+        {river ? (
+          <Tile
+            label={river.label}
+            value={
+              river.dischargeRatio != null
+                ? `${Math.round(river.dischargeRatio * 100)}% of normal`
+                : river.dischargeCfs != null
+                  ? `${river.dischargeCfs.toLocaleString()} cfs`
+                  : river.conductance != null
+                    ? `${river.conductance.toLocaleString()} µS/cm`
+                    : "—"
+            }
+            sub={
+              river.dischargeRatio != null && river.dischargeCfs != null
+                ? `${river.dischargeCfs.toLocaleString()} cfs (24h mean)`
+                : "USGS gauge"
+            }
+          />
+        ) : (
+          <Tile
+            label="Air temp"
+            value={conditions.airTempF != null ? `${Math.round(conditions.airTempF)}°F` : "—"}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 gap-2">
