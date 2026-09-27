@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSupabase, isSupabaseConfigured } from "@/lib/supabase/server";
 import { getRecentSightings } from "@/lib/sightings";
 import { getBeach } from "@/lib/beaches";
+import {
+  normalizeInstagramHandle,
+  normalizeInstagramPostUrl,
+} from "@/lib/instagram";
 import type { SchoolSize } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +55,16 @@ export async function POST(request: Request) {
     typeof body.location_accuracy_m === "number"
       ? Math.max(0, body.location_accuracy_m)
       : null;
+  const rawSourceUrl =
+    typeof body.source_url === "string" ? body.source_url.trim() : "";
+  const source_url = rawSourceUrl
+    ? normalizeInstagramPostUrl(rawSourceUrl)
+    : null;
+  const rawSourceHandle =
+    typeof body.source_handle === "string" ? body.source_handle.trim() : "";
+  const source_handle = rawSourceHandle
+    ? normalizeInstagramHandle(rawSourceHandle)
+    : null;
 
   if (!beach_id) {
     return NextResponse.json({ error: "beach_id is required" }, { status: 400 });
@@ -86,6 +100,24 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+  if (rawSourceUrl && !source_url) {
+    return NextResponse.json(
+      { error: "Use a public Instagram post or Reel URL" },
+      { status: 400 },
+    );
+  }
+  if (rawSourceHandle && !source_handle) {
+    return NextResponse.json(
+      { error: "Enter a valid Instagram handle" },
+      { status: 400 },
+    );
+  }
+  if (source_handle && !source_url) {
+    return NextResponse.json(
+      { error: "An Instagram handle requires a post or Reel URL" },
+      { status: 400 },
+    );
+  }
 
   const supabase = getServerSupabase();
   if (!supabase) {
@@ -102,11 +134,21 @@ export async function POST(request: Request) {
       lat,
       lon,
       location_accuracy_m,
+      source_type: source_url ? "instagram" : "eyewitness",
+      source_url,
+      source_handle,
+      verification_status: "unverified",
     })
     .select()
     .single();
 
   if (error) {
+    if (error.code === "23505" && source_url) {
+      return NextResponse.json(
+        { error: "That Instagram post is already connected to a sighting." },
+        { status: 409 },
+      );
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

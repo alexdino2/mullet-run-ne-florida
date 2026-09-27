@@ -105,6 +105,7 @@ const orgJsonLd = {
   description:
     "Live Florida mullet run tracker with a crowdsourced sightings map, daily opportunity scores, and inlet guides from Northeast Florida to Miami.",
   areaServed: { "@type": "State", name: "Florida" },
+  sameAs: ["https://www.instagram.com/floridamulletrun/"],
 };
 
 const siteJsonLd = {
@@ -191,6 +192,16 @@ export default function RootLayout({
                 Public data: NWS · NOAA CO-OPS · NDBC. Scores are heuristics, not a
                 guarantee. Regulations change — always confirm current limits with
                 the FWC. Fish responsibly.
+              </p>
+              <p className="mt-3 text-center">
+                <a
+                  href="https://www.instagram.com/floridamulletrun/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-fuchsia-700 hover:text-fuchsia-800"
+                >
+                  Follow @floridamulletrun on Instagram ↗
+                </a>
               </p>
             </footer>
           </div>

@@ -12,7 +12,8 @@ opportunity score**, and lets you log sightings alongside it:
 - **Tides** — [NOAA CO-OPS](https://api.tidesandcurrents.noaa.gov/api/prod/) high/low predictions
 - **Buoys** — [NDBC](https://www.ndbc.noaa.gov/) real-time wind, water temp, and waves
 - **Sightings** — logged manually by you (beach, time, school size, notes, and
-  optional browser location).
+  optional browser location). Public Instagram posts and Reels can be connected
+  to a beach while preserving the original permalink and account attribution.
   Tracked and displayed, but **not part of the score yet** — the score uses
   public sources only until enough sightings are collected to be predictive.
 - **Daily beach checks** — a scheduled Google News RSS scan looks for recent,
@@ -133,7 +134,7 @@ Tables are namespaced with `mw_` so they can share a project with other apps:
 - `mw_beaches` — Atlantic coast monitoring stations (seeded; Mickler's priority
   100)
 - `mw_sightings` — manual reports with optional latitude, longitude, and
-  location accuracy
+  location accuracy, plus optional Instagram source attribution
 - `mw_sighting_checks` — latest daily public-web scan and report links per beach
 - `mw_alert_rules` — notification rules (seeded with examples)
 - `mw_conditions_cache` — optional cache written by the refresh job
@@ -145,11 +146,13 @@ Editor, or use the Supabase CLI:
 supabase db push   # with the migration in supabase/migrations/
 ```
 
-Apply all migrations before deploying the location-enabled report form and
-daily checks.
+Apply all migrations before deploying the location-enabled report form, daily
+checks, and Instagram-connected sightings.
 `0002_sighting_locations.sql` adds the map coordinates and statewide monitoring
 stations. Existing reports remain valid and appear at their selected beach.
 `0003_daily_sighting_checks.sql` stores one scan result per beach per UTC day.
+`0004_instagram_sightings.sql` adds normalized Instagram post/Reel permalinks,
+source handles, verification state, and duplicate prevention.
 
 **Row Level Security** is enabled on every table:
 

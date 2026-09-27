@@ -92,6 +92,17 @@ export default function BeachMap({
                 </div>
                 <div>{new Date(sighting.observed_at).toLocaleString()}</div>
                 {sighting.notes && <div className="mt-1">{sighting.notes}</div>}
+                {sighting.source_type === "instagram" &&
+                  sighting.source_url && (
+                    <a
+                      href={sighting.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-block font-semibold text-fuchsia-700 underline"
+                    >
+                      Instagram source ↗
+                    </a>
+                  )}
               </div>
             </Tooltip>
           </CircleMarker>
