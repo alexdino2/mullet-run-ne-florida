@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GUIDES, getGuide, relatedLink } from "@/lib/content/guides";
 import { AdSlot } from "@/components/AdSlot";
+import { SITE_URL } from "@/lib/site";
 
 export function generateStaticParams() {
   return GUIDES.map((g) => ({ slug: g.slug }));
@@ -48,7 +49,7 @@ export default function GuidePage({ params }: { params: { slug: string } }) {
     articleSection: guide.category,
     author: { "@type": "Organization", name: "Florida Mullet Run" },
     publisher: { "@type": "Organization", name: "Florida Mullet Run" },
-    mainEntityOfPage: `https://floridamulletrun.com/guide/${guide.slug}`,
+    mainEntityOfPage: `${SITE_URL}/guide/${guide.slug}`,
     video: videos.map((video) => ({
       "@type": "VideoObject",
       name: video.title,

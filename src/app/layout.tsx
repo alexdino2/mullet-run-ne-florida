@@ -4,6 +4,7 @@ import Script from "next/script";
 import { Figtree, Syne } from "next/font/google";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 
 const figtree = Figtree({
   subsets: ["latin"],
@@ -18,7 +19,7 @@ const syne = Syne({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://floridamulletrun.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
     template: "%s | Florida Mullet Run",
@@ -93,8 +94,6 @@ const FOOTER_LINKS = [
   { href: "/gear", label: "Gear shop" },
   { href: "/charters", label: "Book a charter" },
 ];
-
-const SITE_URL = "https://floridamulletrun.com";
 
 const orgJsonLd = {
   "@context": "https://schema.org",

@@ -252,7 +252,14 @@ and captures long-tail search:
 Articles are structured data in
 [`src/lib/content/guides.ts`](src/lib/content/guides.ts), server-rendered with
 per-page metadata, `Article` JSON-LD, and internal linking. A `sitemap.xml` and
-`robots.txt` are generated for indexing.
+`robots.txt` are generated for indexing
+([`src/app/sitemap.ts`](src/app/sitemap.ts),
+[`src/app/robots.ts`](src/app/robots.ts)); new beach and guide pages are picked
+up automatically from their content files. Every absolute URL comes from
+`SITE_URL` in [`src/lib/site.ts`](src/lib/site.ts), which must match the host
+Vercel serves as primary (`www.floridamulletrun.com`; the apex 308-redirects
+to it). Submit `https://www.floridamulletrun.com/sitemap.xml` in Google Search
+Console and Bing Webmaster Tools.
 
 ### Monetization
 

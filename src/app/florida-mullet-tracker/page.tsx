@@ -17,11 +17,11 @@ import { FaqSection } from "@/components/FaqSection";
 import { TrackerHero } from "@/components/TrackerHero";
 import { TRACKER_FAQ } from "@/lib/content/faq";
 import { GUIDES } from "@/lib/content/guides";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_PATH = "/florida-mullet-tracker";
-const SITE_URL = "https://floridamulletrun.com";
 
 export const metadata: Metadata = {
   title: {
