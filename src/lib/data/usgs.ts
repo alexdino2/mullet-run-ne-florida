@@ -97,11 +97,13 @@ export async function getRiver(
   const state: RiverState = { site, label: RIVER_LABEL[site] ?? `USGS ${site}` };
 
   const days = dailyMeans(flow);
-  if (days[0] != null) {
+  if (days[0] != null && days[0] > 0) {
     state.dischargeCfs = Math.round(days[0]);
     const prior = days.slice(1).filter((v) => v != null);
     const base = median(prior);
-    if (base != null && Math.abs(base) > 1) {
+    // Tidal gauges can average out near zero or negative (net upstream flow);
+    // a ratio against that is meaningless, so only compare positive flows.
+    if (base != null && base > 1 && days[0] > 0) {
       state.dischargeRatio = Math.round((days[0] / base) * 100) / 100;
     }
   }

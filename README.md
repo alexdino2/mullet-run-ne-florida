@@ -1,12 +1,16 @@
 # 🐟 Florida Mullet Run
 
 A mobile-first web app for [floridamulletrun.com](https://floridamulletrun.com)
-that scores the **fall mullet run** opportunity along Florida's Atlantic coast
-and plots crowdsourced bait sightings on a live migration map.
+that scores the **fall mullet run** on both Florida coasts — the Atlantic surf
+from Mickler's Landing to Miami, and the Gulf passes and river mouths from
+Pensacola to Marco Island — and plots crowdsourced bait sightings on a live
+migration map.
 
 It scores each beach from **free public data** into a transparent **0–100
 opportunity score**, and lets you log sightings alongside it:
 
+- **River flow & salinity (Gulf)** — [USGS Water Data API](https://api.waterdata.usgs.gov/) (`ogcapi/v1`, free)
+- **Moon phase** — computed locally, no API
 - **Wind & air temp** — [National Weather Service API](https://www.weather.gov/documentation/services-web-api) (`api.weather.gov`)
 - **Wind/temp fallback** — [Open-Meteo](https://open-meteo.com/) (free, no key) fills in wind, temperature, the recent NE–E pattern, and the hourly forecast whenever `api.weather.gov` is unreachable — its edge blocks some datacenter IPs, including Vercel's serverless egress, so this keeps wind (a key signal) always present
 - **Tides** — [NOAA CO-OPS](https://api.tidesandcurrents.noaa.gov/api/prod/) high/low predictions
@@ -30,7 +34,12 @@ list, and an alert-rules table for future notifications.
 
 ---
 
-## How the score works
+## How the scores work
+
+The two coasts run differently, so they get different models. Both are
+transparent weighted blends shown factor-by-factor in the "why this score" UI.
+
+### Atlantic surf score
 
 A weighted blend of five **public-data** factors, each a 0–1 quality figure ×
 its weight (all pure functions in [`src/lib/score.ts`](src/lib/score.ts)):
@@ -57,6 +66,31 @@ that unsupported precision; future outcome data can be used to recalibrate it.
 The **next best window** re-scores the NWS hourly forecast against the tide
 timeline for the next ~48 h and reports the highest contiguous stretch.
 
+### Gulf exit score
+
+Gulf mullet stage in bays, marsh, and spring-fed rivers, then leave through
+passes and river mouths. The Gulf score ([`src/lib/score-gulf.ts`](src/lib/score-gulf.ts))
+looks for the exit triggers described in the site's research brief:
+
+| Factor | Weight (with river gauge) | What it rewards |
+| ------ | -----: | --------------- |
+| Season window | 18 (16) | Oct–Nov in the Panhandle/Big Bend, sliding ~5 days later per degree south |
+| Cold front | 20 (18) | Largest 24 h pressure fall in the last 48 h (station barometer, Open-Meteo fallback) |
+| North-wind flush | 14 (12) | NW–NE wind now and over the last 12 h — offshore on the Gulf, drains the bays |
+| Water cooling | 20 (18) | 48 h water-temp drop plus temps falling out of the 80s toward the low 70s |
+| Outgoing tide strength | 18 (16) | Ebb stage × today's range vs. the next spring tide |
+| Moon phase | 10 (8) | Days from the nearest new or full moon |
+| River flush | — (12) | USGS flow vs. two-week median, or a salinity drop at tidal gauges |
+
+The next best window uses forecast wind and **forecast pressure**, so an
+incoming front shows up before it arrives. These weights are a research-based
+starting point; the hourly feature log (below) is there to recalibrate or
+replace them with a trained model once a season of sightings exists.
+
+Station IDs (CO-OPS tide predictions, NDBC/NOS met stations, USGS gauges) for
+all 22 Gulf stations were checked against the live feeds in September 2026 and
+live in [`src/lib/beaches.ts`](src/lib/beaches.ts), the station catalog.
+
 Missing data (e.g. an offline buoy) degrades gracefully — the affected factor
 uses a neutral value, and the score is still computed from what's available.
 
@@ -69,8 +103,11 @@ uses a neutral value, and the score is still computed from what's available.
 - **Supabase** (Postgres + RLS) for beaches, sightings, alert rules, cache
 - **React-Leaflet + OpenStreetMap** for the statewide map (no API key or
   WordPress plugin)
-- Deploys to **Vercel** with built-in hourly conditions and daily sighting
-  **cron** jobs
+- Deploys to **Vercel** (site + API routes)
+- **Railway** runs the scheduled jobs ([`worker/run.ts`](worker/run.ts)):
+  hourly refresh and daily sighting checks
+- **Resend** sends alert emails and job-failure emails (templates in
+  [`src/lib/email/templates.ts`](src/lib/email/templates.ts))
 
 ---
 
@@ -115,8 +152,10 @@ ever sees the public anon key (protected by Row Level Security).
 | -------- | :------: | ------- |
 | `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Public anon key (safe in the browser) |
-| `SUPABASE_SERVICE_ROLE_KEY` | optional | Server-only key; enables writing the conditions cache from the cron job |
-| `CRON_SECRET` | optional | Protects `/api/refresh`; Vercel Cron sends it automatically |
+| `SUPABASE_SERVICE_ROLE_KEY` | optional (required on Railway) | Server-only key; lets the jobs write the cache, feature log, sighting checks, and alert log |
+| `RESEND_API_KEY` | Railway | Resend key for alert and failure emails |
+| `ALERT_EMAIL_FROM` | Railway | Sender on a Resend-verified domain |
+| `ALERT_EMAIL_TO` | Railway | Comma-separated recipients for alerts and job failures |
 | `NWS_USER_AGENT` | optional | Contact string sent to `api.weather.gov` per their etiquette |
 | `NEXT_PUBLIC_POSTHOG_KEY` | optional | Override the built-in PostHog project API key |
 | `NEXT_PUBLIC_POSTHOG_HOST` | optional | PostHog ingestion host; defaults to `https://us.i.posthog.com` |
@@ -131,13 +170,18 @@ ever sees the public anon key (protected by Row Level Security).
 The schema lives in [`supabase/migrations`](supabase/migrations).
 Tables are namespaced with `mw_` so they can share a project with other apps:
 
-- `mw_beaches` — Atlantic coast monitoring stations (seeded; Mickler's priority
-  100)
+- `mw_beaches` — monitoring stations on both coasts, mirroring the code
+  catalog in `src/lib/beaches.ts` (coast, region, station type, data-feed IDs)
 - `mw_sightings` — manual reports with optional latitude, longitude, and
   location accuracy, plus optional Instagram source attribution
 - `mw_sighting_checks` — latest daily public-web scan and report links per beach
 - `mw_alert_rules` — notification rules (seeded with examples)
-- `mw_conditions_cache` — optional cache written by the refresh job
+- `mw_conditions_cache` — latest scored conditions per station, written hourly
+  by the refresh job and read by `/api/summaries`
+- `mw_feature_log` — one row per station per hour: every model input plus the
+  score (the training set for a future model; server-only)
+- `mw_alert_log` — one row per alert rule, station, and day, so alert emails
+  never repeat (server-only)
 
 To apply it to your **own** project, paste the SQL into the Supabase SQL
 Editor, or use the Supabase CLI:
@@ -153,6 +197,9 @@ stations. Existing reports remain valid and appear at their selected beach.
 `0003_daily_sighting_checks.sql` stores one scan result per beach per UTC day.
 `0004_instagram_sightings.sql` adds normalized Instagram post/Reel permalinks,
 source handles, verification state, and duplicate prevention.
+`0005_gulf_coast_and_feature_log.sql` adds coast/region metadata, the 22 Gulf
+and Panhandle stations, the hourly feature log, and the alert log. All
+statements are idempotent.
 
 **Row Level Security** is enabled on every table:
 
@@ -173,32 +220,27 @@ source handles, verification state, and duplicate prevention.
    **Settings → Environment Variables** (Production + Preview).
 4. **Deploy.** No code changes are needed.
 
-### Cron refresh
+### Scheduled jobs (Railway)
 
-[`vercel.json`](vercel.json) registers an hourly conditions refresh and a daily
-online sighting check:
+Recurring work runs on Railway, not Vercel Cron, so request handlers stay
+short. Railway project **florida-mullet-run** has two cron services built from
+this repo, each configured by a file in [`worker/`](worker):
 
-```json
-{
-  "crons": [
-    { "path": "/api/refresh", "schedule": "0 * * * *" },
-    { "path": "/api/check-sightings", "schedule": "15 11 * * *" }
-  ]
-}
-```
+| Service | Config | Schedule (UTC) | Command |
+| ------- | ------ | -------------- | ------- |
+| `refresh` | `worker/railway.refresh.json` | `7 * * * *` (hourly) | `npx tsx worker/run.ts refresh` |
+| `sighting-checks` | `worker/railway.sighting-checks.json` | `13 11 * * *` (daily) | `npx tsx worker/run.ts sighting-checks` |
 
-On deploy, Vercel picks this up automatically (Hobby plan allows daily crons;
-Pro allows the hourly schedule — adjust the conditions cron if needed). Set
-`CRON_SECRET` and Vercel will send it as a bearer token so only Vercel can
-trigger the jobs. `/api/refresh` recomputes and caches every beach's conditions
-and evaluates alert rules. `/api/check-sightings` scans recent Google News RSS
-results for every beach and stores its findings; it requires the service-role
-key to persist them.
+The refresh scores all 33 stations, upserts `mw_conditions_cache`, writes one
+`mw_feature_log` row per station for the hour, and emails matching alert rules
+(once per rule, station, and day). Both jobs are safe to re-run, log one JSON
+line per event, and email `ALERT_EMAIL_TO` through Resend if they fail.
 
-You can call it manually:
+Run a job by hand (from the repo root, with the env vars set):
 
 ```bash
-curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>/api/refresh
+npx tsx worker/run.ts refresh
+npx tsx worker/run.ts probe boca-grande-pass,cedar-key-suwannee   # score and print; writes nothing
 ```
 
 ---
@@ -208,22 +250,22 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://<your-app>/api/refresh
 | Route | Method | Description |
 | ----- | ------ | ----------- |
 | `/api/conditions?beach=<id>` | GET | Full conditions, score breakdown, and next window for one beach |
-| `/api/summaries` | GET | Score summary for every beach (map + list) |
+| `/api/summaries?coast=<atlantic\|gulf>` | GET | Score summary per station (map + list), served from the hourly cache |
 | `/api/beaches` | GET | Beach list |
 | `/api/sightings` | GET / POST | List recent sightings / log a new one |
 | `/api/sighting-checks` | GET | Latest daily online check for every beach |
-| `/api/check-sightings` | GET | Cron-only scan for recent online mullet reports |
 | `/api/alert-rules` | GET | Alert rules |
-| `/api/refresh` | GET | Cron-ready refresh (recompute + cache + evaluate alerts) |
 
 ---
 
 ## Tuning
 
-- **Beaches & stations** — edit `mw_beaches` rows (or the fallback in
-  [`src/lib/beaches.ts`](src/lib/beaches.ts)). Tide (`tide_station`) and buoy
-  (`buoy_station`) IDs are approximate nearest stations and can be refined.
-- **Scoring weights** — `WEIGHTS` in [`src/lib/score.ts`](src/lib/score.ts).
+- **Stations** — edit the catalog in [`src/lib/beaches.ts`](src/lib/beaches.ts)
+  and mirror it in a migration (the catalog is what the app reads). Tide
+  (`tide_station`), met (`buoy_station`, `temp_buoy_station`), and river
+  (`usgs_site`) IDs are nearest working stations and can be refined.
+- **Scoring weights** — `WEIGHTS` in [`src/lib/score.ts`](src/lib/score.ts)
+  (Atlantic) and `GULF_WEIGHTS` in [`src/lib/score-gulf.ts`](src/lib/score-gulf.ts).
 - **Season curve** — `seasonFactor` in the same file. A flat-topped window
   (core plateau ~Sep 25–Oct 20 = 1.0) with Gaussian shoulders that ramp up
   through September and taper a little more slowly through November — tuned for
