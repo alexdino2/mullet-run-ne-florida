@@ -30,8 +30,14 @@ export async function safeFetchText(
       return hit.value;
     }
     const value = fetchText(url, opts);
-    memo.set(key, { at: now, value });
+    const entry = { at: now, value };
+    memo.set(key, entry);
     if (memo.size > 500) memo.delete(memo.keys().next().value as string);
+    // Never remember a failure: a single timeout or 429 would otherwise pin
+    // every station on that feed to neutral values for the whole TTL.
+    value.then((text) => {
+      if (text == null && memo.get(key) === entry) memo.delete(key);
+    });
     return value;
   }
   return fetchText(url, opts);

@@ -24,6 +24,7 @@ const ATLANTIC_STATIONS: Beach[] = [
     station_type: "beach",
     temp_buoy_station: null,
     usgs_site: null,
+    wind_station: "sauf1",
   },
   {
     id: "jax-beach",
@@ -39,6 +40,7 @@ const ATLANTIC_STATIONS: Beach[] = [
     station_type: "beach",
     temp_buoy_station: null,
     usgs_site: null,
+    wind_station: "sauf1",
   },
   {
     id: "st-augustine",
@@ -54,6 +56,7 @@ const ATLANTIC_STATIONS: Beach[] = [
     station_type: "beach",
     temp_buoy_station: null,
     usgs_site: null,
+    wind_station: "sauf1",
   },
   {
     id: "mayport",
@@ -69,6 +72,7 @@ const ATLANTIC_STATIONS: Beach[] = [
     station_type: "pass",
     temp_buoy_station: null,
     usgs_site: null,
+    wind_station: "sauf1",
   },
   {
     id: "ponce-inlet",
@@ -99,6 +103,7 @@ const ATLANTIC_STATIONS: Beach[] = [
     station_type: "beach",
     temp_buoy_station: null,
     usgs_site: null,
+    wind_station: "trdf1",
   },
   {
     id: "sebastian-inlet",
@@ -114,6 +119,7 @@ const ATLANTIC_STATIONS: Beach[] = [
     station_type: "pass",
     temp_buoy_station: null,
     usgs_site: null,
+    wind_station: "41068",
   },
   {
     id: "fort-pierce",
@@ -129,6 +135,7 @@ const ATLANTIC_STATIONS: Beach[] = [
     station_type: "pass",
     temp_buoy_station: null,
     usgs_site: null,
+    wind_station: "41068",
   },
   {
     id: "jupiter-inlet",
@@ -144,6 +151,7 @@ const ATLANTIC_STATIONS: Beach[] = [
     station_type: "pass",
     temp_buoy_station: null,
     usgs_site: null,
+    wind_station: "lkwf1",
   },
   {
     id: "fort-lauderdale",
@@ -159,6 +167,7 @@ const ATLANTIC_STATIONS: Beach[] = [
     station_type: "beach",
     temp_buoy_station: null,
     usgs_site: null,
+    wind_station: "pegf1",
   },
   {
     id: "miami-beach",
@@ -174,6 +183,7 @@ const ATLANTIC_STATIONS: Beach[] = [
     station_type: "beach",
     temp_buoy_station: null,
     usgs_site: null,
+    wind_station: "vakf1",
   },
 ];
 

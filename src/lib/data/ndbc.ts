@@ -25,6 +25,10 @@ export interface BuoyResult {
 }
 
 const HOUR_MS = 3600 * 1000;
+/** A feed whose newest row is older than this is treated as offline. */
+const MAX_FEED_AGE_MS = 3 * HOUR_MS;
+/** "Current" values (wind, pressure, water) must be at least this recent. */
+const MAX_READING_AGE_MS = 2 * HOUR_MS;
 
 /** North-sector wind (NW through NE) — offshore along the Gulf coast. */
 export function isNortherlyDirection(dirDeg: number): boolean {
@@ -36,6 +40,8 @@ interface Reading {
   t: number;
   wdir: number | null;
   wspd: number | null;
+  gst: number | null;
+  wvht: number | null;
   pres: number | null;
   wtmp: number | null;
 }
@@ -126,47 +132,58 @@ export async function getBuoy(
     ),
     wdir: num(r[5]),
     wspd: num(r[6]),
+    gst: num(r[7]),
+    wvht: num(r[8]),
     pres: num(r[12]),
     wtmp: num(r[14]),
   }));
-  const latestMs = allReadings[0]?.t ?? Date.now();
+
+  // Everything below is anchored to the wall clock, not to the newest row: a
+  // station that stopped reporting still serves its last 45 days of data, and
+  // treating that as "now" would score yesterday's wind as today's.
+  const nowMs = Date.now();
+  const latestMs = allReadings[0]?.t;
+  if (latestMs == null || !Number.isFinite(latestMs)) return undefined;
+  if (nowMs - latestMs > MAX_FEED_AGE_MS) return undefined; // station offline
+
   // Only the last ~2.5 days matter for fronts and cooling; the feed holds 45.
-  const readings = allReadings.filter((r) => r.t >= latestMs - 60 * HOUR_MS);
+  const readings = allReadings.filter((r) => r.t >= nowMs - 60 * HOUR_MS);
 
-  const latest = rows[0];
-  const wdir = num(latest[5]);
-  const wspd = num(latest[6]);
-  const gst = num(latest[7]);
-  const wvht = num(latest[8]);
-  const wtmp = num(latest[14]);
-
+  // Latest reading that actually has wind (wave-only buoys such as 41117
+  // never do, and C-MAN rows often skip a column).
+  const windRow = readings.find(
+    (r) => r.wdir != null && r.wspd != null && nowMs - r.t <= MAX_READING_AGE_MS,
+  );
   let wind: WindObservation | undefined;
-  if (wdir != null && wspd != null) {
+  if (windRow) {
     wind = {
-      directionDeg: wdir,
-      directionLabel: degreesToCompass(wdir),
-      speedKt: Math.round(wspd * MPS_TO_KT),
-      gustKt: gst != null ? Math.round(gst * MPS_TO_KT) : undefined,
+      directionDeg: windRow.wdir!,
+      directionLabel: degreesToCompass(windRow.wdir!),
+      speedKt: Math.round(windRow.wspd! * MPS_TO_KT),
+      gustKt: windRow.gst != null ? Math.round(windRow.gst * MPS_TO_KT) : undefined,
     };
   }
 
-  // Recent NE-through-E pattern over the last ~18 valid readings.
+  // Recent NE-through-E pattern over the last 18 hours. Counting rows would
+  // cover only ~2 hours on 6-minute stations versus 18 hours on hourly buoys.
   let easterlyCount = 0;
   let validCount = 0;
-  for (const r of rows.slice(0, 18)) {
-    const d = num(r[5]);
-    const s = num(r[6]);
-    if (d == null || s == null) continue;
+  for (const r of readings) {
+    if (r.t < nowMs - 18 * HOUR_MS) break;
+    if (r.wdir == null || r.wspd == null) continue;
     validCount += 1;
-    if (isFavorableEasterly(d, s)) easterlyCount += 1;
+    if (isFavorableEasterly(r.wdir, r.wspd)) easterlyCount += 1;
   }
 
-  // Latest non-missing pressure / water temp within the last 3 hours.
-  const pressureHpa = valueNear(readings, latestMs, (r) => r.pres, 3 * HOUR_MS);
-  const wtmpNow = wtmp ?? valueNear(readings, latestMs, (r) => r.wtmp, 3 * HOUR_MS);
+  // Latest non-missing pressure / water temp / waves, if recent enough.
+  const recent = (pick: (r: Reading) => number | null) =>
+    valueNear(readings, nowMs, pick, MAX_READING_AGE_MS);
+  const pressureHpa = recent((r) => r.pres);
+  const wvht = recent((r) => r.wvht);
+  const wtmpNow = recent((r) => r.wtmp);
   const wtmpThen = valueNear(
     readings,
-    latestMs - 48 * HOUR_MS,
+    nowMs - 48 * HOUR_MS,
     (r) => r.wtmp,
     3 * HOUR_MS,
   );
@@ -175,7 +192,7 @@ export async function getBuoy(
   let northCount = 0;
   let northValid = 0;
   for (const r of readings) {
-    if (r.t < latestMs - 12 * HOUR_MS) break;
+    if (r.t < nowMs - 12 * HOUR_MS) break;
     if (r.wdir == null || r.wspd == null) continue;
     northValid += 1;
     if (isNortherlyDirection(r.wdir) && r.wspd >= 3) northCount += 1;
@@ -184,7 +201,7 @@ export async function getBuoy(
   return {
     wind,
     pressureHpa: pressureHpa ?? undefined,
-    pressureDrop24hHpa: largestPressureDrop(readings, latestMs),
+    pressureDrop24hHpa: largestPressureDrop(readings, nowMs),
     waterTempChange48hF:
       wtmpNow != null && wtmpThen != null
         ? Math.round((wtmpNow - wtmpThen) * 1.8 * 10) / 10

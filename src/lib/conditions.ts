@@ -11,7 +11,7 @@ import type {
 } from "@/lib/types";
 import { getBeaches, getStation } from "@/lib/beaches";
 import { getRecentSightings } from "@/lib/sightings";
-import { getNwsForecast } from "@/lib/data/nws";
+import { getNwsForecast, type NwsResult } from "@/lib/data/nws";
 import { getOpenMeteo, maxPressureDrop } from "@/lib/data/openmeteo";
 import { getTides, stageAt, tideRangeRatio } from "@/lib/data/coops";
 import { getBuoy } from "@/lib/data/ndbc";
@@ -36,24 +36,33 @@ interface Assembled {
   pressureSeries: { t: number; hpa: number }[];
 }
 
+const NO_NWS: NwsResult = { hourly: [] };
+
 /**
- * Fetch every source for a station in parallel and assemble the merged
- * conditions. Wind/temp prefer the buoy, then NWS, then Open-Meteo — the last
- * guarantees coverage when api.weather.gov is unreachable (e.g. from Vercel's
- * serverless egress). Pressure history prefers the station's own barometer and
- * falls back to the Open-Meteo model. Gulf stations also pull a river gauge
- * and, when the primary station has no water sensor, a second buoy for temp.
+ * Fetch every source for a station and assemble the merged conditions.
+ *
+ * Source precedence is fixed and does not depend on where the code runs, so
+ * the Railway refresh job and the Vercel app score a station from the same
+ * inputs: wind prefers a fresh station observation, then the Open-Meteo model,
+ * then the NWS forecast. NWS is only called when Open-Meteo has nothing —
+ * api.weather.gov blocks Vercel's egress but not Railway's, and preferring it
+ * whenever reachable made the same beach score differently in each place.
+ * Pressure history prefers the station's own barometer and falls back to the
+ * Open-Meteo model. Gulf stations also pull a river gauge and, when the primary
+ * station has no water sensor, a second buoy for temp.
  */
 async function assembleConditions(beach: Beach): Promise<Assembled> {
   const gulf = beach.coast === "gulf";
-  const [nws, om, tide, buoy, tempBuoy, river] = await Promise.all([
-    getNwsForecast(beach.lat, beach.lon),
+  const [om, tide, buoy, windStation, tempBuoy, river] = await Promise.all([
     getOpenMeteo(beach.lat, beach.lon),
     getTides(beach.tide_station),
     getBuoy(beach.buoy_station),
+    getBuoy(beach.wind_station ?? null),
     gulf ? getBuoy(beach.temp_buoy_station) : Promise.resolve(undefined),
     gulf ? getRiver(beach.usgs_site) : Promise.resolve(undefined),
   ]);
+  const needNws = !om.current?.wind || om.hourly.length < 2;
+  const nws = needNws ? await getNwsForecast(beach.lat, beach.lon) : NO_NWS;
 
   const waterTempF = buoy?.waterTempF ?? tempBuoy?.waterTempF;
   const waterTempChange48hF =
@@ -61,24 +70,38 @@ async function assembleConditions(beach: Beach): Promise<Assembled> {
       ? buoy.waterTempChange48hF
       : tempBuoy?.waterTempChange48hF;
 
+  const stationWind = windStation?.wind ?? buoy?.wind;
+  const wind = stationWind ?? om.current?.wind ?? nws.current?.wind;
+  const windSource: Conditions["windSource"] = stationWind
+    ? "station"
+    : om.current?.wind
+      ? "model"
+      : nws.current?.wind
+        ? "forecast"
+        : undefined;
+
   const sources: string[] = [];
-  if (nws.hourly.length) sources.push("NWS");
   if (om.current?.wind || om.hourly.length) sources.push("Open-Meteo");
+  if (nws.hourly.length) sources.push("NWS");
   if (tide) sources.push("NOAA CO-OPS");
   if (buoy) sources.push(`NDBC ${beach.buoy_station?.toUpperCase()}`);
+  if (windStation) sources.push(`NDBC ${beach.wind_station?.toUpperCase()}`);
   if (tempBuoy && buoy?.waterTempF == null) {
     sources.push(`NDBC ${beach.temp_buoy_station?.toUpperCase()}`);
   }
   if (river) sources.push(`USGS ${river.site}`);
 
   const conditions: Conditions = {
-    wind: buoy?.wind ?? nws.current?.wind ?? om.current?.wind,
-    airTempF: nws.current?.airTempF ?? om.current?.airTempF,
+    wind,
+    windSource,
+    airTempF: om.current?.airTempF ?? nws.current?.airTempF,
     waterTempF,
     waveHeightFt: buoy?.waveHeightFt,
     tide,
     recentEasterlyFraction:
-      buoy?.recentEasterlyFraction ?? om.recentEasterlyFraction,
+      windStation?.recentEasterlyFraction ??
+      buoy?.recentEasterlyFraction ??
+      om.recentEasterlyFraction,
     pressureHpa: buoy?.pressureHpa ?? om.pressureHpa,
     pressureDrop24hHpa: buoy?.pressureDrop24hHpa ?? om.pressureDrop24hHpa,
     waterTempChange48hF,
@@ -90,12 +113,12 @@ async function assembleConditions(beach: Beach): Promise<Assembled> {
     observedAt: new Date().toISOString(),
   };
 
-  // Prefer the NWS hourly series for the forecast; fall back to Open-Meteo.
-  // Open-Meteo is the only hourly source with pressure, so merge it in.
+  // Same order for the forecast: Open-Meteo (which also carries pressure),
+  // then NWS with Open-Meteo pressure merged in where the hours line up.
   const omPressure = new Map(
     om.hourly.map((h) => [Math.round(new Date(h.time).getTime() / 3600000), h.pressureHpa]),
   );
-  const base = nws.hourly.length >= 2 ? nws.hourly : om.hourly;
+  const base = om.hourly.length >= 2 ? om.hourly : nws.hourly;
   const hourly = base.map((h) => ({
     ...h,
     pressureHpa:
@@ -207,22 +230,103 @@ function computeNextWindow(
   );
 }
 
+/**
+ * Bump whenever the way inputs are gathered changes (source precedence, feed
+ * parsing, new condition fields). Snapshots with another version are ignored,
+ * so a deploy never mixes old-pipeline numbers into the rankings.
+ */
+export const SNAPSHOT_VERSION = 2;
+
 export interface CachedPayload {
+  /** Snapshot format/pipeline version; see SNAPSHOT_VERSION. */
+  v?: number;
+  /** Feed IDs the snapshot was built from; see stationFingerprint. */
+  station?: string;
   conditions: Conditions;
   score: ScoreResult;
   nextWindow: OpportunityWindow | null;
 }
 
-async function persistCache(beachId: string, score: number, payload: CachedPayload) {
+/** Changes whenever a station's coast, location, or data feeds change. */
+function stationFingerprint(b: Beach): string {
+  return [
+    b.coast,
+    b.lat,
+    b.lon,
+    b.tide_station,
+    b.buoy_station,
+    b.temp_buoy_station,
+    b.wind_station ?? "",
+    b.usgs_site,
+  ].join("|");
+}
+
+/**
+ * Re-derive everything that depends only on the clock — tide stage, next tide,
+ * spring/neap range, moon, season — and score with the current model. Lets a
+ * cached snapshot be served without a stale tide stage or an old scorer.
+ */
+export function rescoreSnapshot(
+  beach: Beach,
+  snapshot: Conditions,
+  now: Date,
+): { conditions: Conditions; score: ScoreResult } {
+  const nowMs = now.getTime();
+  const events = snapshot.tide?.events ?? [];
+  const tide =
+    snapshot.tide && events.length
+      ? {
+          ...snapshot.tide,
+          stage: stageAt(events, nowMs),
+          nextEvent: events.find((e) => new Date(e.time).getTime() > nowMs),
+          rangeRatio: tideRangeRatio(events, nowMs),
+        }
+      : snapshot.tide;
+  const conditions: Conditions = { ...snapshot, tide, moon: moonAt(now) };
+  return { conditions, score: scoreStation(beach, conditions, now) };
+}
+
+async function persistCache(
+  beach: Beach,
+  now: Date,
+  score: ScoreResult,
+  conditions: Conditions,
+  nextWindow: OpportunityWindow | null,
+) {
   if (!hasServiceRole()) return; // avoid RLS write failures with the anon key
   const supabase = getServerSupabase();
   if (!supabase) return;
+
+  // Self-check: the stored snapshot must reproduce this exact score after a
+  // JSON round trip. If it can't, readers would serve a different number than
+  // the one computed here, so don't write it.
+  const stored = JSON.parse(JSON.stringify(conditions)) as Conditions;
+  const replayed = rescoreSnapshot(beach, stored, now).score.score;
+  if (replayed !== score.score) {
+    console.error(
+      JSON.stringify({
+        event: "snapshot_mismatch",
+        station: beach.id,
+        score: score.score,
+        replayed,
+      }),
+    );
+    return;
+  }
+
+  const payload: CachedPayload = {
+    v: SNAPSHOT_VERSION,
+    station: stationFingerprint(beach),
+    conditions,
+    score,
+    nextWindow,
+  };
   await supabase
     .from("mw_conditions_cache")
     .upsert({
-      beach_id: beachId,
-      fetched_at: new Date().toISOString(),
-      score,
+      beach_id: beach.id,
+      fetched_at: now.toISOString(),
+      score: score.score,
       payload,
     })
     .then(
@@ -239,11 +343,12 @@ export async function computeBeachConditions(
   const now = new Date();
   const sightings = allSightings ?? (await getRecentSightings(100));
   const assembled = await assembleConditions(beach);
-  const { conditions } = assembled;
 
   // Score is computed from public sources only — sightings are not a factor.
-  const score = scoreStation(beach, conditions, now);
-  const nextWindow = computeNextWindow(beach, assembled, now);
+  // It goes through the same function that re-scores cached snapshots, so the
+  // dashboard and the map can never disagree about what inputs mean.
+  const { conditions, score } = rescoreSnapshot(beach, assembled.conditions, now);
+  const nextWindow = computeNextWindow(beach, { ...assembled, conditions }, now);
   // Sightings are still fetched purely for display alongside the score.
   const recentSightings = sightings
     .filter((s) => s.beach_id === beach.id)
@@ -259,7 +364,7 @@ export async function computeBeachConditions(
   };
 
   if (opts.persist !== false) {
-    await persistCache(beach.id, score.score, { conditions, score, nextWindow });
+    await persistCache(beach, now, score, conditions, nextWindow);
   }
 
   return result;
@@ -276,24 +381,30 @@ function toSummary(beach: Beach, conditions: Conditions, score: ScoreResult): Be
   };
 }
 
-/** Cached rows newer than this are served as-is; older ones are recomputed. */
-const CACHE_MAX_AGE_MS = 2 * 60 * 60 * 1000;
+/**
+ * Snapshots older than this are recomputed. The Railway refresh runs hourly;
+ * the extra 15 minutes covers a slow run without serving a skipped one.
+ */
+const CACHE_MAX_AGE_MS = 75 * 60 * 1000;
 
 /**
- * Summaries for the map and rankings. Reads the hourly cache the Railway
- * refresh job writes, and computes live only for stations with no fresh row —
- * keeping this request short even with 30+ stations.
+ * Summaries for the map and rankings. Reads the snapshots the hourly Railway
+ * refresh (and every dashboard view) writes and re-scores each one for the
+ * current moment, so the ranking uses the same model and tide stage as the
+ * live dashboard. Only stations without a valid, recent snapshot are fetched
+ * live — keeping this request short even with 30+ stations.
  */
 export async function computeAllSummaries(coast?: Coast): Promise<BeachSummary[]> {
   const beaches = await getBeaches(coast);
+  const now = new Date();
   const cached = new Map<string, BeachSummary>();
 
   const supabase = getServerSupabase();
   if (supabase) {
-    const since = new Date(Date.now() - CACHE_MAX_AGE_MS).toISOString();
+    const since = new Date(now.getTime() - CACHE_MAX_AGE_MS).toISOString();
     const { data } = await supabase
       .from("mw_conditions_cache")
-      .select("beach_id, fetched_at, score, payload")
+      .select("beach_id, fetched_at, payload")
       .in(
         "beach_id",
         beaches.map((b) => b.id),
@@ -305,12 +416,13 @@ export async function computeAllSummaries(coast?: Coast): Promise<BeachSummary[]
     }[]) {
       const beach = getStation(row.beach_id);
       const payload = row.payload;
-      // Only trust rows written by a scorer that knows this station's coast.
-      if (!beach || !payload?.score || !payload.conditions) continue;
-      const expected = beach.coast === "gulf" ? "gulf-trigger" : "atlantic-surf";
-      if (payload.score.model && payload.score.model !== expected) continue;
-      if (beach.coast === "gulf" && !payload.score.model) continue;
-      cached.set(beach.id, toSummary(beach, payload.conditions, payload.score));
+      // Only trust snapshots from the current pipeline, for this station's
+      // current feeds. Anything else is recomputed live below.
+      if (!beach || !payload?.conditions) continue;
+      if (payload.v !== SNAPSHOT_VERSION) continue;
+      if (payload.station !== stationFingerprint(beach)) continue;
+      const { conditions, score } = rescoreSnapshot(beach, payload.conditions, now);
+      cached.set(beach.id, toSummary(beach, conditions, score));
     }
   }
 
@@ -318,8 +430,9 @@ export async function computeAllSummaries(coast?: Coast): Promise<BeachSummary[]
     beaches.map(async (beach) => {
       const hit = cached.get(beach.id);
       if (hit) return hit;
-      const { conditions } = await assembleConditions(beach);
-      return toSummary(beach, conditions, scoreStation(beach, conditions));
+      // A miss also writes a snapshot, so the next request is a hit.
+      const r = await computeBeachConditions(beach, []);
+      return toSummary(beach, r.conditions, r.score);
     }),
   );
 
