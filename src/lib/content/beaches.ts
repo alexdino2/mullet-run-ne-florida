@@ -549,13 +549,13 @@ export const BEACH_CONTENT: BeachContent[] = [
     ],
     image: {
       src: "/images/beaches/miami-beach.jpg",
-      alt: "Atlantic Ocean shoreline at South Beach, Miami Beach",
+      alt: "Lifeguard stand on the sand at 8th Street, South Beach, with Atlantic surf behind",
       width: 1200,
       height: 900,
-      credit: "Wikimedia Commons contributor",
-      license: "CC BY-SA 4.0",
+      credit: "Dan Lundberg",
+      license: "CC BY-SA 2.0",
       sourceUrl:
-        "https://commons.wikimedia.org/wiki/File:South_beach_Miami.jpg",
+        "https://commons.wikimedia.org/wiki/File:20130820_Miami_Beach_3373_lifeguard_stand_(8th_Street).jpg",
     },
     about: [
       "Miami Beach is the tail of this site's tracked corridor. Pods that started in Northeast Florida weeks earlier often show here later in fall, keeping the bite alive when northern water has already cooled past the peak.",
