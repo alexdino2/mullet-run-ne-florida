@@ -58,7 +58,9 @@ export async function getTides(
 
   const now = new Date();
   const start = new Date(now.getTime() - 24 * 3600 * 1000);
-  const end = new Date(now.getTime() + 48 * 3600 * 1000);
+  // Two weeks ahead so the current range can be compared against the next
+  // spring tide (the strongest outgoing currents of the cycle).
+  const end = new Date(now.getTime() + 15 * 24 * 3600 * 1000);
 
   const url =
     `https://api.tidesandcurrents.noaa.gov/api/prod/datagetter` +
@@ -80,5 +82,38 @@ export async function getTides(
   const nowMs = now.getTime();
   const next = events.find((e) => new Date(e.time).getTime() > nowMs);
 
-  return { stage: stageAt(events, nowMs), nextEvent: next, events };
+  return {
+    stage: stageAt(events, nowMs),
+    nextEvent: next,
+    events,
+    rangeRatio: tideRangeRatio(events, nowMs),
+  };
+}
+
+/**
+ * Today's tidal range as a fraction of the biggest range in the prediction
+ * window (~2 weeks). Near 1 = spring tides and the strongest ebb flows;
+ * near the low end = neaps. Works for the Gulf's mixed and diurnal tides too.
+ */
+export function tideRangeRatio(
+  events: TideEvent[],
+  atMs: number,
+): number | undefined {
+  if (events.length < 4) return undefined;
+  const ranges: { t: number; range: number }[] = [];
+  for (let i = 1; i < events.length; i++) {
+    const a = events[i - 1];
+    const b = events[i];
+    if (a.type === b.type) continue;
+    ranges.push({
+      t: (new Date(a.time).getTime() + new Date(b.time).getTime()) / 2,
+      range: Math.abs(a.heightFt - b.heightFt),
+    });
+  }
+  const max = Math.max(...ranges.map((r) => r.range));
+  if (!Number.isFinite(max) || max <= 0) return undefined;
+  const near = ranges.filter((r) => Math.abs(r.t - atMs) <= 12 * 3600 * 1000);
+  if (near.length === 0) return undefined;
+  const current = Math.max(...near.map((r) => r.range));
+  return Math.round((current / max) * 100) / 100;
 }

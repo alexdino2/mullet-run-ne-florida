@@ -1,13 +1,15 @@
-import type { Beach } from "@/lib/types";
-import { getServerSupabase } from "@/lib/supabase/server";
+import type { Beach, Coast, RegionId } from "@/lib/types";
+import { regionsForCoast } from "@/lib/regions";
 
 /**
- * Static fallback that mirrors the seeded `mw_beaches` rows. Keeps the app
- * usable (map, selector, scoring) even if the database is unreachable.
- * Mickler's Landing is prioritized highest. Stations continue south along the
- * Atlantic migration corridor so the public tracker works statewide.
+ * Station catalog. This file is the source of truth for every monitoring
+ * station and its data-feed IDs; `mw_beaches` mirrors it (see migration 0005)
+ * so sightings and cached conditions have rows to reference.
+ *
+ * Atlantic stations run north to south along the surf migration corridor;
+ * Mickler's Landing is prioritized highest.
  */
-export const FALLBACK_BEACHES: Beach[] = [
+const ATLANTIC_STATIONS: Beach[] = [
   {
     id: "micklers",
     name: "Mickler's Landing",
@@ -17,6 +19,12 @@ export const FALLBACK_BEACHES: Beach[] = [
     tide_station: "8720218",
     buoy_station: "41117",
     nws_note: "Ponte Vedra Beach; tide via Mayport station",
+    coast: "atlantic",
+    region: "northeast-florida",
+    station_type: "beach",
+    temp_buoy_station: null,
+    usgs_site: null,
+    wind_station: "sauf1",
   },
   {
     id: "jax-beach",
@@ -27,6 +35,12 @@ export const FALLBACK_BEACHES: Beach[] = [
     tide_station: "8720218",
     buoy_station: "41117",
     nws_note: "Tide via Mayport station",
+    coast: "atlantic",
+    region: "northeast-florida",
+    station_type: "beach",
+    temp_buoy_station: null,
+    usgs_site: null,
+    wind_station: "sauf1",
   },
   {
     id: "st-augustine",
@@ -37,6 +51,12 @@ export const FALLBACK_BEACHES: Beach[] = [
     tide_station: "8720587",
     buoy_station: "41117",
     nws_note: "St. Augustine Beach station",
+    coast: "atlantic",
+    region: "northeast-florida",
+    station_type: "beach",
+    temp_buoy_station: null,
+    usgs_site: null,
+    wind_station: "sauf1",
   },
   {
     id: "mayport",
@@ -47,6 +67,12 @@ export const FALLBACK_BEACHES: Beach[] = [
     tide_station: "8720218",
     buoy_station: "41112",
     nws_note: "Mayport / St. Johns River entrance",
+    coast: "atlantic",
+    region: "northeast-florida",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
+    wind_station: "sauf1",
   },
   {
     id: "ponce-inlet",
@@ -57,6 +83,11 @@ export const FALLBACK_BEACHES: Beach[] = [
     tide_station: "8721147",
     buoy_station: "41009",
     nws_note: "Ponce de Leon Inlet; offshore conditions via Canaveral buoy",
+    coast: "atlantic",
+    region: "space-coast",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
   },
   {
     id: "cocoa-beach",
@@ -67,6 +98,12 @@ export const FALLBACK_BEACHES: Beach[] = [
     tide_station: "8721604",
     buoy_station: "41009",
     nws_note: "Space Coast; tide via Trident Pier",
+    coast: "atlantic",
+    region: "space-coast",
+    station_type: "beach",
+    temp_buoy_station: null,
+    usgs_site: null,
+    wind_station: "trdf1",
   },
   {
     id: "sebastian-inlet",
@@ -77,6 +114,12 @@ export const FALLBACK_BEACHES: Beach[] = [
     tide_station: "8722004",
     buoy_station: "41114",
     nws_note: "Sebastian Inlet; nearshore conditions via Fort Pierce buoy",
+    coast: "atlantic",
+    region: "space-coast",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
+    wind_station: "41068",
   },
   {
     id: "fort-pierce",
@@ -87,6 +130,12 @@ export const FALLBACK_BEACHES: Beach[] = [
     tide_station: "8722212",
     buoy_station: "41114",
     nws_note: "Fort Pierce Inlet",
+    coast: "atlantic",
+    region: "treasure-coast",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
+    wind_station: "41068",
   },
   {
     id: "jupiter-inlet",
@@ -97,6 +146,12 @@ export const FALLBACK_BEACHES: Beach[] = [
     tide_station: "8722495",
     buoy_station: "41122",
     nws_note: "Jupiter Inlet; nearshore conditions via Hollywood buoy",
+    coast: "atlantic",
+    region: "treasure-coast",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
+    wind_station: "lkwf1",
   },
   {
     id: "fort-lauderdale",
@@ -107,6 +162,12 @@ export const FALLBACK_BEACHES: Beach[] = [
     tide_station: "8722956",
     buoy_station: "41122",
     nws_note: "South Florida; tide via South Port Everglades",
+    coast: "atlantic",
+    region: "southeast-florida",
+    station_type: "beach",
+    temp_buoy_station: null,
+    usgs_site: null,
+    wind_station: "pegf1",
   },
   {
     id: "miami-beach",
@@ -117,27 +178,396 @@ export const FALLBACK_BEACHES: Beach[] = [
     tide_station: "8723170",
     buoy_station: "41122",
     nws_note: "Miami Beach; tide via Miami Beach Government Cut",
+    coast: "atlantic",
+    region: "southeast-florida",
+    station_type: "beach",
+    temp_buoy_station: null,
+    usgs_site: null,
+    wind_station: "vakf1",
   },
 ];
 
-export async function getBeaches(): Promise<Beach[]> {
-  const supabase = getServerSupabase();
-  if (!supabase) return FALLBACK_BEACHES;
-  const { data, error } = await supabase
-    .from("mw_beaches")
-    .select("*")
-    .order("priority", { ascending: false });
-  if (error || !data || data.length === 0) return FALLBACK_BEACHES;
-  return data as Beach[];
+/**
+ * Gulf Coast and Panhandle stations. The Gulf run is scored as an "exit"
+ * forecast: fish staged in bays and rivers leave through these passes and
+ * river mouths when fronts, cooling water, and strong outgoing tides line up.
+ * Station IDs were checked against live NOAA CO-OPS, NDBC, and USGS feeds
+ * (Sept 2026).
+ */
+const GULF_STATIONS: Beach[] = [
+  {
+    id: "pensacola-pass",
+    name: "Pensacola Pass",
+    lat: 30.3233,
+    lon: -87.294,
+    priority: 90,
+    tide_station: "8729840",
+    buoy_station: "pclf1",
+    nws_note: "Pensacola Pass off Fort Pickens; wind/pressure via Pensacola NOS station (wind falls back to forecast models)",
+    coast: "gulf",
+    region: "panhandle",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: "02376033",
+  },
+  {
+    id: "navarre-beach",
+    name: "Navarre Beach",
+    lat: 30.379,
+    lon: -86.865,
+    priority: 89,
+    tide_station: "8729678",
+    buoy_station: "pclf1",
+    nws_note: "Navarre Beach pier and surf; met via Pensacola NOS station",
+    coast: "gulf",
+    region: "panhandle",
+    station_type: "beach",
+    temp_buoy_station: null,
+    usgs_site: null,
+  },
+  {
+    id: "destin-east-pass",
+    name: "Destin East Pass",
+    lat: 30.3935,
+    lon: -86.5135,
+    priority: 88,
+    tide_station: "8729511",
+    buoy_station: "pcbf1",
+    nws_note: "East Pass, Destin \u2014 Choctawhatchee Bay outflow; met via Panama City Beach",
+    coast: "gulf",
+    region: "panhandle",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: "02366500",
+  },
+  {
+    id: "st-andrew-pass",
+    name: "St. Andrew Pass",
+    lat: 30.125,
+    lon: -85.733,
+    priority: 87,
+    tide_station: "8729136",
+    buoy_station: "pcbf1",
+    nws_note: "St. Andrew Bay entrance at St. Andrews State Park",
+    coast: "gulf",
+    region: "panhandle",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
+  },
+  {
+    id: "cape-san-blas",
+    name: "Cape San Blas",
+    lat: 29.764,
+    lon: -85.402,
+    priority: 86,
+    tide_station: "8728978",
+    buoy_station: "apcf1",
+    nws_note: "St. Joseph Peninsula and Cape San Blas surf; met via Apalachicola",
+    coast: "gulf",
+    region: "panhandle",
+    station_type: "beach",
+    temp_buoy_station: null,
+    usgs_site: null,
+  },
+  {
+    id: "st-george-island",
+    name: "St. George Island (Sikes Cut)",
+    lat: 29.613,
+    lon: -84.958,
+    priority: 85,
+    tide_station: "8728669",
+    buoy_station: "apcf1",
+    nws_note: "Bob Sikes Cut \u2014 Apalachicola Bay outflow",
+    coast: "gulf",
+    region: "panhandle",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: "02358700",
+  },
+  {
+    id: "st-marks",
+    name: "St. Marks River Mouth",
+    lat: 30.078,
+    lon: -84.178,
+    priority: 84,
+    tide_station: "8728130",
+    buoy_station: "apcf1",
+    nws_note: "St. Marks River entrance on Apalachee Bay; met via Apalachicola",
+    coast: "gulf",
+    region: "big-bend",
+    station_type: "river",
+    temp_buoy_station: null,
+    usgs_site: "02326900",
+  },
+  {
+    id: "steinhatchee",
+    name: "Steinhatchee River",
+    lat: 29.672,
+    lon: -83.39,
+    priority: 83,
+    tide_station: "8727695",
+    buoy_station: "ktnf1",
+    nws_note: "Steinhatchee River entrance at Deadman Bay; wind via Keaton Beach, water temp via Cedar Key",
+    coast: "gulf",
+    region: "big-bend",
+    station_type: "river",
+    temp_buoy_station: "ckyf1",
+    usgs_site: "02324170",
+  },
+  {
+    id: "cedar-key-suwannee",
+    name: "Cedar Key & Suwannee River",
+    lat: 29.137,
+    lon: -83.035,
+    priority: 82,
+    tide_station: "8727520",
+    buoy_station: "ckyf1",
+    nws_note: "Cedar Key and the Suwannee River mouth",
+    coast: "gulf",
+    region: "big-bend",
+    station_type: "river",
+    temp_buoy_station: null,
+    usgs_site: "02323500",
+  },
+  {
+    id: "crystal-river",
+    name: "Crystal River",
+    lat: 28.905,
+    lon: -82.72,
+    priority: 81,
+    tide_station: "8727333",
+    buoy_station: "ckyf1",
+    nws_note: "Crystal River mouth and Crystal Bay; met via Cedar Key",
+    coast: "gulf",
+    region: "big-bend",
+    station_type: "river",
+    temp_buoy_station: null,
+    usgs_site: "02310750",
+  },
+  {
+    id: "homosassa",
+    name: "Homosassa River",
+    lat: 28.772,
+    lon: -82.695,
+    priority: 80,
+    tide_station: "8727277",
+    buoy_station: "ckyf1",
+    nws_note: "Homosassa River mouth; met via Cedar Key",
+    coast: "gulf",
+    region: "big-bend",
+    station_type: "river",
+    temp_buoy_station: null,
+    usgs_site: "02310700",
+  },
+  {
+    id: "egmont-fort-desoto",
+    name: "Egmont Key & Fort De Soto",
+    lat: 27.615,
+    lon: -82.735,
+    priority: 79,
+    tide_station: "8726347",
+    buoy_station: "sapf1",
+    nws_note: "Egmont Key and Fort De Soto at the Tampa Bay mouth",
+    coast: "gulf",
+    region: "tampa-bay",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
+  },
+  {
+    id: "anna-maria",
+    name: "Anna Maria Island",
+    lat: 27.533,
+    lon: -82.73,
+    priority: 78,
+    tide_station: "8726282",
+    buoy_station: "sapf1",
+    nws_note: "Passage Key Inlet and the Anna Maria Island beaches",
+    coast: "gulf",
+    region: "tampa-bay",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
+  },
+  {
+    id: "longboat-pass",
+    name: "Longboat Pass",
+    lat: 27.44,
+    lon: -82.69,
+    priority: 77,
+    tide_station: "8726089",
+    buoy_station: "sapf1",
+    nws_note: "Longboat Pass between Anna Maria Island and Longboat Key",
+    coast: "gulf",
+    region: "sarasota-charlotte",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
+  },
+  {
+    id: "venice-inlet",
+    name: "Venice Inlet",
+    lat: 27.112,
+    lon: -82.465,
+    priority: 76,
+    tide_station: "8725889",
+    buoy_station: "venf1",
+    nws_note: "Venice Inlet jetties; wind via Venice station, water temp via WFS buoy C10",
+    coast: "gulf",
+    region: "sarasota-charlotte",
+    station_type: "pass",
+    temp_buoy_station: "42013",
+    usgs_site: null,
+  },
+  {
+    id: "stump-pass",
+    name: "Stump Pass",
+    lat: 26.9,
+    lon: -82.345,
+    priority: 75,
+    tide_station: "8725685",
+    buoy_station: "venf1",
+    nws_note: "Stump Pass, Englewood; tide via Don Pedro Island",
+    coast: "gulf",
+    region: "sarasota-charlotte",
+    station_type: "pass",
+    temp_buoy_station: "42013",
+    usgs_site: null,
+  },
+  {
+    id: "boca-grande-pass",
+    name: "Boca Grande Pass",
+    lat: 26.717,
+    lon: -82.26,
+    priority: 74,
+    tide_station: "8725577",
+    buoy_station: "fmrf1",
+    nws_note: "Boca Grande Pass \u2014 Charlotte Harbor outflow; met via Fort Myers",
+    coast: "gulf",
+    region: "sarasota-charlotte",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: "02296750",
+  },
+  {
+    id: "redfish-pass",
+    name: "Redfish Pass",
+    lat: 26.55,
+    lon: -82.197,
+    priority: 73,
+    tide_station: "8725441",
+    buoy_station: "fmrf1",
+    nws_note: "Redfish Pass between Captiva and North Captiva",
+    coast: "gulf",
+    region: "southwest-florida",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
+  },
+  {
+    id: "sanibel",
+    name: "Sanibel (Blind Pass)",
+    lat: 26.483,
+    lon: -82.183,
+    priority: 72,
+    tide_station: "8725383",
+    buoy_station: "fmrf1",
+    nws_note: "Blind Pass and the Sanibel/Captiva beaches",
+    coast: "gulf",
+    region: "southwest-florida",
+    station_type: "beach",
+    temp_buoy_station: null,
+    usgs_site: null,
+  },
+  {
+    id: "wiggins-pass",
+    name: "Wiggins Pass",
+    lat: 26.29,
+    lon: -81.818,
+    priority: 71,
+    tide_station: "8725235",
+    buoy_station: "fmrf1",
+    nws_note: "Wiggins Pass at Delnor-Wiggins State Park",
+    coast: "gulf",
+    region: "southwest-florida",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
+  },
+  {
+    id: "naples",
+    name: "Naples",
+    lat: 26.132,
+    lon: -81.808,
+    priority: 70,
+    tide_station: "8725110",
+    buoy_station: "fmrf1",
+    nws_note: "Naples Pier and beaches",
+    coast: "gulf",
+    region: "southwest-florida",
+    station_type: "beach",
+    temp_buoy_station: null,
+    usgs_site: null,
+  },
+  {
+    id: "marco-island",
+    name: "Marco Island (Caxambas Pass)",
+    lat: 25.908,
+    lon: -81.728,
+    priority: 69,
+    tide_station: "8724967",
+    buoy_station: "fmrf1",
+    nws_note: "Caxambas Pass, Marco Island",
+    coast: "gulf",
+    region: "southwest-florida",
+    station_type: "pass",
+    temp_buoy_station: null,
+    usgs_site: null,
+  },
+];
+
+/** Every station, both coasts, in display order. */
+export const STATIONS: Beach[] = [...ATLANTIC_STATIONS, ...GULF_STATIONS];
+
+/** Kept for existing imports: the full catalog. */
+export const FALLBACK_BEACHES = STATIONS;
+
+/** Default station shown when a coast is picked without a specific beach. */
+export const DEFAULT_STATION: Record<Coast, string> = {
+  atlantic: "micklers",
+  gulf: "boca-grande-pass",
+};
+
+/**
+ * All stations. Served from the code catalog rather than the database so the
+ * data-feed IDs always match the scoring code that uses them.
+ */
+export async function getBeaches(coast?: Coast): Promise<Beach[]> {
+  return coast ? STATIONS.filter((b) => b.coast === coast) : STATIONS;
+}
+
+export function getStation(id: string): Beach | null {
+  return STATIONS.find((b) => b.id === id) ?? null;
 }
 
 export async function getBeach(id: string): Promise<Beach | null> {
-  const beaches = await getBeaches();
-  return beaches.find((b) => b.id === id) ?? null;
+  return getStation(id);
 }
 
-/** The highest-priority beach (Mickler's by default). */
-export async function getPrimaryBeach(): Promise<Beach> {
-  const beaches = await getBeaches();
-  return beaches[0] ?? FALLBACK_BEACHES[0];
+/** The highest-priority station (Mickler's by default). */
+export async function getPrimaryBeach(coast: Coast = "atlantic"): Promise<Beach> {
+  return getStation(DEFAULT_STATION[coast]) ?? STATIONS[0];
+}
+
+/** Stations grouped by region in north-to-south order for one coast. */
+export function stationsByRegion(
+  coast: Coast,
+): { region: RegionId; stations: Beach[] }[] {
+  return regionsForCoast(coast)
+    .map((r) => ({
+      region: r.id,
+      stations: STATIONS.filter((b) => b.region === r.id),
+    }))
+    .filter((g) => g.stations.length > 0);
 }

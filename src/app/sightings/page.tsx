@@ -15,24 +15,31 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Where Are the Mullet Right Now? Live Florida Sightings Map",
   description:
-    "Live crowdsourced map of where the mullet run is right now along Florida's Atlantic coast. See the latest bait-school sightings from Northeast Florida to Miami and report the ones you find.",
+    "Live crowdsourced map of where the mullet run is right now on Florida's Atlantic and Gulf coasts. See the latest bait-school sightings from Jacksonville to Miami and Pensacola to Marco Island and report the ones you find.",
   alternates: { canonical: "/sightings" },
   openGraph: {
     type: "website",
     url: "/sightings",
     title: "Where Are the Mullet Right Now? Live Florida Sightings Map",
     description:
-      "Crowdsourced Florida mullet run sightings, updated as anglers report bait schools from Northeast Florida to Miami.",
+      "Crowdsourced Florida mullet run sightings, updated as anglers report bait schools on both Florida coasts.",
   },
 };
 
-export default async function SightingsPage() {
+export default async function SightingsPage({
+  searchParams,
+}: {
+  searchParams?: { beach?: string };
+}) {
   const [beaches, sightings, checks] = await Promise.all([
     getBeaches(),
     getRecentSightings(50),
     getLatestSightingChecks(),
   ]);
   const configured = isSupabaseConfigured();
+  const requestedBeach = searchParams?.beach;
+  const defaultBeachId =
+    beaches.find((beach) => beach.id === requestedBeach)?.id ?? beaches[0]?.id;
 
   return (
     <div>
@@ -48,12 +55,33 @@ export default async function SightingsPage() {
         </Link>
       </div>
       <p className="mt-1 text-sm text-slate-500">
-        A live, crowdsourced map of the Florida mullet run along the Atlantic
-        coast — from Northeast Florida to Miami. Spot a school? Log it below so
+        A live, crowdsourced map of the Florida mullet run on both coasts —
+        the Atlantic from Jacksonville to Miami and the Gulf from Pensacola to
+        Marco Island. Spot a school? Log it below so
         other anglers know where the bait is. Sightings are tracked and shown
         here, but don’t affect the opportunity score yet — the score uses public
         data only while we gather more reports.
       </p>
+
+      <div className="mt-3 rounded-xl border border-fuchsia-100 bg-gradient-to-r from-fuchsia-50 to-orange-50 p-3">
+        <p className="text-sm font-bold text-slate-800">
+          Found it on Instagram?
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-600">
+          Connect a public post or Reel below and assign it to the right beach.
+          Tag{" "}
+          <a
+            href="https://www.instagram.com/floridamulletrun/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-fuchsia-700 hover:text-fuchsia-800"
+          >
+            @floridamulletrun
+          </a>{" "}
+          and use <span className="font-bold">#mulletrun</span> so we can find
+          future reports.
+        </p>
+      </div>
 
       {!configured && (
         <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 ring-1 ring-amber-200">
@@ -68,7 +96,7 @@ export default async function SightingsPage() {
       <SightingList sightings={sightings} beaches={beaches} />
 
       <div className="mt-6">
-        <SightingForm beaches={beaches} defaultBeachId={beaches[0]?.id} />
+        <SightingForm beaches={beaches} defaultBeachId={defaultBeachId} />
       </div>
 
       <AdSlot label="Advertisement" />

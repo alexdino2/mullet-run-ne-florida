@@ -1,11 +1,27 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import Script from "next/script";
+import { Figtree, Syne } from "next/font/google";
 import { PostHogAnalytics } from "@/components/PostHogAnalytics";
+import { AdSenseLoader } from "@/components/AdSenseLoader";
+import { monetization } from "@/lib/monetization";
+import { EARLY_ERROR_BUFFER_SCRIPT } from "@/lib/early-errors";
 import "./globals.css";
+import { INSTAGRAM_URL, SITE_URL } from "@/lib/site";
+
+const figtree = Figtree({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const syne = Syne({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://floridamulletrun.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
     template: "%s | Florida Mullet Run",
@@ -15,6 +31,7 @@ export const metadata: Metadata = {
   applicationName: "Florida Mullet Run",
   keywords: [
     "florida mullet run",
+    "florida mullet tracker",
     "mullet run 2026",
     "where are the mullet",
     "where is the mullet run right now",
@@ -41,16 +58,16 @@ export const metadata: Metadata = {
     locale: "en_US",
     title: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
     description:
-      "Live coastal conditions and a crowdsourced mullet sightings map from Northeast Florida to Miami.",
+      "Live coastal conditions and a crowdsourced mullet sightings map for Florida's Atlantic and Gulf coasts.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
     description:
-      "Live coastal conditions and a crowdsourced mullet sightings map from Northeast Florida to Miami.",
+      "Live coastal conditions and a crowdsourced mullet sightings map for Florida's Atlantic and Gulf coasts.",
   },
   other: {
-    "google-adsense-account": "ca-pub-4183912956441070",
+    "google-adsense-account": monetization.adsClient,
   },
   category: "sports",
 };
@@ -68,21 +85,26 @@ const NAV = [
   { href: "/beaches", label: "Beaches" },
   { href: "/guide", label: "Guide" },
   { href: "/gear", label: "Gear" },
-  { href: "/charters", label: "Charters" },
   { href: "/insider", label: "Insider" },
 ];
 
 const FOOTER_LINKS = [
+  { href: "/florida-mullet-tracker", label: "Florida mullet tracker" },
   { href: "/beaches", label: "Beach guides" },
   { href: "/guide/biology", label: "Migration biology" },
   { href: "/guide/locations", label: "Inlet guides" },
   { href: "/guide/regulations", label: "FWC regulations" },
   { href: "/guide/tactics", label: "Tactics & gear" },
   { href: "/gear", label: "Gear shop" },
-  { href: "/charters", label: "Book a charter" },
+  { href: "/charters", label: "Charter captains" },
 ];
 
-const SITE_URL = "https://floridamulletrun.com";
+/** Site-wide policy links, kept in their own row at the bottom of every page. */
+const LEGAL_LINKS = [
+  { href: "/privacy", label: "Privacy Policy" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+];
 
 const orgJsonLd = {
   "@context": "https://schema.org",
@@ -91,8 +113,9 @@ const orgJsonLd = {
   name: "Florida Mullet Run",
   url: SITE_URL,
   description:
-    "Live Florida mullet run tracker with a crowdsourced sightings map, daily opportunity scores, and inlet guides from Northeast Florida to Miami.",
+    "Live Florida mullet run tracker with a crowdsourced sightings map, daily opportunity scores, and inlet and pass guides for Florida's Atlantic and Gulf coasts.",
   areaServed: { "@type": "State", name: "Florida" },
+  sameAs: [INSTAGRAM_URL],
 };
 
 const siteJsonLd = {
@@ -118,15 +141,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <Script
-        id="adsbygoogle-init"
-        async
-        strategy="beforeInteractive"
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4183912956441070"
-        crossOrigin="anonymous"
-      />
-      <body className="min-h-screen">
+    <html lang="en" className={`${figtree.variable} ${syne.variable}`}>
+      <head>
+        <script
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: EARLY_ERROR_BUFFER_SCRIPT }}
+        />
+      </head>
+      <body className="min-h-screen bg-slate-50 font-sans">
         <PostHogAnalytics>
           <script
             type="application/ld+json"
@@ -138,14 +160,11 @@ export default function RootLayout({
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
           />
-          <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-slate-50 shadow-sm">
+          <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-transparent shadow-sm ring-1 ring-ocean-900/5">
             <header className="sticky top-0 z-[500] border-b border-ocean-800 bg-ocean-900 text-white">
               <div className="flex items-center justify-between px-4 py-3">
                 <Link href="/" className="flex shrink-0 items-center gap-2">
-                  <span className="text-xl" aria-hidden>
-                    🐟
-                  </span>
-                  <span className="text-base font-bold tracking-tight">
+                  <span className="font-display text-base font-bold tracking-tight">
                     Florida <span className="text-ocean-300">Mullet Run</span>
                   </span>
                 </Link>
@@ -176,13 +195,48 @@ export default function RootLayout({
                 ))}
               </div>
               <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400">
-                Public data: NWS · NOAA CO-OPS · NDBC. Scores are heuristics, not a
-                guarantee. Regulations change — always confirm current limits with
-                the FWC. Fish responsibly.
+                Scores are heuristics, not a guarantee. Regulations change — always
+                confirm current limits with the FWC. Fish responsibly.
+              </p>
+              <p className="mt-3 text-center">
+                <a
+                  href={INSTAGRAM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-fuchsia-700 hover:text-fuchsia-800"
+                >
+                  Follow @floridamulletrun on Instagram ↗
+                </a>
+              </p>
+              <nav
+                aria-label="Legal"
+                className="mt-4 flex items-center justify-center gap-x-2 border-t border-slate-100 pt-4 text-[12px]"
+              >
+                {LEGAL_LINKS.map((item, i) => (
+                  <span key={item.href} className="flex items-center gap-x-2">
+                    {i > 0 && (
+                      <span aria-hidden className="text-slate-300">
+                        |
+                      </span>
+                    )}
+                    <Link
+                      href={item.href}
+                      className="font-semibold text-slate-600 hover:text-ocean-700"
+                    >
+                      {item.label}
+                    </Link>
+                  </span>
+                ))}
+              </nav>
+              <p className="mt-2 text-center text-[11px] text-slate-400">
+                © {new Date().getFullYear()} Florida Mullet Run
               </p>
             </footer>
           </div>
         </PostHogAnalytics>
+        {/* Third-party ads and analytics load after the first interaction
+            or a few idle seconds, keeping them off the mobile critical path. */}
+        <AdSenseLoader />
       </body>
     </html>
   );

@@ -9,7 +9,11 @@ import {
   getBeachContent,
   getBeachContentById,
 } from "@/lib/content/beaches";
+import { getSightingsForBeach } from "@/lib/sightings";
 import { AdSlot } from "@/components/AdSlot";
+import { SightingList } from "@/components/SightingList";
+import { SITE_URL } from "@/lib/site";
+import { StationVisual } from "@/components/StationVisual";
 
 export function generateStaticParams() {
   return BEACH_CONTENT.map((b) => ({ slug: b.slug }));
@@ -36,20 +40,24 @@ export function generateMetadata({
       title: ogTitle,
       description: beach.description,
       url,
-      images: [
-        {
-          url: beach.image.src,
-          width: beach.image.width,
-          height: beach.image.height,
-          alt: beach.image.alt,
-        },
-      ],
+      ...(beach.image
+        ? {
+            images: [
+              {
+                url: beach.image.src,
+                width: beach.image.width,
+                height: beach.image.height,
+                alt: beach.image.alt,
+              },
+            ],
+          }
+        : {}),
     },
     twitter: {
-      card: "summary_large_image",
+      card: beach.image ? "summary_large_image" : "summary",
       title: ogTitle,
       description: beach.description,
-      images: [beach.image.src],
+      ...(beach.image ? { images: [beach.image.src] } : {}),
     },
   };
 }
@@ -70,17 +78,22 @@ function BulletList({ items }: { items: string[] }) {
   );
 }
 
-export default function BeachPage({ params }: { params: { slug: string } }) {
+export default async function BeachPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
   const content = getBeachContent(params.slug);
   if (!content) notFound();
 
   const station = FALLBACK_BEACHES.find((b) => b.id === content.id);
+  const sightings = await getSightingsForBeach(content.id, 6);
   const nearby = content.nearby
     .map((id) => getBeachContentById(id))
     .filter((b): b is NonNullable<typeof b> => Boolean(b));
 
-  const pageUrl = `https://floridamulletrun.com${beachPath(content.slug)}`;
-  const imageUrl = `https://floridamulletrun.com${content.image.src}`;
+  const pageUrl = `${SITE_URL}${beachPath(content.slug)}`;
+  const imageUrl = content.image ? `${SITE_URL}${content.image.src}` : undefined;
 
   const jsonLd = [
     {
@@ -126,13 +139,13 @@ export default function BeachPage({ params }: { params: { slug: string } }) {
           "@type": "ListItem",
           position: 1,
           name: "Home",
-          item: "https://floridamulletrun.com/",
+          item: `${SITE_URL}/`,
         },
         {
           "@type": "ListItem",
           position: 2,
           name: "Beaches",
-          item: "https://floridamulletrun.com/beaches",
+          item: `${SITE_URL}/beaches`,
         },
         {
           "@type": "ListItem",
@@ -177,31 +190,37 @@ export default function BeachPage({ params }: { params: { slug: string } }) {
         </p>
       </header>
 
-      <figure className="mt-5 overflow-hidden rounded-xl bg-slate-100 shadow-sm ring-1 ring-slate-200">
-        <div className="relative aspect-[16/10] w-full">
-          <Image
-            src={content.image.src}
-            alt={content.image.alt}
-            fill
-            priority
-            sizes="(max-width: 768px) 100vw, 768px"
-            className="object-cover"
-            quality={75}
-          />
+      {content.image ? (
+        <figure className="mt-5 overflow-hidden rounded-xl bg-slate-100 shadow-sm ring-1 ring-slate-200">
+          <div className="relative aspect-[16/10] w-full">
+            <Image
+              src={content.image.src}
+              alt={content.image.alt}
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 768px"
+              className="object-cover"
+              quality={75}
+            />
+          </div>
+          <figcaption className="px-3 py-2 text-[11px] leading-relaxed text-slate-500">
+            {content.image.alt}. Photo: {content.image.credit} ({content.image.license}
+            ).{" "}
+            <a
+              href={content.image.sourceUrl}
+              className="underline hover:text-ocean-600"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Source
+            </a>
+          </figcaption>
+        </figure>
+      ) : (
+        <div className="mt-5 aspect-[16/7] overflow-hidden rounded-xl shadow-sm ring-1 ring-slate-200">
+          <StationVisual id={content.id} />
         </div>
-        <figcaption className="px-3 py-2 text-[11px] leading-relaxed text-slate-500">
-          {content.image.alt}. Photo: {content.image.credit} ({content.image.license}
-          ).{" "}
-          <a
-            href={content.image.sourceUrl}
-            className="underline hover:text-ocean-600"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Source
-          </a>
-        </figcaption>
-      </figure>
+      )}
 
       <div className="mt-5 flex flex-wrap gap-2">
         <Link
@@ -211,7 +230,7 @@ export default function BeachPage({ params }: { params: { slug: string } }) {
           Live score for {station?.name ?? "this beach"}
         </Link>
         <Link
-          href="/sightings"
+          href={`/sightings?beach=${content.id}#report-sighting`}
           className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200"
         >
           Report a sighting
@@ -264,10 +283,37 @@ export default function BeachPage({ params }: { params: { slug: string } }) {
         </section>
       </div>
 
+      <section className="mt-8 border-t border-slate-200 pt-5">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">
+              Recent sightings
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Eyewitness and attributed Instagram reports connected to this
+              beach.
+            </p>
+          </div>
+          <Link
+            href={`/sightings?beach=${content.id}#report-sighting`}
+            className="shrink-0 text-xs font-bold text-ocean-600 hover:text-ocean-700"
+          >
+            Add one →
+          </Link>
+        </div>
+        <div className="mt-3">
+          <SightingList
+            sightings={sightings}
+            beaches={station ? [station] : FALLBACK_BEACHES}
+            emptyHint={`No sightings connected to ${station?.name ?? content.headline} yet.`}
+          />
+        </div>
+      </section>
+
       {nearby.length > 0 && (
         <div className="mt-8 border-t border-slate-200 pt-4">
           <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
-            Nearby beaches
+            Nearby stations
           </h2>
           <ul className="mt-3 space-y-3">
             {nearby.map((b) => (
@@ -277,14 +323,18 @@ export default function BeachPage({ params }: { params: { slug: string } }) {
                   className="flex gap-3 rounded-xl bg-white p-2 shadow-sm ring-1 ring-slate-100 transition hover:ring-ocean-300"
                 >
                   <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                    <Image
-                      src={b.image.src}
-                      alt=""
-                      fill
-                      sizes="96px"
-                      className="object-cover"
-                      quality={60}
-                    />
+                    {b.image ? (
+                      <Image
+                        src={b.image.src}
+                        alt=""
+                        fill
+                        sizes="96px"
+                        className="object-cover"
+                        quality={60}
+                      />
+                    ) : (
+                      <StationVisual id={b.id} compact />
+                    )}
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-ocean-700">

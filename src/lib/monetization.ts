@@ -18,16 +18,29 @@ function opt(value: string | undefined): string | undefined {
   return v ? v : undefined;
 }
 
+/** The site's approved Google AdSense publisher (client) id. */
+export const ADSENSE_CLIENT = "ca-pub-4183912956441070";
+
+/** AdSense ad unit "FMR – In-content responsive" (responsive display). */
+export const ADSENSE_IN_CONTENT_SLOT = "2953754323";
+
 export const monetization = {
   /**
-   * Display-ad publisher/client ID (e.g. Google AdSense `ca-pub-…`, or a
-   * Raptive/Mediavine site id once the traffic threshold is crossed). When
-   * unset, ad slots render as labeled placeholders.
+   * Display-ad publisher/client ID. Defaults to the approved AdSense account;
+   * `NEXT_PUBLIC_ADS_CLIENT` overrides it (e.g. for a fork or a future
+   * Raptive/Mediavine migration).
    */
   // Keep public env accesses static so Next.js replaces them at build time.
   // Aliasing `process.env` leaves a runtime `process` reference in browser
   // bundles, where the Node.js global does not exist.
-  adsClient: opt(process.env.NEXT_PUBLIC_ADS_CLIENT),
+  adsClient: opt(process.env.NEXT_PUBLIC_ADS_CLIENT) ?? ADSENSE_CLIENT,
+
+  /**
+   * Default AdSense ad-unit id (`data-ad-slot`) for in-page `<AdSlot>` units.
+   * `NEXT_PUBLIC_ADS_SLOT` overrides it; individual placements can pass their
+   * own `slot` to report separately in AdSense.
+   */
+  adsSlot: opt(process.env.NEXT_PUBLIC_ADS_SLOT) ?? ADSENSE_IN_CONTENT_SLOT,
 
   /** Amazon Associates store tag appended to product/search links. */
   amazonTag: opt(process.env.NEXT_PUBLIC_AMAZON_AFFILIATE_TAG),
@@ -47,6 +60,35 @@ export const monetization = {
 } as const;
 
 export const adsEnabled = Boolean(monetization.adsClient);
+
+/** AdSense loader URL; loading it on every page also powers Auto ads. */
+export const adsScriptSrc = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${monetization.adsClient}`;
+
+/**
+ * Pages that must not show ads, including Auto ads. AdSense wants ads only on
+ * pages with substantial publisher content, so this keeps them off pages that
+ * are still placeholders (Insider waitlist, the charter directory before
+ * listings go live) and off the policy/contact pages. Mirror this list under
+ * AdSense → Ads → Auto ads → Page exclusions, which also covers anchor ads
+ * that persist across client-side navigation.
+ */
+export const AD_FREE_PATHS = [
+  "/insider",
+  "/charters",
+  "/privacy",
+  "/about",
+  "/contact",
+] as const;
+
+export function isAdFreePath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return AD_FREE_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
+}
+
+/** Publisher id as `ads.txt` expects it (`pub-…`, without the `ca-` prefix). */
+export const adsPublisherId = monetization.adsClient.replace(/^ca-/, "");
 
 export const AFFILIATE_DISCLOSURE =
   "Some links on this page are affiliate links. If you buy through them we may " +

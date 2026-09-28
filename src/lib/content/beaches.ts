@@ -7,7 +7,9 @@
  */
 
 import { FALLBACK_BEACHES } from "@/lib/beaches";
-import type { Beach } from "@/lib/types";
+import { REGIONS } from "@/lib/regions";
+import type { Beach, Coast } from "@/lib/types";
+import { GULF_BEACH_CONTENT } from "@/lib/content/gulf-beaches";
 
 export interface BeachImage {
   /** Path under /public, e.g. /images/beaches/micklers.jpg */
@@ -35,17 +37,14 @@ export interface BeachContent {
   headline: string;
   /** Short lede under the H1 */
   summary: string;
-  /** Region label for clustering */
-  region:
-    | "Northeast Florida"
-    | "Space Coast"
-    | "Treasure Coast"
-    | "Southeast Florida";
+  /** Region label for clustering — matches a label in `REGIONS`. */
+  region: string;
   /** Last content review date (ISO) */
   updated: string;
   /** Keywords for meta + internal topical signals */
   keywords: string[];
-  image: BeachImage;
+  /** Licensed photo. Stations without one render a map-style header. */
+  image?: BeachImage;
   /** Intro paragraphs */
   about: string[];
   /** Why this spot matters during the run */
@@ -58,7 +57,7 @@ export interface BeachContent {
   nearby: string[];
 }
 
-export const BEACH_CONTENT: BeachContent[] = [
+const ATLANTIC_BEACH_CONTENT: BeachContent[] = [
   {
     id: "micklers",
     slug: "micklers",
@@ -549,13 +548,13 @@ export const BEACH_CONTENT: BeachContent[] = [
     ],
     image: {
       src: "/images/beaches/miami-beach.jpg",
-      alt: "Atlantic Ocean shoreline at South Beach, Miami Beach",
+      alt: "Lifeguard stand on the sand at 8th Street, South Beach, with Atlantic surf behind",
       width: 1200,
       height: 900,
-      credit: "Wikimedia Commons contributor",
-      license: "CC BY-SA 4.0",
+      credit: "Dan Lundberg",
+      license: "CC BY-SA 2.0",
       sourceUrl:
-        "https://commons.wikimedia.org/wiki/File:South_beach_Miami.jpg",
+        "https://commons.wikimedia.org/wiki/File:20130820_Miami_Beach_3373_lifeguard_stand_(8th_Street).jpg",
     },
     about: [
       "Miami Beach is the tail of this site's tracked corridor. Pods that started in Northeast Florida weeks earlier often show here later in fall, keeping the bite alive when northern water has already cooled past the peak.",
@@ -578,6 +577,11 @@ export const BEACH_CONTENT: BeachContent[] = [
     ],
     nearby: ["fort-lauderdale", "jupiter-inlet", "fort-pierce"],
   },
+];
+
+export const BEACH_CONTENT: BeachContent[] = [
+  ...ATLANTIC_BEACH_CONTENT,
+  ...GULF_BEACH_CONTENT,
 ];
 
 const bySlug = new Map(BEACH_CONTENT.map((b) => [b.slug, b]));
@@ -603,18 +607,16 @@ export function beachPath(slug: string): string {
 
 export function beachesByRegion(
   beaches?: Beach[],
-): { region: BeachContent["region"]; beaches: BeachContent[] }[] {
-  const order: BeachContent["region"][] = [
-    "Northeast Florida",
-    "Space Coast",
-    "Treasure Coast",
-    "Southeast Florida",
-  ];
+): { region: string; coast: Coast; beaches: BeachContent[] }[] {
   const list = listBeachContent(beaches);
-  return order
-    .map((region) => ({
-      region,
-      beaches: list.filter((b) => b.region === region),
+  return [...REGIONS]
+    .sort((a, b) =>
+      a.coast === b.coast ? a.order - b.order : a.coast === "atlantic" ? -1 : 1,
+    )
+    .map((r) => ({
+      region: r.label,
+      coast: r.coast,
+      beaches: list.filter((b) => b.region === r.label),
     }))
     .filter((g) => g.beaches.length > 0);
 }

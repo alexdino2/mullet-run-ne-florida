@@ -6,12 +6,46 @@ export interface FetchOpts {
 }
 
 /**
+ * Short-lived in-process memo so a refresh run that scores 30+ stations does
+ * not re-download the same buoy or tide feed for every station that shares it.
+ * (Next.js dedupes via its fetch cache on Vercel; the Railway worker has none.)
+ */
+const MEMO_TTL_MS = 10 * 60 * 1000;
+const memo = new Map<string, { at: number; value: Promise<string | null> }>();
+
+/**
  * fetch wrapper with a hard timeout. Never throws for network/HTTP issues —
  * returns null so upstream data pipelines can degrade gracefully.
  */
 export async function safeFetchText(
   url: string,
   opts: FetchOpts = {},
+): Promise<string | null> {
+  const { revalidate = 900 } = opts;
+  if (revalidate > 0) {
+    const key = `${url}|${JSON.stringify(opts.headers ?? {})}`;
+    const hit = memo.get(key);
+    const now = Date.now();
+    if (hit && now - hit.at < Math.min(MEMO_TTL_MS, revalidate * 1000)) {
+      return hit.value;
+    }
+    const value = fetchText(url, opts);
+    const entry = { at: now, value };
+    memo.set(key, entry);
+    if (memo.size > 500) memo.delete(memo.keys().next().value as string);
+    // Never remember a failure: a single timeout or 429 would otherwise pin
+    // every station on that feed to neutral values for the whole TTL.
+    value.then((text) => {
+      if (text == null && memo.get(key) === entry) memo.delete(key);
+    });
+    return value;
+  }
+  return fetchText(url, opts);
+}
+
+async function fetchText(
+  url: string,
+  opts: FetchOpts,
 ): Promise<string | null> {
   const { timeoutMs = 8000, headers = {}, revalidate = 900 } = opts;
   const controller = new AbortController();

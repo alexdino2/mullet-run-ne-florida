@@ -5,6 +5,7 @@ import type {
   TideStage,
   WindObservation,
 } from "@/lib/types";
+import { isFavorableEasterlyDirection } from "@/lib/wind";
 
 /**
  * Mullet opportunity score.
@@ -15,7 +16,12 @@ import type {
  * hourly lookahead used for the next-best-window forecast.
  *
  * Weights (sum to 100):
- *   season 25 · windDir 24 · recentNE 18 · tide 18 · windSpeed 15
+ *   season 30 · windDir 18 · recentEasterly 12 · tide 22 · windSpeed 18
+ *
+ * Wind direction is intentionally a secondary signal. NE, ENE, and E all
+ * bring an onshore component to Florida's Atlantic beaches, while there is not
+ * enough outcome data to justify treating an exact NE bearing as uniquely
+ * predictive.
  *
  * Manually logged sightings are intentionally NOT part of the score: the score
  * is derived from public sources only (NWS, NOAA CO-OPS, NDBC, season). Sightings
@@ -23,21 +29,21 @@ import type {
  * enough have been collected to be predictive.
  */
 
-const NEUTRAL = 0.45;
+export const NEUTRAL = 0.45;
 
 export const WEIGHTS = {
-  season: 25,
-  windDir: 24,
-  recentNe: 18,
-  tide: 18,
-  windSpeed: 15,
+  season: 30,
+  windDir: 18,
+  recentEasterly: 12,
+  tide: 22,
+  windSpeed: 18,
 } as const;
 
-function clamp01(n: number): number {
+export function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
 }
 
-function dayOfYear(d: Date): number {
+export function dayOfYear(d: Date): number {
   const start = Date.UTC(d.getUTCFullYear(), 0, 0);
   const diff = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - start;
   return Math.floor(diff / 86400000);
@@ -93,9 +99,19 @@ function angDiff(a: number, b: number): number {
   return d;
 }
 
-/** NE (45°) is ideal; N and E are decent; onshore-S/offshore-W are poor. */
+/**
+ * Broadly favor winds from NE through E.
+ *
+ * The flat top avoids claiming a precision the available evidence does not
+ * support: NE, ENE, and E are treated alike, with smooth shoulders through NNE
+ * and ESE. Southerly and offshore westerly winds receive only a small floor.
+ */
 export function windDirFactor(deg: number): number {
-  return clamp01(1 - angDiff(deg, 45) / 90);
+  const distanceFromFavorableSector =
+    deg >= 45 && deg <= 90
+      ? 0
+      : Math.min(angDiff(deg, 45), angDiff(deg, 90));
+  return clamp01(0.1 + 0.9 * (1 - distanceFromFavorableSector / 90));
 }
 
 /** Moderate wind (roughly 10–17 kt) is ideal; calm or blown-out is poor. */
@@ -122,7 +138,7 @@ export function tideFactor(stage: TideStage): number {
   }
 }
 
-export function recentNeFactor(
+export function recentEasterlyFactor(
   fraction: number | undefined,
   currentWind: WindObservation | undefined,
 ): { factor: number; estimated: boolean } {
@@ -130,20 +146,20 @@ export function recentNeFactor(
     return { factor: clamp01(0.15 + 0.85 * fraction), estimated: false };
   }
   if (currentWind) {
-    const ne = windDirFactor(currentWind.directionDeg) > 0.6;
-    return { factor: ne ? 0.5 : 0.2, estimated: true };
+    const favorable = isFavorableEasterlyDirection(currentWind.directionDeg);
+    return { factor: favorable ? 0.5 : 0.2, estimated: true };
   }
   return { factor: NEUTRAL, estimated: true };
 }
 
-function ratingFor(score: number): ScoreResult["rating"] {
+export function ratingFor(score: number): ScoreResult["rating"] {
   if (score >= 80) return "prime";
   if (score >= 60) return "good";
   if (score >= 40) return "fair";
   return "poor";
 }
 
-function pts(weight: number, factor: number): number {
+export function pts(weight: number, factor: number): number {
   return Math.round(weight * factor);
 }
 
@@ -181,22 +197,25 @@ export function computeScore(input: ScoreInputs): ScoreResult {
     points: pts(WEIGHTS.windDir, dirFactor),
     available: !!wind,
     reason: wind
-      ? `${wind.directionLabel} (${Math.round(wind.directionDeg)}°) — NE is ideal.`
+      ? `${wind.directionLabel} (${Math.round(wind.directionDeg)}°) — NE through E is the favorable range.`
       : "No wind reading available; used a neutral value.",
   });
 
-  // Recent NE pattern
-  const ne = recentNeFactor(conditions.recentNeFraction, wind);
+  // Recent favorable easterly pattern
+  const easterly = recentEasterlyFactor(
+    conditions.recentEasterlyFraction,
+    wind,
+  );
   components.push({
-    key: "recentNe",
-    label: "Recent NE pattern",
-    weight: WEIGHTS.recentNe,
-    factor: ne.factor,
-    points: pts(WEIGHTS.recentNe, ne.factor),
-    available: conditions.recentNeFraction != null,
+    key: "recentEasterly",
+    label: "Recent NE–E pattern",
+    weight: WEIGHTS.recentEasterly,
+    factor: easterly.factor,
+    points: pts(WEIGHTS.recentEasterly, easterly.factor),
+    available: conditions.recentEasterlyFraction != null,
     reason:
-      conditions.recentNeFraction != null
-        ? `${Math.round(conditions.recentNeFraction * 100)}% of recent hourly readings blew out of the NE.`
+      conditions.recentEasterlyFraction != null
+        ? `${Math.round(conditions.recentEasterlyFraction * 100)}% of recent hourly readings blew from NE through E.`
         : "Estimated from current wind (no recent history).",
   });
 
@@ -239,6 +258,7 @@ export function computeScore(input: ScoreInputs): ScoreResult {
   );
 
   return {
+    model: "atlantic-surf",
     score,
     rating: ratingFor(score),
     components,
@@ -246,7 +266,7 @@ export function computeScore(input: ScoreInputs): ScoreResult {
   };
 }
 
-function clampScore(n: number): number {
+export function clampScore(n: number): number {
   return Math.max(0, Math.min(100, Math.round(n)));
 }
 
@@ -255,10 +275,10 @@ export function hourlyScore(params: {
   when: Date;
   wind: WindObservation | undefined;
   stage: TideStage;
-  recentNeF: number;
+  recentEasterlyF: number;
   latitude?: number;
 }): number {
-  const { when, wind, stage, recentNeF, latitude } = params;
+  const { when, wind, stage, recentEasterlyF, latitude } = params;
   const season = seasonFactor(when, latitude);
   const dir = wind ? windDirFactor(wind.directionDeg) : NEUTRAL;
   const spd = wind ? windSpeedFactor(wind.speedKt) : NEUTRAL;
@@ -266,7 +286,7 @@ export function hourlyScore(params: {
   const total =
     WEIGHTS.season * season +
     WEIGHTS.windDir * dir +
-    WEIGHTS.recentNe * recentNeF +
+    WEIGHTS.recentEasterly * recentEasterlyF +
     WEIGHTS.tide * tide +
     WEIGHTS.windSpeed * spd;
   return clampScore(total);
@@ -280,7 +300,7 @@ function seasonReason(now: Date, factor: number): string {
   return "Shoulder of the fall run window.";
 }
 
-function relTime(iso: string, now: Date): string {
+export function relTime(iso: string, now: Date): string {
   const mins = Math.round((new Date(iso).getTime() - now.getTime()) / 60000);
   if (mins <= 0) return "now";
   if (mins < 60) return `in ${mins} min`;
@@ -289,7 +309,7 @@ function relTime(iso: string, now: Date): string {
   return m ? `in ${h}h ${m}m` : `in ${h}h`;
 }
 
-function buildSummary(components: ScoreComponent[], score: number): string {
+export function buildSummary(components: ScoreComponent[], score: number): string {
   const sorted = [...components].sort((a, b) => b.points - a.points);
   const drivers = sorted.filter((c) => c.factor >= 0.7).slice(0, 2);
   const limiter = [...components]

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getBeaches } from "@/lib/beaches";
+import { resolveSelection } from "@/lib/selection";
+import { STATIONS } from "@/lib/beaches";
+import { getRegion } from "@/lib/regions";
+import { CoastToggle } from "@/components/CoastToggle";
 import { computeBeachConditions } from "@/lib/conditions";
 import { getRecentSightings } from "@/lib/sightings";
 import { getAlertRules } from "@/lib/alerts";
@@ -23,7 +26,7 @@ export const metadata: Metadata = {
     absolute: "Florida Mullet Run Tracker — Where Are the Mullet Right Now?",
   },
   description:
-    "See where the Florida mullet run is right now: live opportunity scores, coastal conditions, and a crowdsourced sightings map tracking the fall migration from Northeast Florida to Miami.",
+    "See where the Florida mullet run is right now on both coasts: live opportunity scores, coastal conditions, and a crowdsourced sightings map from Jacksonville to Miami and Pensacola to Marco Island.",
   alternates: { canonical: "/" },
 };
 
@@ -38,11 +41,10 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: { beach?: string };
+  searchParams: { beach?: string; coast?: string };
 }) {
-  const beaches = await getBeaches();
-  const selected =
-    beaches.find((b) => b.id === searchParams.beach) ?? beaches[0];
+  const { coast, selected, beaches } = await resolveSelection(searchParams);
+  const gulf = coast === "gulf";
 
   const sightings = await getRecentSightings(100);
   const [data, rules] = await Promise.all([
@@ -63,14 +65,22 @@ export default async function DashboardPage({
         </h1>
         <p className="mt-1 text-sm text-slate-500">
           Where are the mullet right now? Live opportunity scores, coastal
-          conditions, and crowdsourced sightings tracking the fall migration
-          from Northeast Florida to Miami.
+          conditions, and crowdsourced sightings for the fall run on both
+          coasts — the Atlantic surf from Jacksonville to Miami, and the Gulf
+          passes from Pensacola to Marco Island.{" "}
+          <Link
+            href="/florida-mullet-tracker"
+            className="font-semibold text-ocean-600 hover:text-ocean-700"
+          >
+            Open the Florida mullet tracker →
+          </Link>
         </p>
       </header>
 
+      <CoastToggle current={coast} />
       <BeachSwitcher beaches={beaches} currentId={selected.id} />
 
-      <div className="mt-4 flex flex-col items-center">
+        <div className="mt-4 flex flex-col items-center">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-bold text-slate-900">
             <Link
@@ -86,8 +96,12 @@ export default async function DashboardPage({
             </span>
           )}
         </div>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          {getRegion(selected.region).label}
+          {gulf ? " · Gulf exit score" : " · Atlantic surf score"}
+        </p>
         <p className="text-xs text-slate-400">
-          Updated {generated} · sources: {data.conditions.sources.join(", ") || "none available"}
+          Updated {generated}
           {" · "}
           <Link
             href={`/beaches/${selected.id}`}
@@ -115,8 +129,9 @@ export default async function DashboardPage({
             Live migration map
           </h2>
           <p className="mt-1 text-sm text-slate-500">
-            Recent crowd reports and live conditions along Florida’s Atlantic
-            coast.
+            {gulf
+              ? "Recent crowd reports and live exit scores at the Gulf passes and river mouths."
+              : "Recent crowd reports and live conditions along Florida’s Atlantic coast."}
           </p>
         </div>
         <Link
@@ -127,15 +142,36 @@ export default async function DashboardPage({
         </Link>
       </div>
       <div className="mt-3">
-        <MapSection />
+        <MapSection
+          key={coast}
+          coast={coast}
+          selectedSummary={{
+            beach: data.beach,
+            score: data.score.score,
+            rating: data.score.rating,
+            summary: data.score.summary,
+            wind: data.conditions.wind,
+            waterTempF: data.conditions.waterTempF,
+          }}
+        />
       </div>
 
       <AdSlot label="Advertisement" />
 
       <SectionTitle>Current conditions</SectionTitle>
-      <ConditionsGrid conditions={data.conditions} />
+      <ConditionsGrid conditions={data.conditions} coast={coast} />
 
       <SectionTitle>Why this score</SectionTitle>
+      {gulf && (
+        <p className="mb-2 text-xs leading-relaxed text-slate-500">
+          Gulf mullet stage in bays and rivers, then leave through the passes.
+          This score looks for the exit triggers: a cold front, north wind,
+          cooling water, a strong outgoing tide, and the moon.{" "}
+          <Link href="/guide/gulf-coast" className="font-semibold text-ocean-600">
+            How the Gulf run works →
+          </Link>
+        </p>
+      )}
       <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
         <ScoreBreakdown components={data.score.components} />
       </div>
@@ -220,11 +256,11 @@ export default async function DashboardPage({
 
       <FaqSection heading="Where are the mullet? FAQ" />
 
-      <SectionTitle>Alert rules (for future notifications)</SectionTitle>
-      <AlertRulesTable rules={rules} beaches={beaches} />
+      <SectionTitle>Alert rules</SectionTitle>
+      <AlertRulesTable rules={rules} beaches={STATIONS} />
       <p className="mt-2 text-xs text-slate-400">
-        These rules define when notifications will fire once a delivery channel
-        is connected. The hourly refresh already evaluates them.
+        The hourly refresh checks these rules on both coasts. Email rules send
+        at most once per station per day; SMS and push are not connected yet.
       </p>
     </div>
   );
