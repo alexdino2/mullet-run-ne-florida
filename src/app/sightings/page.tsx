@@ -62,7 +62,12 @@ export default async function SightingsPage() {
         </p>
       )}
 
-      <div className="mt-4">
+      <h2 className="mb-2 mt-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+        Latest eyewitness reports
+      </h2>
+      <SightingList sightings={sightings} beaches={beaches} />
+
+      <div className="mt-6">
         <SightingForm beaches={beaches} defaultBeachId={beaches[0]?.id} />
       </div>
 
@@ -77,11 +82,6 @@ export default async function SightingsPage() {
         sightings.
       </p>
       <DailySightingChecks beaches={beaches} checks={checks} />
-
-      <h2 className="mb-2 mt-6 text-xs font-bold uppercase tracking-widest text-slate-400">
-        Latest eyewitness reports
-      </h2>
-      <SightingList sightings={sightings} beaches={beaches} />
 
       <FaqSection heading="Where are the mullet? FAQ" />
     </div>
