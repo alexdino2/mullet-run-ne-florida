@@ -37,6 +37,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
               : 0.7,
   }));
 
+  // Site information pages: crawlable for trust signals, rarely updated.
+  const infoRoutes = ["/about", "/contact", "/privacy"].map((path) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.3,
+  }));
+
   const beachRoutes = BEACH_CONTENT.map((b) => ({
     url: `${SITE_URL}/beaches/${b.slug}`,
     lastModified: new Date(b.updated),
@@ -51,5 +59,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...beachRoutes, ...guideRoutes];
+  return [...staticRoutes, ...beachRoutes, ...guideRoutes, ...infoRoutes];
 }

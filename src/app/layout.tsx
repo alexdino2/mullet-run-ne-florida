@@ -6,7 +6,7 @@ import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { monetization } from "@/lib/monetization";
 import { EARLY_ERROR_BUFFER_SCRIPT } from "@/lib/early-errors";
 import "./globals.css";
-import { SITE_URL } from "@/lib/site";
+import { INSTAGRAM_URL, SITE_URL } from "@/lib/site";
 
 const figtree = Figtree({
   subsets: ["latin"],
@@ -85,7 +85,6 @@ const NAV = [
   { href: "/beaches", label: "Beaches" },
   { href: "/guide", label: "Guide" },
   { href: "/gear", label: "Gear" },
-  { href: "/charters", label: "Charters" },
   { href: "/insider", label: "Insider" },
 ];
 
@@ -97,7 +96,14 @@ const FOOTER_LINKS = [
   { href: "/guide/regulations", label: "FWC regulations" },
   { href: "/guide/tactics", label: "Tactics & gear" },
   { href: "/gear", label: "Gear shop" },
-  { href: "/charters", label: "Book a charter" },
+  { href: "/charters", label: "Charter captains" },
+];
+
+/** Site-wide policy links, kept in their own row at the bottom of every page. */
+const LEGAL_LINKS = [
+  { href: "/privacy", label: "Privacy Policy" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ];
 
 const orgJsonLd = {
@@ -109,7 +115,7 @@ const orgJsonLd = {
   description:
     "Live Florida mullet run tracker with a crowdsourced sightings map, daily opportunity scores, and inlet and pass guides for Florida's Atlantic and Gulf coasts.",
   areaServed: { "@type": "State", name: "Florida" },
-  sameAs: ["https://www.instagram.com/floridamulletrun/"],
+  sameAs: [INSTAGRAM_URL],
 };
 
 const siteJsonLd = {
@@ -194,13 +200,36 @@ export default function RootLayout({
               </p>
               <p className="mt-3 text-center">
                 <a
-                  href="https://www.instagram.com/floridamulletrun/"
+                  href={INSTAGRAM_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-bold text-fuchsia-700 hover:text-fuchsia-800"
                 >
                   Follow @floridamulletrun on Instagram ↗
                 </a>
+              </p>
+              <nav
+                aria-label="Legal"
+                className="mt-4 flex items-center justify-center gap-x-2 border-t border-slate-100 pt-4 text-[12px]"
+              >
+                {LEGAL_LINKS.map((item, i) => (
+                  <span key={item.href} className="flex items-center gap-x-2">
+                    {i > 0 && (
+                      <span aria-hidden className="text-slate-300">
+                        |
+                      </span>
+                    )}
+                    <Link
+                      href={item.href}
+                      className="font-semibold text-slate-600 hover:text-ocean-700"
+                    >
+                      {item.label}
+                    </Link>
+                  </span>
+                ))}
+              </nav>
+              <p className="mt-2 text-center text-[11px] text-slate-400">
+                © {new Date().getFullYear()} Florida Mullet Run
               </p>
             </footer>
           </div>
