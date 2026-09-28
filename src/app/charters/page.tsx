@@ -6,7 +6,6 @@ import {
   CHARTER_REGIONS,
 } from "@/lib/content/charters";
 import { monetization } from "@/lib/monetization";
-import { AdSlot } from "@/components/AdSlot";
 import { CharterListingForm } from "@/components/CharterListingForm";
 
 export const metadata: Metadata = {
@@ -22,8 +21,13 @@ export default function ChartersPage() {
       <div className="rounded-2xl bg-ocean-900 p-5 text-white">
         <h1 className="text-xl font-bold">Mullet Run Charters</h1>
         <p className="mt-1 text-sm text-ocean-100">
-          Book a captain who’s already on the bait. Verified guides organized by
-          the inlets where the run fires.
+          Where the run fishes best, region by region — and the captains who
+          fish it.
+        </p>
+        <p className="mt-3 rounded-lg bg-white/10 px-3 py-2 text-xs text-ocean-50">
+          We’re verifying the first captains for this season. Listings appear
+          here once a USCG license is confirmed; until then, use the region notes
+          below to plan your own trip.
         </p>
       </div>
 
@@ -50,13 +54,13 @@ export default function ChartersPage() {
         </a>
       </nav>
 
-      {CHARTER_COASTS.map((coast, c) => (
+      {CHARTER_COASTS.map((coast) => (
         <section key={coast.id} id={coast.id} className="mt-6 scroll-mt-28">
           <h2 className="text-lg font-bold text-slate-900">{coast.name}</h2>
           <p className="mt-0.5 text-sm text-slate-600">{coast.blurb}</p>
           <div className="mt-3 space-y-4">
             {CHARTER_REGIONS.filter((r) => r.coast === coast.id).map(
-              (region, i) => (
+              (region) => (
                 <section
                   key={region.id}
                   className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100"
@@ -77,10 +81,7 @@ export default function ChartersPage() {
                       </span>
                     ))}
                   </div>
-                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-dashed border-slate-200 pt-3">
-                    <p className="text-xs text-slate-400">
-                      Verified listings opening for this season.
-                    </p>
+                  <div className="mt-4 flex justify-end border-t border-dashed border-slate-200 pt-3">
                     <Link
                       href={{ query: { region: region.id }, hash: FORM_ID }}
                       data-analytics-event="charter_lead_started"
@@ -93,7 +94,6 @@ export default function ChartersPage() {
                         : "Claim this inlet"}
                     </Link>
                   </div>
-                  {c === 0 && i === 1 && <AdSlot label="In-content ad" />}
                 </section>
               ),
             )}
