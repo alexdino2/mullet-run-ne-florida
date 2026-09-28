@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { monetization } from "@/lib/monetization";
+import { AdSlot } from "@/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "Florida Mullet Run Insider — Real-Time Bait Alerts",
@@ -79,6 +80,8 @@ export default function InsiderPage() {
           </div>
         ))}
       </div>
+
+      <AdSlot label="In-content ad" />
 
       <div className="mt-6 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
         <h2 className="text-sm font-bold text-slate-900">Simple seasonal price</h2>
