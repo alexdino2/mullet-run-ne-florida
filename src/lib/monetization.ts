@@ -64,29 +64,6 @@ export const adsEnabled = Boolean(monetization.adsClient);
 /** AdSense loader URL; loading it on every page also powers Auto ads. */
 export const adsScriptSrc = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${monetization.adsClient}`;
 
-/**
- * Pages that must not show ads, including Auto ads. AdSense wants ads only on
- * pages with substantial publisher content, so this keeps them off pages that
- * are still placeholders (Insider waitlist, the charter directory before
- * listings go live) and off the policy/contact pages. Mirror this list under
- * AdSense → Ads → Auto ads → Page exclusions, which also covers anchor ads
- * that persist across client-side navigation.
- */
-export const AD_FREE_PATHS = [
-  "/insider",
-  "/charters",
-  "/privacy",
-  "/about",
-  "/contact",
-] as const;
-
-export function isAdFreePath(pathname: string | null): boolean {
-  if (!pathname) return false;
-  return AD_FREE_PATHS.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`),
-  );
-}
-
 /** Publisher id as `ads.txt` expects it (`pub-…`, without the `ca-` prefix). */
 export const adsPublisherId = monetization.adsClient.replace(/^ca-/, "");
 

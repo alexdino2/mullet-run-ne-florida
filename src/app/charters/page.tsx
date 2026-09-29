@@ -5,6 +5,7 @@ import {
   CHARTER_FORM_ID as FORM_ID,
   CHARTER_REGIONS,
 } from "@/lib/content/charters";
+import { AdSlot } from "@/components/AdSlot";
 import { monetization } from "@/lib/monetization";
 import { CharterListingForm } from "@/components/CharterListingForm";
 
@@ -100,6 +101,8 @@ export default function ChartersPage() {
           </div>
         </section>
       ))}
+
+      <AdSlot label="In-content ad" />
 
       {/* Captain lead-gen CTA */}
       <div
