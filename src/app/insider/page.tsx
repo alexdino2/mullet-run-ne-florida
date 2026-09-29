@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdSlot } from "@/components/AdSlot";
 import { monetization } from "@/lib/monetization";
 
 export const metadata: Metadata = {
@@ -81,7 +80,7 @@ export default function InsiderPage() {
         ))}
       </div>
 
-      <AdSlot label="In-content ad" />
+      {/* No ads here while Insider is a pre-launch waitlist; see AD_FREE_PATHS. */}
 
       <div className="mt-6 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
         <h2 className="text-sm font-bold text-slate-900">Simple seasonal price</h2>
