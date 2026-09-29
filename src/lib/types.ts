@@ -71,6 +71,41 @@ export interface OnlineSightingReport {
   publishedAt: string;
 }
 
+export type LocationMethod = "caption" | "ai" | "none";
+export type LocationConfidence = "high" | "medium" | "low" | "none";
+export type CandidateStatus = "pending" | "approved" | "rejected" | "duplicate";
+
+/** A public Instagram post found by the hashtag job, awaiting review. */
+export interface InstagramCandidate {
+  id: string;
+  media_id: string;
+  permalink: string;
+  media_type: string | null;
+  media_url: string | null;
+  caption: string | null;
+  hashtags: string[];
+  posted_at: string;
+  source_handle: string | null;
+  location_method: LocationMethod;
+  location_name: string | null;
+  lat: number | null;
+  lon: number | null;
+  location_confidence: LocationConfidence;
+  location_evidence: string | null;
+  beach_id: string | null;
+  station_distance_km: number | null;
+  ai_is_report: boolean | null;
+  ai_reason: string | null;
+  ai_summary: string | null;
+  ai_school_size: SchoolSize | null;
+  ai_error: string | null;
+  status: CandidateStatus;
+  sighting_id: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  created_at: string;
+}
+
 export interface SightingCheck {
   id?: string;
   beach_id: string;
