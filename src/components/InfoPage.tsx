@@ -1,6 +1,10 @@
+import { Children, Fragment } from "react";
+import { AdSlot } from "@/components/AdSlot";
+
 /**
  * Shared layout for the site's plain-text pages (About, Contact, Privacy):
- * a header card followed by white section cards, matching the guide pages.
+ * a header card followed by white section cards, matching the guide pages,
+ * with an in-content ad unit after the first section.
  */
 
 export function InfoPage({
@@ -26,7 +30,14 @@ export function InfoPage({
           </p>
         )}
       </header>
-      <div className="mt-5 space-y-4">{children}</div>
+      <div className="mt-5 space-y-4">
+        {Children.toArray(children).map((child, i) => (
+          <Fragment key={i}>
+            {child}
+            {i === 0 && <AdSlot label="In-content ad" />}
+          </Fragment>
+        ))}
+      </div>
     </article>
   );
 }
