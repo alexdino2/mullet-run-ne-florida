@@ -40,10 +40,10 @@ export function AdSlot({ slot, label = "Advertisement", className }: AdSlotProps
     }
   }, [live, pathname]);
 
-  // `ad-slot` lets globals.css collapse the whole unit, label included, when
-  // AdSense marks it unfilled.
+  // Units stay visible even when AdSense leaves them unfilled (as it does
+  // while the site is under review), so the space is always there to see.
   const wrapper =
-    "ad-slot my-6 flex flex-col items-center " + (className ? className : "");
+    "my-6 flex flex-col items-center " + (className ? className : "");
 
   if (!live) {
     if (!isDev) return null;
@@ -66,7 +66,8 @@ export function AdSlot({ slot, label = "Advertisement", className }: AdSlotProps
       <ins
         key={pathname}
         className="adsbygoogle block w-full"
-        style={{ display: "block" }}
+        // Reserve the space before AdSense sizes the unit.
+        style={{ display: "block", minHeight: 100 }}
         data-ad-client={monetization.adsClient}
         data-ad-slot={adSlot}
         data-ad-format="auto"

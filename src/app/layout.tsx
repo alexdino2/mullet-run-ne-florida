@@ -147,6 +147,7 @@ export default function RootLayout({
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: EARLY_ERROR_BUFFER_SCRIPT }}
         />
+        <AdSenseLoader />
       </head>
       <body className="min-h-screen bg-slate-50 font-sans">
         <PostHogAnalytics>
@@ -234,9 +235,6 @@ export default function RootLayout({
             </footer>
           </div>
         </PostHogAnalytics>
-        {/* Third-party ads and analytics load after the first interaction
-            or a few idle seconds, keeping them off the mobile critical path. */}
-        <AdSenseLoader />
       </body>
     </html>
   );
