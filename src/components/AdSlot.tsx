@@ -34,24 +34,18 @@ export function AdSlot({ slot, label = "Advertisement", className }: AdSlotProps
   useEffect(() => {
     const ins = insRef.current;
     if (!live || !ins) return;
-    const push = () => {
+    // AdSense sizes the unit later and throws a TagError if it has no width,
+    // so request the ad only once the unit has a width. The observer also
+    // fires once when it starts.
+    const observer = new ResizeObserver(() => {
+      if (ins.offsetWidth === 0) return;
+      observer.disconnect();
       try {
         // @ts-expect-error adsbygoogle is injected by the AdSense script.
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       } catch {
         /* Unit already filled (e.g. Strict Mode double-effect) or blocked. */
       }
-    };
-    // AdSense sizes the unit later and throws a TagError if it has no width,
-    // so request the ad only once the unit has a width.
-    if (ins.offsetWidth > 0) {
-      push();
-      return;
-    }
-    const observer = new ResizeObserver(() => {
-      if (ins.offsetWidth === 0) return;
-      observer.disconnect();
-      push();
     });
     observer.observe(ins);
     return () => observer.disconnect();
