@@ -1,4 +1,4 @@
-import type { PostHog } from "posthog-js";
+import type { CaptureResult, PostHog } from "posthog-js";
 import { flushEarlyErrors } from "@/lib/early-errors";
 
 export type AnalyticsProperties = Record<
@@ -41,6 +41,25 @@ export function captureEvent(
 }
 
 /**
+ * AdSense throws its errors (`TagError`) from its own script, after `AdSlot`
+ * queues a unit, so no code here can catch them.
+ */
+function isAdSenseError(result: CaptureResult): boolean {
+  if (result.event !== "$exception") return false;
+  const exceptions: {
+    type?: string;
+    stacktrace?: { frames?: { filename?: string }[] };
+  }[] = result.properties.$exception_list ?? [];
+  return exceptions.some(
+    (exception) =>
+      exception.type === "TagError" ||
+      exception.stacktrace?.frames?.some((frame) =>
+        frame.filename?.includes("/pagead/js/adsbygoogle.js"),
+      ),
+  );
+}
+
+/**
  * Download and initialise posthog-js (~100 KiB, plus the session recorder it
  * fetches), then flush queued events. Called once the page is interactive so
  * none of it is on the critical path.
@@ -68,6 +87,9 @@ export async function loadAnalytics(): Promise<void> {
       session_recording: {
         maskAllInputs: true,
       },
+      // Also applies to the errors that `flushEarlyErrors` sends.
+      before_send: (result) =>
+        result && isAdSenseError(result) ? null : result,
     });
   }
 

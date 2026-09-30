@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { monetization, adsEnabled } from "@/lib/monetization";
 
@@ -29,15 +29,32 @@ export function AdSlot({ slot, label = "Advertisement", className }: AdSlotProps
   // to another) reuse this component; re-key the unit so each page requests
   // a fresh ad instead of keeping the previous page's.
   const pathname = usePathname();
+  const insRef = useRef<HTMLModElement>(null);
 
   useEffect(() => {
-    if (!live) return;
-    try {
-      // @ts-expect-error adsbygoogle is injected by the AdSense script.
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch {
-      /* Unit already filled (e.g. Strict Mode double-effect) or blocked. */
+    const ins = insRef.current;
+    if (!live || !ins) return;
+    const push = () => {
+      try {
+        // @ts-expect-error adsbygoogle is injected by the AdSense script.
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch {
+        /* Unit already filled (e.g. Strict Mode double-effect) or blocked. */
+      }
+    };
+    // AdSense sizes the unit later and throws a TagError if it has no width,
+    // so request the ad only once the unit has a width.
+    if (ins.offsetWidth > 0) {
+      push();
+      return;
     }
+    const observer = new ResizeObserver(() => {
+      if (ins.offsetWidth === 0) return;
+      observer.disconnect();
+      push();
+    });
+    observer.observe(ins);
+    return () => observer.disconnect();
   }, [live, pathname]);
 
   // Units stay visible even when AdSense leaves them unfilled (as it does
@@ -65,6 +82,7 @@ export function AdSlot({ slot, label = "Advertisement", className }: AdSlotProps
       </span>
       <ins
         key={pathname}
+        ref={insRef}
         className="adsbygoogle block w-full"
         // Reserve the space before AdSense sizes the unit.
         style={{ display: "block", minHeight: 100 }}
