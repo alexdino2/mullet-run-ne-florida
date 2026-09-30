@@ -15,9 +15,10 @@ declare global {
  * `loadAnalytics`), so its exception autocapture is not active during
  * hydration. This script runs before any React code and holds uncaught
  * errors and rejections, such as React hydration errors, until
- * `flushEarlyErrors` sends them.
+ * `flushEarlyErrors` sends them. It drops rejections with no reason, because
+ * they give no message or stack to act on.
  */
-export const EARLY_ERROR_BUFFER_SCRIPT = `(function(w){var q=w.__earlyErrors=[];function add(e){if(q.length<${MAX_EARLY_ERRORS})q.push(e)}function onError(e){add(e.error||e.message)}function onRejection(e){add(e.reason)}w.addEventListener("error",onError);w.addEventListener("unhandledrejection",onRejection);w.__stopEarlyErrors=function(){w.removeEventListener("error",onError);w.removeEventListener("unhandledrejection",onRejection)}})(window)`;
+export const EARLY_ERROR_BUFFER_SCRIPT = `(function(w){var q=w.__earlyErrors=[];function add(e){if(q.length<${MAX_EARLY_ERRORS})q.push(e)}function onError(e){add(e.error||e.message)}function onRejection(e){if(e.reason!=null)add(e.reason)}w.addEventListener("error",onError);w.addEventListener("unhandledrejection",onRejection);w.__stopEarlyErrors=function(){w.removeEventListener("error",onError);w.removeEventListener("unhandledrejection",onRejection)}})(window)`;
 
 /**
  * Stop the inline buffer and send the errors it held. posthog-js exception
