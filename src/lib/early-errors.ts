@@ -16,8 +16,12 @@ declare global {
  * hydration. This script runs before any React code and holds uncaught
  * errors and rejections, such as React hydration errors, until
  * `flushEarlyErrors` sends them.
+ *
+ * An error event without `error` is kept as the event itself, so posthog-js
+ * builds the stack from its `filename`, `lineno` and `colno`. Opaque
+ * cross-origin errors ("Script error.") have no details and are dropped.
  */
-export const EARLY_ERROR_BUFFER_SCRIPT = `(function(w){var q=w.__earlyErrors=[];function add(e){if(q.length<${MAX_EARLY_ERRORS})q.push(e)}function onError(e){add(e.error||e.message)}function onRejection(e){add(e.reason)}w.addEventListener("error",onError);w.addEventListener("unhandledrejection",onRejection);w.__stopEarlyErrors=function(){w.removeEventListener("error",onError);w.removeEventListener("unhandledrejection",onRejection)}})(window)`;
+export const EARLY_ERROR_BUFFER_SCRIPT = `(function(w){var q=w.__earlyErrors=[];function add(e){if(q.length<${MAX_EARLY_ERRORS})q.push(e)}function onError(e){if(e.error)add(e.error);else if(e.message!=="Script error.")add(e)}function onRejection(e){add(e.reason)}w.addEventListener("error",onError);w.addEventListener("unhandledrejection",onRejection);w.__stopEarlyErrors=function(){w.removeEventListener("error",onError);w.removeEventListener("unhandledrejection",onRejection)}})(window)`;
 
 /**
  * Stop the inline buffer and send the errors it held. posthog-js exception
