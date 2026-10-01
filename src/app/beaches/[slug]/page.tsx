@@ -157,6 +157,38 @@ export default async function BeachPage({
     },
   ];
 
+  const sightingsSection = (
+    <section aria-labelledby="beach-sightings">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h2
+            id="beach-sightings"
+            className="text-lg font-bold text-slate-900"
+          >
+            Recent sightings
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Eyewitness and attributed Instagram reports connected to this
+            beach.
+          </p>
+        </div>
+        <Link
+          href={`/sightings?beach=${content.id}#report-sighting`}
+          className="shrink-0 text-xs font-bold text-ocean-600 hover:text-ocean-700"
+        >
+          Add one →
+        </Link>
+      </div>
+      <div className="mt-3">
+        <SightingList
+          sightings={sightings}
+          beaches={station ? [station] : FALLBACK_BEACHES}
+          emptyHint={`No sightings connected to ${station?.name ?? content.headline} yet.`}
+        />
+      </div>
+    </section>
+  );
+
   return (
     <article>
       <script
@@ -237,6 +269,8 @@ export default async function BeachPage({
         </Link>
       </div>
 
+      {sightings.length > 0 && <div className="mt-6">{sightingsSection}</div>}
+
       <div className="mt-6 space-y-6">
         <section>
           <h2 className="mb-2 text-lg font-bold text-slate-900">
@@ -283,32 +317,11 @@ export default async function BeachPage({
         </section>
       </div>
 
-      <section className="mt-8 border-t border-slate-200 pt-5">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">
-              Recent sightings
-            </h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Eyewitness and attributed Instagram reports connected to this
-              beach.
-            </p>
-          </div>
-          <Link
-            href={`/sightings?beach=${content.id}#report-sighting`}
-            className="shrink-0 text-xs font-bold text-ocean-600 hover:text-ocean-700"
-          >
-            Add one →
-          </Link>
+      {sightings.length === 0 && (
+        <div className="mt-8 border-t border-slate-200 pt-5">
+          {sightingsSection}
         </div>
-        <div className="mt-3">
-          <SightingList
-            sightings={sightings}
-            beaches={station ? [station] : FALLBACK_BEACHES}
-            emptyHint={`No sightings connected to ${station?.name ?? content.headline} yet.`}
-          />
-        </div>
-      </section>
+      )}
 
       {nearby.length > 0 && (
         <div className="mt-8 border-t border-slate-200 pt-4">

@@ -14,6 +14,7 @@ import { ConditionsGrid } from "@/components/ConditionsGrid";
 import { NextWindowCard } from "@/components/NextWindowCard";
 import { MapSection } from "@/components/MapSection";
 import { SightingList } from "@/components/SightingList";
+import { LatestSightings } from "@/components/LatestSightings";
 import { AlertRulesTable } from "@/components/AlertRulesTable";
 import { AdSlot } from "@/components/AdSlot";
 import { FaqSection } from "@/components/FaqSection";
@@ -122,6 +123,31 @@ export default async function DashboardPage({
       <div className="mt-5">
         <NextWindowCard window={data.nextWindow} />
       </div>
+
+      {sightings.length > 0 && (
+        <>
+          <div className="mt-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                Latest sightings
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Newest reports from both coasts. Tap a clip to watch it on
+                Instagram.
+              </p>
+            </div>
+            <Link
+              href="/sightings"
+              className="shrink-0 text-xs font-semibold text-ocean-600 hover:text-ocean-700"
+            >
+              View all →
+            </Link>
+          </div>
+          <div className="mt-3">
+            <LatestSightings sightings={sightings.slice(0, 10)} />
+          </div>
+        </>
+      )}
 
       <div className="mt-6 flex items-end justify-between gap-4">
         <div>

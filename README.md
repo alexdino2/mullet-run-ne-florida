@@ -19,6 +19,11 @@ opportunity score**, and lets you log sightings alongside it:
 - **Sightings** — logged manually by you (beach, time, school size, notes, and
   optional browser location). Public Instagram posts and Reels can be connected
   to a beach while preserving the original permalink and account attribution.
+  Their preview images are served as thumbnails through
+  `/api/instagram-thumbnail/<shortcode>`, which reads the post's public
+  `og:image` on demand (only for posts attached to a sighting), caches it at
+  the CDN for a week, and stores nothing. Thumbnails load only after the page
+  has finished loading and the card scrolls near the viewport.
   Tracked and displayed, but **not part of the score yet** — the score uses
   public sources only until enough sightings are collected to be predictive.
 - **Daily beach checks** — a scheduled Google News RSS scan looks for recent,

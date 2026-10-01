@@ -31,3 +31,31 @@ export function normalizeInstagramHandle(value: string): string | null {
   const handle = value.trim().replace(/^@/, "");
   return INSTAGRAM_HANDLE.test(handle) ? handle.toLowerCase() : null;
 }
+
+const INSTAGRAM_SHORTCODE = /^[A-Za-z0-9_-]{5,64}$/;
+
+/** The post or Reel id from a stored permalink, e.g. `Dd4JOcrRgEO`. */
+export function instagramShortcode(postUrl: string): string | null {
+  const match = /^\/(?:p|reel)\/([A-Za-z0-9_-]+)\/?$/.exec(
+    safePathname(postUrl) ?? "",
+  );
+  return match && isInstagramShortcode(match[1]) ? match[1] : null;
+}
+
+export function isInstagramShortcode(value: string): boolean {
+  return INSTAGRAM_SHORTCODE.test(value);
+}
+
+/** Same-origin URL that serves a cached preview image for a post or Reel. */
+export function instagramThumbnailPath(postUrl: string): string | null {
+  const shortcode = instagramShortcode(postUrl);
+  return shortcode ? `/api/instagram-thumbnail/${shortcode}` : null;
+}
+
+function safePathname(value: string): string | null {
+  try {
+    return new URL(value).pathname;
+  } catch {
+    return null;
+  }
+}
