@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { GUIDES } from "@/lib/content/guides";
-import { BEACH_CONTENT } from "@/lib/content/beaches";
+import { BEACH_CONTENT, isBeachIndexed } from "@/lib/content/beaches";
 import { SITE_URL } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -16,9 +16,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/sightings",
     "/beaches",
     "/guide",
-    "/gear",
-    "/charters",
-    "/insider",
+    // /gear, /charters and /insider are noindexed placeholders; add them back
+    // here when they carry original content.
   ].map((path) => ({
     url: `${SITE_URL}${path}`,
     lastModified: now,
@@ -45,7 +44,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.3,
   }));
 
-  const beachRoutes = BEACH_CONTENT.map((b) => ({
+  const beachRoutes = BEACH_CONTENT.filter((b) => isBeachIndexed(b.id)).map((b) => ({
     url: `${SITE_URL}/beaches/${b.slug}`,
     lastModified: new Date(b.updated),
     changeFrequency: "weekly" as const,

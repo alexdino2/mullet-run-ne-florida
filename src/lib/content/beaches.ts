@@ -601,6 +601,34 @@ export function listBeachContent(beaches?: Beach[]): BeachContent[] {
   return BEACH_CONTENT.filter((b) => ids.has(b.id));
 }
 
+/**
+ * Beach pages offered to search engines. Every station page is still built
+ * and linked, but most carry only ~150 words of their own text in the same
+ * template, which reads as thin, mass-produced content. These are the pages
+ * with real sightings or the most written content (200+ words). Add a beach
+ * here once its page has been expanded with first-hand detail; the rest are
+ * `noindex` and left out of the sitemap until then.
+ */
+export const INDEXED_BEACH_IDS: ReadonlySet<string> = new Set([
+  // Atlantic: stations with logged sightings.
+  "micklers",
+  "cocoa-beach",
+  "sebastian-inlet",
+  "fort-pierce",
+  "jupiter-inlet",
+  "fort-lauderdale",
+  "miami-beach",
+  // Gulf: the most complete write-ups.
+  "pensacola-pass",
+  "st-george-island",
+  "st-marks",
+  "boca-grande-pass",
+]);
+
+export function isBeachIndexed(id: string): boolean {
+  return INDEXED_BEACH_IDS.has(id);
+}
+
 export function beachPath(slug: string): string {
   return `/beaches/${slug}`;
 }

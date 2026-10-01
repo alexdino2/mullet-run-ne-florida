@@ -66,11 +66,20 @@ export const adsScriptSrc = `https://pagead2.googlesyndication.com/pagead/js/ads
 
 /**
  * Pages that must not request ads, including Auto ads. Insider is still a
- * pre-launch waitlist. Mirror this list under AdSense → Ads → Auto ads →
- * Page exclusions, which also covers anchor ads that persist across
- * client-side navigation.
+ * pre-launch waitlist; Charters (no listings yet) and Gear (affiliate links)
+ * are noindexed until they carry original content; About, Contact and
+ * Privacy are site information, not content. Mirror this list under AdSense →
+ * Ads → Auto ads → Page exclusions, which also covers anchor ads that persist
+ * across client-side navigation.
  */
-export const AD_FREE_PATHS = ["/insider"] as const;
+export const AD_FREE_PATHS = [
+  "/insider",
+  "/charters",
+  "/gear",
+  "/about",
+  "/contact",
+  "/privacy",
+] as const;
 
 export function isAdFreePath(pathname: string | null): boolean {
   if (!pathname) return false;
