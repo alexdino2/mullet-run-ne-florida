@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   description:
     "Join the Florida Mullet Run Insider waitlist for real-time bait-pod alerts, exclusive inlet reports, and member-only charter and tackle discounts.",
   alternates: { canonical: "/insider" },
+  // Pre-launch waitlist: nothing to index until the membership exists.
+  robots: { index: false, follow: true },
 };
 
 const waitlistSubject = encodeURIComponent("Insider waitlist");

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GUIDES } from "@/lib/content/guides";
-import { AdSlot } from "@/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "Mullet Run Guide — Biology, Locations, Regulations & Tactics",
@@ -46,8 +45,6 @@ export default function GuideHubPage() {
           </Link>
         ))}
       </div>
-
-      <AdSlot label="In-content ad" />
 
       <div className="mt-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
         <h2 className="text-sm font-bold text-slate-900">

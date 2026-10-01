@@ -4,7 +4,7 @@ import { resolveSelection } from "@/lib/selection";
 import { STATIONS } from "@/lib/beaches";
 import { getRegion } from "@/lib/regions";
 import { CoastToggle } from "@/components/CoastToggle";
-import { computeBeachConditions } from "@/lib/conditions";
+import { computeBeachConditions, getCachedSummaries } from "@/lib/conditions";
 import { getRecentSightings } from "@/lib/sightings";
 import { getAlertRules } from "@/lib/alerts";
 import { BeachSwitcher } from "@/components/BeachSwitcher";
@@ -48,9 +48,10 @@ export default async function DashboardPage({
   const gulf = coast === "gulf";
 
   const sightings = await getRecentSightings(100);
-  const [data, rules] = await Promise.all([
+  const [data, rules, cached] = await Promise.all([
     computeBeachConditions(selected, sightings),
     getAlertRules(),
+    getCachedSummaries(coast),
   ]);
 
   const generated = new Date(data.generatedAt).toLocaleTimeString(undefined, {
@@ -146,6 +147,9 @@ export default async function DashboardPage({
         <MapSection
           key={coast}
           coast={coast}
+          initialSummaries={cached.summaries}
+          summariesComplete={cached.complete}
+          initialSightings={sightings}
           selectedSummary={{
             beach: data.beach,
             score: data.score.score,

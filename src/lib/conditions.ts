@@ -388,43 +388,53 @@ function toSummary(beach: Beach, conditions: Conditions, score: ScoreResult): Be
 const CACHE_MAX_AGE_MS = 75 * 60 * 1000;
 
 /**
- * Summaries for the map and rankings. Reads the snapshots the hourly Railway
- * refresh (and every dashboard view) writes and re-scores each one for the
- * current moment, so the ranking uses the same model and tide stage as the
- * live dashboard. Only stations without a valid, recent snapshot are fetched
- * live — keeping this request short even with 30+ stations.
+ * Re-scored summaries for every station with a valid, recent snapshot.
+ * Snapshots come from the hourly Railway refresh (and every dashboard view)
+ * and are re-scored for the current moment, so they use the same model and
+ * tide stage as the live dashboard. Stations without one are left out.
+ */
+async function readCachedSummaries(
+  beaches: Beach[],
+  now: Date,
+): Promise<Map<string, BeachSummary>> {
+  const cached = new Map<string, BeachSummary>();
+  const supabase = getServerSupabase();
+  if (!supabase) return cached;
+
+  const since = new Date(now.getTime() - CACHE_MAX_AGE_MS).toISOString();
+  const { data } = await supabase
+    .from("mw_conditions_cache")
+    .select("beach_id, fetched_at, payload")
+    .in(
+      "beach_id",
+      beaches.map((b) => b.id),
+    )
+    .gte("fetched_at", since);
+  for (const row of (data ?? []) as {
+    beach_id: string;
+    payload: CachedPayload | null;
+  }[]) {
+    const beach = getStation(row.beach_id);
+    const payload = row.payload;
+    // Only trust snapshots from the current pipeline, for this station's
+    // current feeds. Anything else is recomputed live by the caller.
+    if (!beach || !payload?.conditions) continue;
+    if (payload.v !== SNAPSHOT_VERSION) continue;
+    if (payload.station !== stationFingerprint(beach)) continue;
+    const { conditions, score } = rescoreSnapshot(beach, payload.conditions, now);
+    cached.set(beach.id, toSummary(beach, conditions, score));
+  }
+  return cached;
+}
+
+/**
+ * Summaries for the map and rankings, from cached snapshots. Only stations
+ * without a valid, recent snapshot are fetched live — keeping this request
+ * short even with 30+ stations.
  */
 export async function computeAllSummaries(coast?: Coast): Promise<BeachSummary[]> {
   const beaches = await getBeaches(coast);
-  const now = new Date();
-  const cached = new Map<string, BeachSummary>();
-
-  const supabase = getServerSupabase();
-  if (supabase) {
-    const since = new Date(now.getTime() - CACHE_MAX_AGE_MS).toISOString();
-    const { data } = await supabase
-      .from("mw_conditions_cache")
-      .select("beach_id, fetched_at, payload")
-      .in(
-        "beach_id",
-        beaches.map((b) => b.id),
-      )
-      .gte("fetched_at", since);
-    for (const row of (data ?? []) as {
-      beach_id: string;
-      payload: CachedPayload | null;
-    }[]) {
-      const beach = getStation(row.beach_id);
-      const payload = row.payload;
-      // Only trust snapshots from the current pipeline, for this station's
-      // current feeds. Anything else is recomputed live below.
-      if (!beach || !payload?.conditions) continue;
-      if (payload.v !== SNAPSHOT_VERSION) continue;
-      if (payload.station !== stationFingerprint(beach)) continue;
-      const { conditions, score } = rescoreSnapshot(beach, payload.conditions, now);
-      cached.set(beach.id, toSummary(beach, conditions, score));
-    }
-  }
+  const cached = await readCachedSummaries(beaches, new Date());
 
   const summaries = await Promise.all(
     beaches.map(async (beach) => {
@@ -437,4 +447,25 @@ export async function computeAllSummaries(coast?: Coast): Promise<BeachSummary[]
   );
 
   return summaries.sort((a, b) => b.score - a.score);
+}
+
+/**
+ * Cached summaries only, for server-rendering the rankings into the page
+ * HTML without waiting on live feeds. `complete` is false when some stations
+ * had no usable snapshot; the client then fetches `/api/summaries` to fill
+ * them in.
+ */
+export async function getCachedSummaries(
+  coast?: Coast,
+): Promise<{ summaries: BeachSummary[]; complete: boolean }> {
+  const beaches = await getBeaches(coast);
+  try {
+    const cached = await readCachedSummaries(beaches, new Date());
+    return {
+      summaries: [...cached.values()].sort((a, b) => b.score - a.score),
+      complete: cached.size === beaches.length,
+    };
+  } catch {
+    return { summaries: [], complete: false };
+  }
 }

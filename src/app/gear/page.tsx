@@ -3,13 +3,15 @@ import Link from "next/link";
 import { GEAR } from "@/lib/content/gear";
 import { amazonSearch } from "@/lib/monetization";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
-import { AdSlot } from "@/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "Best Mullet Run Gear — Rods, Reels, Line & Lures",
   description:
     "A no-fluff Florida mullet run gear guide: the surf rods, spinning reels, braid, leaders, and mullet-matching lures that land tarpon, snook, and sharks from the beach.",
   alternates: { canonical: "/gear" },
+  // Generic affiliate links aren't original content; keep the page out of
+  // search (and out of the sitemap) until each pick has a hands-on review.
+  robots: { index: false, follow: true },
 };
 
 const TIER_LABEL: Record<string, string> = {
@@ -45,7 +47,7 @@ export default function GearPage() {
         ))}
       </nav>
 
-      {GEAR.map((cat, ci) => (
+      {GEAR.map((cat) => (
         <section key={cat.id} id={cat.id} className="mt-8 scroll-mt-28">
           <h2 className="text-lg font-bold text-slate-900">{cat.title}</h2>
           <p className="mt-1 text-sm text-slate-500">{cat.intent}</p>
@@ -80,8 +82,6 @@ export default function GearPage() {
               </div>
             ))}
           </div>
-
-          {ci === 1 && <AdSlot label="In-content ad" />}
         </section>
       ))}
 

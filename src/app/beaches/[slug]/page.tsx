@@ -8,12 +8,19 @@ import {
   beachPath,
   getBeachContent,
   getBeachContentById,
+  isBeachIndexed,
 } from "@/lib/content/beaches";
 import { getSightingsForBeach } from "@/lib/sightings";
 import { AdSlot } from "@/components/AdSlot";
 import { SightingList } from "@/components/SightingList";
 import { SITE_URL } from "@/lib/site";
 import { StationVisual } from "@/components/StationVisual";
+import { ScoreHistory } from "@/components/ScoreHistory";
+import { getScoreHistory } from "@/lib/score-history";
+
+// Rebuild hourly so sightings and score history track the Railway refresh
+// instead of freezing at deploy time.
+export const revalidate = 3600;
 
 export function generateStaticParams() {
   return BEACH_CONTENT.map((b) => ({ slug: b.slug }));
@@ -35,6 +42,11 @@ export function generateMetadata({
     description: beach.description,
     keywords: beach.keywords,
     alternates: { canonical: url },
+    // Short, templated station pages stay out of search until expanded;
+    // see INDEXED_BEACH_IDS.
+    ...(isBeachIndexed(beach.id)
+      ? {}
+      : { robots: { index: false, follow: true } }),
     openGraph: {
       type: "article",
       title: ogTitle,
@@ -87,7 +99,12 @@ export default async function BeachPage({
   if (!content) notFound();
 
   const station = FALLBACK_BEACHES.find((b) => b.id === content.id);
-  const sightings = await getSightingsForBeach(content.id, 6);
+  const indexed = isBeachIndexed(content.id);
+  const [allSightings, history] = await Promise.all([
+    getSightingsForBeach(content.id, 20),
+    getScoreHistory(content.id, 14),
+  ]);
+  const sightings = allSightings.slice(0, 6);
   const nearby = content.nearby
     .map((id) => getBeachContentById(id))
     .filter((b): b is NonNullable<typeof b> => Boolean(b));
@@ -293,7 +310,7 @@ export default async function BeachPage({
           <BulletList items={content.whyFish} />
         </section>
 
-        <AdSlot label="In-content ad" />
+        {indexed && <AdSlot label="In-content ad" />}
 
         <section>
           <h2 className="mb-2 text-lg font-bold text-slate-900">
@@ -315,6 +332,16 @@ export default async function BeachPage({
             </p>
           )}
         </section>
+
+        {station && (
+          <ScoreHistory
+            beachId={content.id}
+            beachName={station.name}
+            coast={station.coast}
+            hours={history}
+            sightings={allSightings}
+          />
+        )}
       </div>
 
       {sightings.length === 0 && (
