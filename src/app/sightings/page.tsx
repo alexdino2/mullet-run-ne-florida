@@ -58,9 +58,7 @@ export default async function SightingsPage({
         A live, crowdsourced map of the Florida mullet run on both coasts —
         the Atlantic from Jacksonville to Miami and the Gulf from Pensacola to
         Marco Island. Spot a school? Log it below so
-        other anglers know where the bait is. Sightings are tracked and shown
-        here, but don’t affect the opportunity score yet — the score uses public
-        data only while we gather more reports.
+        other anglers know where the bait is.
       </p>
 
       <div className="mt-3 rounded-xl border border-fuchsia-100 bg-gradient-to-r from-fuchsia-50 to-orange-50 p-3">

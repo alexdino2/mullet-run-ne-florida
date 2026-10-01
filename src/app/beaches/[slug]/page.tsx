@@ -8,12 +8,19 @@ import {
   beachPath,
   getBeachContent,
   getBeachContentById,
+  isBeachIndexed,
 } from "@/lib/content/beaches";
 import { getSightingsForBeach } from "@/lib/sightings";
 import { AdSlot } from "@/components/AdSlot";
 import { SightingList } from "@/components/SightingList";
 import { SITE_URL } from "@/lib/site";
 import { StationVisual } from "@/components/StationVisual";
+import { ScoreHistory } from "@/components/ScoreHistory";
+import { getScoreHistory } from "@/lib/score-history";
+
+// Rebuild hourly so sightings and score history track the Railway refresh
+// instead of freezing at deploy time.
+export const revalidate = 3600;
 
 export function generateStaticParams() {
   return BEACH_CONTENT.map((b) => ({ slug: b.slug }));
@@ -35,6 +42,11 @@ export function generateMetadata({
     description: beach.description,
     keywords: beach.keywords,
     alternates: { canonical: url },
+    // Short, templated station pages stay out of search until expanded;
+    // see INDEXED_BEACH_IDS.
+    ...(isBeachIndexed(beach.id)
+      ? {}
+      : { robots: { index: false, follow: true } }),
     openGraph: {
       type: "article",
       title: ogTitle,
@@ -87,7 +99,12 @@ export default async function BeachPage({
   if (!content) notFound();
 
   const station = FALLBACK_BEACHES.find((b) => b.id === content.id);
-  const sightings = await getSightingsForBeach(content.id, 6);
+  const indexed = isBeachIndexed(content.id);
+  const [allSightings, history] = await Promise.all([
+    getSightingsForBeach(content.id, 20),
+    getScoreHistory(content.id, 14),
+  ]);
+  const sightings = allSightings.slice(0, 6);
   const nearby = content.nearby
     .map((id) => getBeachContentById(id))
     .filter((b): b is NonNullable<typeof b> => Boolean(b));
@@ -156,6 +173,38 @@ export default async function BeachPage({
       ],
     },
   ];
+
+  const sightingsSection = (
+    <section aria-labelledby="beach-sightings">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h2
+            id="beach-sightings"
+            className="text-lg font-bold text-slate-900"
+          >
+            Recent sightings
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Eyewitness and attributed Instagram reports connected to this
+            beach.
+          </p>
+        </div>
+        <Link
+          href={`/sightings?beach=${content.id}#report-sighting`}
+          className="shrink-0 text-xs font-bold text-ocean-600 hover:text-ocean-700"
+        >
+          Add one →
+        </Link>
+      </div>
+      <div className="mt-3">
+        <SightingList
+          sightings={sightings}
+          beaches={station ? [station] : FALLBACK_BEACHES}
+          emptyHint={`No sightings connected to ${station?.name ?? content.headline} yet.`}
+        />
+      </div>
+    </section>
+  );
 
   return (
     <article>
@@ -237,6 +286,8 @@ export default async function BeachPage({
         </Link>
       </div>
 
+      {sightings.length > 0 && <div className="mt-6">{sightingsSection}</div>}
+
       <div className="mt-6 space-y-6">
         <section>
           <h2 className="mb-2 text-lg font-bold text-slate-900">
@@ -259,7 +310,7 @@ export default async function BeachPage({
           <BulletList items={content.whyFish} />
         </section>
 
-        <AdSlot label="In-content ad" />
+        {indexed && <AdSlot label="In-content ad" />}
 
         <section>
           <h2 className="mb-2 text-lg font-bold text-slate-900">
@@ -281,34 +332,23 @@ export default async function BeachPage({
             </p>
           )}
         </section>
+
+        {station && (
+          <ScoreHistory
+            beachId={content.id}
+            beachName={station.name}
+            coast={station.coast}
+            hours={history}
+            sightings={allSightings}
+          />
+        )}
       </div>
 
-      <section className="mt-8 border-t border-slate-200 pt-5">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">
-              Recent sightings
-            </h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Eyewitness and attributed Instagram reports connected to this
-              beach.
-            </p>
-          </div>
-          <Link
-            href={`/sightings?beach=${content.id}#report-sighting`}
-            className="shrink-0 text-xs font-bold text-ocean-600 hover:text-ocean-700"
-          >
-            Add one →
-          </Link>
+      {sightings.length === 0 && (
+        <div className="mt-8 border-t border-slate-200 pt-5">
+          {sightingsSection}
         </div>
-        <div className="mt-3">
-          <SightingList
-            sightings={sightings}
-            beaches={station ? [station] : FALLBACK_BEACHES}
-            emptyHint={`No sightings connected to ${station?.name ?? content.headline} yet.`}
-          />
-        </div>
-      </section>
+      )}
 
       {nearby.length > 0 && (
         <div className="mt-8 border-t border-slate-200 pt-4">

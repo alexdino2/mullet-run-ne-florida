@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description:
     "Find a verified mullet run charter captain on Florida's Atlantic and Gulf coasts, from Jacksonville to Miami and Pensacola to Naples. Captains: get your charter listed at the season's top inlets and passes.",
   alternates: { canonical: "/charters" },
+  // No verified captains listed yet; index the directory once it has some.
+  robots: { index: false, follow: true },
 };
 
 export default function ChartersPage() {

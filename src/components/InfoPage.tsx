@@ -1,6 +1,8 @@
+
 /**
  * Shared layout for the site's plain-text pages (About, Contact, Privacy):
  * a header card followed by white section cards, matching the guide pages.
+ * These pages carry no ads (see `AD_FREE_PATHS`).
  */
 
 export function InfoPage({
@@ -26,7 +28,9 @@ export function InfoPage({
           </p>
         )}
       </header>
-      <div className="mt-5 space-y-4">{children}</div>
+      <div className="mt-5 space-y-4">
+        {children}
+      </div>
     </article>
   );
 }

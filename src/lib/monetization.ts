@@ -65,19 +65,20 @@ export const adsEnabled = Boolean(monetization.adsClient);
 export const adsScriptSrc = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${monetization.adsClient}`;
 
 /**
- * Pages that must not show ads, including Auto ads. AdSense wants ads only on
- * pages with substantial publisher content, so this keeps them off pages that
- * are still placeholders (Insider waitlist, the charter directory before
- * listings go live) and off the policy/contact pages. Mirror this list under
- * AdSense → Ads → Auto ads → Page exclusions, which also covers anchor ads
- * that persist across client-side navigation.
+ * Pages that must not request ads, including Auto ads. Insider is still a
+ * pre-launch waitlist; Charters (no listings yet) and Gear (affiliate links)
+ * are noindexed until they carry original content; About, Contact and
+ * Privacy are site information, not content. Mirror this list under AdSense →
+ * Ads → Auto ads → Page exclusions, which also covers anchor ads that persist
+ * across client-side navigation.
  */
 export const AD_FREE_PATHS = [
   "/insider",
   "/charters",
-  "/privacy",
+  "/gear",
   "/about",
   "/contact",
+  "/privacy",
 ] as const;
 
 export function isAdFreePath(pathname: string | null): boolean {
