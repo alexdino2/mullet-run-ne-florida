@@ -201,8 +201,9 @@ export default function PrivacyPage() {
         </p>
         <p>
           We also link public Instagram posts about the run to beach pages, with
-          the original post and account credited. If you’d like a post or
-          sighting removed, email us and we’ll take it down.
+          the original post and account credited and the post’s public preview
+          image shown as a thumbnail. If you’d like a post or sighting removed,
+          email us and we’ll take it down.
         </p>
       </InfoSection>
 
