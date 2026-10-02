@@ -26,6 +26,10 @@ opportunity score**, and lets you log sightings alongside it:
   has finished loading and the card scrolls near the viewport.
   Tracked and displayed, but **not part of the score yet** — the score uses
   public sources only until enough sightings are collected to be predictive.
+- **Instagram hashtag watch** — an hourly job finds public posts tagged
+  `#mulletrun` or `#floridamulletrun`, works out where each was taken, and
+  queues it for review. Nothing is published until a reviewer approves it at
+  `/admin/instagram` (see [Instagram sightings review](#instagram-sightings-review)).
 - **Daily beach checks** — a scheduled Google News RSS scan looks for recent,
   attributable online mullet reports for every tracked beach. These are shown
   as unverified signals and never mixed with eyewitness reports.
@@ -190,6 +194,15 @@ ever sees the public anon key (protected by Row Level Security).
 | `RESEND_API_KEY` | Railway | Resend key for alert and failure emails |
 | `ALERT_EMAIL_FROM` | Railway | Sender on a Resend-verified domain |
 | `ALERT_EMAIL_TO` | Railway | Comma-separated recipients for alerts and job failures |
+| `INSTAGRAM_GRAPH_TOKEN` | Railway (Instagram job) | Meta Graph API token with Instagram Public Content Access; use a system-user token so it doesn't expire |
+| `INSTAGRAM_BUSINESS_ACCOUNT_ID` | Railway (Instagram job) | IG user id of the Business/Creator account that runs hashtag searches |
+| `INSTAGRAM_HASHTAGS` | optional | Hashtags to watch; defaults to `mulletrun,floridamulletrun` |
+| `META_GRAPH_API_VERSION` | optional | Graph API version; defaults to `v24.0` |
+| `ANTHROPIC_API_KEY` | optional (Railway) | Lets Claude read each post's caption and photo to flag non-sightings and locate posts the place list can't |
+| `INSTAGRAM_AI_MODEL` | optional | Claude model for that step; defaults to `claude-opus-5-5` |
+| `INSTAGRAM_REVIEW_EMAIL_TO` | optional | Who gets the "new posts to review" email; defaults to `ALERT_EMAIL_TO` |
+| `ADMIN_EMAILS` | Vercel | Comma-separated addresses allowed to sign in to `/admin` |
+| `RESEND_API_KEY`, `ALERT_EMAIL_FROM`, `SUPABASE_SERVICE_ROLE_KEY` | Vercel (admin) | Needed on Vercel to send admin sign-in links and read/write the review queue |
 | `NWS_USER_AGENT` | optional | Contact string sent to `api.weather.gov` per their etiquette |
 | `NEXT_PUBLIC_POSTHOG_KEY` | optional | Override the built-in PostHog project API key |
 | `NEXT_PUBLIC_POSTHOG_HOST` | optional | PostHog region host that `/ingest` proxies to; defaults to `https://us.i.posthog.com` |
@@ -223,6 +236,8 @@ Tables are namespaced with `mw_` so they can share a project with other apps:
   never repeat (server-only)
 - `mw_charter_leads` — captain listing requests from `/charters` (insert-only
   for the public roles; read them in the dashboard)
+- `mw_instagram_candidates` — Instagram review queue: one row per hashtag post
+  with its inferred location, nearest station, and review status (server-only)
 
 To apply it to your **own** project, paste the SQL into the Supabase SQL
 Editor, or use the Supabase CLI:
@@ -248,6 +263,8 @@ returns one station's hourly score, rating, wind, water temp and tide stage
 for up to 31 days. It is the only public read into `mw_feature_log` and
 powers the "Score history" block on the beach pages; until it is applied
 those pages simply leave the block out.
+`0008_instagram_candidates.sql` adds the Instagram review queue; apply it
+before starting the `instagram-hashtags` job.
 
 **Row Level Security** is enabled on every table:
 
@@ -272,7 +289,7 @@ those pages simply leave the block out.
 ### Scheduled jobs (Railway)
 
 Recurring work runs on Railway, not Vercel Cron, so request handlers stay
-short. Railway project **florida-mullet-run** has two cron services built from
+short. Railway project **florida-mullet-run** has three cron services built from
 this repo (settings live on the services; Railway's config-file format is
 deprecated):
 
@@ -280,8 +297,9 @@ deprecated):
 | ------- | -------------- | ------------- | ------------- |
 | `refresh` | `7 * * * *` (hourly) | `npx tsx worker/run.ts refresh` | `echo` (no Next.js build) |
 | `sighting-checks` | `13 11 * * *` (daily) | `npx tsx worker/run.ts sighting-checks` | `echo` (no Next.js build) |
+| `instagram-hashtags` | `23 * * * *` (hourly) | `npx tsx worker/run.ts instagram-hashtags` | `echo` (no Next.js build) |
 
-Both use restart policy `NEVER` and watch `src/lib/**`, `worker/**`, and the
+All use restart policy `NEVER` and watch `src/lib/**`, `worker/**`, and the
 package files, so site-only changes don't rebuild them.
 
 The refresh scores all 33 stations, upserts `mw_conditions_cache`, writes one
@@ -294,6 +312,66 @@ Run a job by hand (from the repo root, with the env vars set):
 ```bash
 npx tsx worker/run.ts refresh
 npx tsx worker/run.ts probe boca-grande-pass,cedar-key-suwannee   # score and print; writes nothing
+```
+
+### Instagram sightings review
+
+The `instagram-hashtags` job and the `/admin/instagram` page turn tagged
+Instagram posts into reviewed sightings:
+
+1. **Find.** Every hour the job asks the Instagram Graph API for posts tagged
+   `#mulletrun` or `#floridamulletrun` in the last 24 hours (the API's window,
+   so hourly runs overlap and nothing is missed). Posts already in the queue are
+   skipped, so re-runs never duplicate rows or AI calls.
+2. **Locate.** Instagram's hashtag API returns the caption, photo, permalink
+   and time, but **no location and no username**. The job first matches the
+   caption and hashtags against ~100 Florida coastal places
+   ([`src/lib/instagram-places.ts`](src/lib/instagram-places.ts)): "Mickler's",
+   `#jaxbeach`, "Sikes Cut" and so on. It picks the most specific spot, lowers
+   the confidence when the caption names places far apart, and suggests the
+   nearest tracked station. When `ANTHROPIC_API_KEY` is set, Claude also reads
+   the caption and first photo
+   ([`src/lib/instagram-ai.ts`](src/lib/instagram-ai.ts)). That flags posts
+   that aren't Florida sightings (`#mulletrun` also covers mullet haircuts and
+   Australia's sea mullet run), locates posts the place list can't, and
+   suggests a school size and a one-line note.
+3. **Notify.** If new posts arrived, one email through Resend links to the
+   queue. Job failures email `ALERT_EMAIL_TO`, with a specific message when the
+   Instagram token has expired.
+4. **Review.** At `/admin/instagram` each post shows the embedded original, the
+   inferred place with its confidence and evidence, and a map link. Adjust the
+   station, coordinates, school size, account handle and notes, then **Approve
+   & post** (published as a verified Instagram sighting linking to the original)
+   or **Reject**. Posts someone already logged by hand land in "Already on
+   site".
+
+**Sign-in.** `/admin` uses Supabase Auth. Enter an address listed in
+`ADMIN_EMAILS` at `/admin/login`, and a one-time link is emailed through Resend
+(template in code). The link opens a confirm page, and signing in takes a button
+press so email scanners can't use up the token. Non-admin addresses get the
+same response and no email.
+
+**Meta setup (one time).** Instagram only allows hashtag search through the
+*Instagram API with Facebook Login*:
+
+1. Switch the @floridamulletrun Instagram account to Business or Creator and
+   link it to a Facebook Page.
+2. In a Meta developer app, add the Instagram product, request
+   `instagram_basic` and the **Instagram Public Content Access** feature, and
+   complete App Review.
+3. Create a system user in Business Manager with access to the app and Page,
+   and generate a non-expiring token → `INSTAGRAM_GRAPH_TOKEN`. Look up the IG
+   user id (`GET /me/accounts?fields=instagram_business_account`) →
+   `INSTAGRAM_BUSINESS_ACCOUNT_ID`.
+
+Limits: 30 unique hashtags per account per rolling 7 days, and only public
+posts are returned.
+
+Run it by hand:
+
+```bash
+npx tsx worker/run.ts instagram-hashtags
+npm test   # place-matching tests
 ```
 
 ---

@@ -4,6 +4,7 @@
  *
  *   npx tsx worker/run.ts refresh          # hourly: scores, cache, feature log, alerts
  *   npx tsx worker/run.ts sighting-checks  # daily: public news scan
+ *   npx tsx worker/run.ts instagram-hashtags  # hourly: queue #mulletrun posts for review
  *   npx tsx worker/run.ts probe [ids]      # score stations and print; writes nothing
  *
  * Shares src/lib with the Vercel app (types, scoring, email templates,
@@ -13,6 +14,8 @@
  */
 import { runRefresh } from "@/lib/jobs/refresh";
 import { runSightingChecks } from "@/lib/jobs/sighting-checks";
+import { runInstagramHashtags } from "@/lib/jobs/instagram-hashtags";
+import { GraphApiError } from "@/lib/instagram-graph";
 import { jobLog } from "@/lib/jobs/log";
 import { jobFailureEmail } from "@/lib/email/templates";
 import { alertRecipients, emailConfigured, sendEmail } from "@/lib/email/resend";
@@ -76,16 +79,29 @@ async function main() {
         await notifyFailure(job, startedAt, "Sighting checks ran but were not saved (service role key or table missing)");
         process.exitCode = 1;
       }
+    } else if (job === "instagram-hashtags") {
+      const report = await runInstagramHashtags();
+      if (report.newPosts > 0 && report.aiErrors === report.newPosts) {
+        await notifyFailure(
+          job,
+          startedAt,
+          `The AI location step failed for all ${report.newPosts} new posts. They were still queued with caption-based locations; check ANTHROPIC_API_KEY and the job logs.`,
+        );
+      }
     } else if (job === "probe") {
       await probe(args.join(",").split(",").filter(Boolean));
     } else {
-      console.error(`Unknown job "${job}". Use: refresh | sighting-checks | probe [ids]`);
+      console.error(`Unknown job "${job}". Use: refresh | sighting-checks | instagram-hashtags | probe [ids]`);
       process.exitCode = 2;
     }
   } catch (err) {
     const e = err as Error;
     jobLog(job ?? "unknown", "crashed", { error: e.message, stack: e.stack });
-    await notifyFailure(job ?? "unknown", startedAt, e.stack ?? e.message);
+    const hint =
+      err instanceof GraphApiError && err.isAuthError
+        ? ["The Instagram token was rejected (expired or revoked). Generate a new one and update INSTAGRAM_GRAPH_TOKEN on Railway; re-running will not help until then."]
+        : [];
+    await notifyFailure(job ?? "unknown", startedAt, e.stack ?? e.message, hint);
     process.exitCode = 1;
   }
 }

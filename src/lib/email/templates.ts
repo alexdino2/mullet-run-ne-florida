@@ -1,7 +1,8 @@
 import { SITE_URL } from "@/lib/site";
 import { COAST_LABEL } from "@/lib/regions";
+import { getStation } from "@/lib/beaches";
 import type { CharterLead } from "@/lib/charter-leads";
-import type { Beach, ScoreResult } from "@/lib/types";
+import type { Beach, InstagramCandidate, ScoreResult } from "@/lib/types";
 
 /** Email templates, kept in code and shared by the web app and the jobs. */
 
@@ -95,7 +96,7 @@ export function jobFailureEmail(params: {
     `<p style="font-size:14px">The <b>${escape(params.job)}</b> job on Railway failed (started ${escape(params.startedAt)}).</p>
 <pre style="white-space:pre-wrap;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:12px">${escape(params.error)}</pre>
 ${details ? `<ul style="font-size:13px">${details}</ul>` : ""}
-<p style="font-size:13px">It is safe to re-run from the Railway dashboard. The site keeps serving live scores; only the hourly cache and alerts are affected.</p>`,
+<p style="font-size:13px">It is safe to re-run from the Railway dashboard. The site keeps serving live scores; only this job's output (cache, alerts, sighting checks, or the Instagram review queue) is delayed.</p>`,
   );
   return {
     subject,
@@ -139,4 +140,70 @@ ${filled
   ].join("\n");
 
   return { subject, html: layout("New charter listing request", table), text };
+}
+
+/** Sent by the Instagram hashtag job when new posts are waiting for review. */
+export function instagramReviewEmail(params: {
+  posts: Pick<
+    InstagramCandidate,
+    "permalink" | "caption" | "location_name" | "location_confidence" | "beach_id" | "ai_is_report" | "ai_reason"
+  >[];
+  pending: number;
+}) {
+  const { posts, pending } = params;
+  const reviewUrl = `${SITE_URL}/admin/instagram`;
+  const subject = `${posts.length} new #mulletrun post${posts.length === 1 ? "" : "s"} to review`;
+
+  const describe = (p: (typeof posts)[number]) => {
+    const station = p.beach_id ? getStation(p.beach_id)?.name : null;
+    const where = p.location_name
+      ? `${p.location_name} (${p.location_confidence} confidence${station ? `, nearest station ${station}` : ""})`
+      : "Location unknown";
+    const flag = p.ai_is_report === false ? `Likely not a Florida sighting: ${p.ai_reason ?? ""}` : null;
+    const caption = (p.caption ?? "").replace(/\s+/g, " ").slice(0, 160);
+    return { where, flag, caption };
+  };
+
+  const rows = posts
+    .slice(0, 20)
+    .map((p) => {
+      const d = describe(p);
+      return `<div style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:10px;border:1px solid #e2e8f0">
+<div style="font-size:14px;font-weight:700">${escape(d.where)}</div>
+${d.flag ? `<div style="font-size:12px;color:#b45309;margin-top:2px">${escape(d.flag)}</div>` : ""}
+<p style="margin:6px 0 0;font-size:13px;color:#334155">${escape(d.caption)}</p>
+<a href="${escape(p.permalink)}" style="font-size:12px;color:#0f5479">View on Instagram</a>
+</div>`;
+    })
+    .join("");
+  const more = posts.length > 20 ? `<p style="font-size:13px">…and ${posts.length - 20} more.</p>` : "";
+  const button = `<p style="margin:16px 0"><a href="${reviewUrl}" style="background:#0f5479;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px">Review ${pending} pending post${pending === 1 ? "" : "s"}</a></p>`;
+
+  const text = [
+    `${posts.length} new post${posts.length === 1 ? "" : "s"} tagged #mulletrun / #floridamulletrun. ${pending} pending in total.`,
+    `Review: ${reviewUrl}`,
+    "",
+    ...posts.slice(0, 20).map((p) => {
+      const d = describe(p);
+      return [d.where, d.flag, d.caption, p.permalink].filter(Boolean).join("\n");
+    }),
+  ].join("\n\n");
+
+  return { subject, html: layout(subject, button + rows + more), text };
+}
+
+/** One-time sign-in link for /admin, sent through Resend. */
+export function adminSignInEmail(link: string) {
+  const subject = "Your Florida Mullet Run admin sign-in link";
+  const html = layout(
+    "Sign in to review sightings",
+    `<p style="font-size:14px">Use this link to sign in. It works once and expires in an hour.</p>
+<p style="margin:16px 0"><a href="${escape(link)}" style="background:#0f5479;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px">Sign in</a></p>
+<p style="font-size:12px;color:#64748b">If you didn't ask for this, ignore this email.</p>`,
+  );
+  return {
+    subject,
+    html,
+    text: `Sign in to Florida Mullet Run admin (works once, expires in an hour):\n${link}\n\nIf you didn't ask for this, ignore this email.`,
+  };
 }
