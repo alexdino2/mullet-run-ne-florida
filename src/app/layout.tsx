@@ -106,7 +106,8 @@ const FOOTER_LINKS = [
 /** Site-wide policy links, kept in their own row at the bottom of every page. */
 const LEGAL_LINKS = [
   { href: "/privacy", label: "Privacy Policy" },
-  { href: "/about", label: "About" },
+  { href: "/about-us", label: "About Us" },
+  { href: "/about", label: "How It Works" },
   { href: "/contact", label: "Contact" },
 ];
 

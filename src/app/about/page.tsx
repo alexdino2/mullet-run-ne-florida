@@ -156,7 +156,8 @@ export default function AboutPage() {
         <p>
           We’re independent: not affiliated with the FWC, NOAA or any tackle brand
           or charter company. The site is free and supported by ads and affiliate
-          links (see our <Link href="/privacy">Privacy Policy</Link>).
+          links (see our <Link href="/privacy">Privacy Policy</Link>). Curious
+          how it got started? <Link href="/about-us">Read our story</Link>.
         </p>
       </InfoSection>
 
