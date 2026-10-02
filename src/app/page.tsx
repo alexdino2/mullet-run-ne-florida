@@ -92,11 +92,6 @@ export default async function DashboardPage({
               {selected.name}
             </Link>
           </h2>
-          {selected.id === "micklers" && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
-              ★ Priority
-            </span>
-          )}
         </div>
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
           {getRegion(selected.region).label}

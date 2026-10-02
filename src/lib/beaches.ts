@@ -6,8 +6,7 @@ import { regionsForCoast } from "@/lib/regions";
  * station and its data-feed IDs; `mw_beaches` mirrors it (see migration 0005)
  * so sightings and cached conditions have rows to reference.
  *
- * Atlantic stations run north to south along the surf migration corridor;
- * Mickler's Landing is prioritized highest.
+ * Atlantic stations run north to south along the surf migration corridor.
  */
 const ATLANTIC_STATIONS: Beach[] = [
   {
@@ -535,7 +534,7 @@ export const FALLBACK_BEACHES = STATIONS;
 
 /** Default station shown when a coast is picked without a specific beach. */
 export const DEFAULT_STATION: Record<Coast, string> = {
-  atlantic: "micklers",
+  atlantic: "fort-lauderdale",
   gulf: "boca-grande-pass",
 };
 
@@ -555,7 +554,7 @@ export async function getBeach(id: string): Promise<Beach | null> {
   return getStation(id);
 }
 
-/** The highest-priority station (Mickler's by default). */
+/** The default station for a coast (Fort Lauderdale on the Atlantic). */
 export async function getPrimaryBeach(coast: Coast = "atlantic"): Promise<Beach> {
   return getStation(DEFAULT_STATION[coast]) ?? STATIONS[0];
 }

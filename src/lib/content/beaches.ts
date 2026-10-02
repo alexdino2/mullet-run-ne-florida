@@ -66,7 +66,7 @@ const ATLANTIC_BEACH_CONTENT: BeachContent[] = [
       "Mickler's Landing mullet run guide: early-season bait on Ponte Vedra Beach, how to fish the clean NEFL surf, live conditions, and tips for tarpon and snook.",
     headline: "Mickler's Landing Mullet Run",
     summary:
-      "Ponte Vedra's priority beach — long, clean Atlantic surf that loads up early when the fall migration pushes out of Northeast Florida.",
+      "Ponte Vedra's go-to surf beach — long, clean Atlantic surf that loads up early when the fall migration pushes out of Northeast Florida.",
     region: "Northeast Florida",
     updated: "2026-09-26",
     keywords: [
@@ -86,7 +86,7 @@ const ATLANTIC_BEACH_CONTENT: BeachContent[] = [
         "https://commons.wikimedia.org/wiki/File:FL_Ponte_Vedra_Beach_ocean01.jpg",
     },
     about: [
-      "Mickler's Landing sits on Ponte Vedra Beach in St. Johns County — a wide, gently sloping Atlantic beach with public parking and a short walk to the water. It is this site's highest-priority station because Northeast Florida typically sees the mullet run first.",
+      "Mickler's Landing sits on Ponte Vedra Beach in St. Johns County — a wide, gently sloping Atlantic beach with public parking and a short walk to the water. Northeast Florida typically sees the mullet run first, so it is often one of the earliest stations to light up.",
       "Schools often hug the troughs outside the first sandbar on northeast and east winds. When birds work and the water looks nervous, predators are usually already on the edges of the bait.",
     ],
     whyFish: [
