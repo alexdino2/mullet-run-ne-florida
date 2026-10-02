@@ -19,7 +19,9 @@ export function DailySightingChecks({
         return (
           <div
             key={beach.id}
-            className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100"
+            className={`relative rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100 ${
+              recent ? "transition hover:shadow-md hover:ring-ocean-200" : ""
+            }`}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -57,7 +59,8 @@ export function DailySightingChecks({
                 data-analytics-event="external_report_clicked"
                 data-analytics-property-beach-id={beach.id}
                 data-analytics-property-source={recent.source}
-                className="mt-2 block text-xs font-medium text-ocean-700 hover:underline"
+                // Stretched over the whole card so a tap anywhere opens it.
+                className="mt-2 block text-xs font-medium text-ocean-700 after:absolute after:inset-0 after:rounded-xl hover:underline"
               >
                 {recent.title} · {recent.source}
               </a>

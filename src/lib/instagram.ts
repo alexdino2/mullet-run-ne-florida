@@ -31,3 +31,11 @@ export function normalizeInstagramHandle(value: string): string | null {
   const handle = value.trim().replace(/^@/, "");
   return INSTAGRAM_HANDLE.test(handle) ? handle.toLowerCase() : null;
 }
+
+/**
+ * Instagram's iframe player for a normalized post or Reel permalink, so the
+ * video plays on our page instead of sending visitors to instagram.com.
+ */
+export function instagramEmbedUrl(postUrl: string): string {
+  return `${postUrl.endsWith("/") ? postUrl : `${postUrl}/`}embed/`;
+}

@@ -256,6 +256,12 @@ export default function PrivacyPage() {
             once you play a video.
           </li>
           <li>
+            <strong>Instagram.</strong> When you open an Instagram sighting, the
+            post plays in an Instagram embed on our page. Nothing loads from
+            Instagram until you open one; Instagram may then set cookies and
+            receives your IP address.
+          </li>
+          <li>
             <strong>Public data.</strong> Conditions come from the National
             Weather Service, NOAA Tides & Currents, NOAA’s National Data Buoy
             Center, USGS and Open-Meteo. We request that data from our servers;

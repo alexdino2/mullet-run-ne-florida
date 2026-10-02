@@ -305,6 +305,7 @@ export default async function BeachPage({
           <SightingList
             sightings={sightings}
             beaches={station ? [station] : FALLBACK_BEACHES}
+            linkBeaches={false}
             emptyHint={`No sightings connected to ${station?.name ?? content.headline} yet.`}
           />
         </div>
