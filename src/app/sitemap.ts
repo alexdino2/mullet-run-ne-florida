@@ -37,7 +37,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   // Site information pages: crawlable for trust signals, rarely updated.
-  const infoRoutes = ["/about", "/contact", "/privacy"].map((path) => ({
+  const infoRoutes = ["/about-us", "/about", "/contact", "/privacy"].map((path) => ({
     url: `${SITE_URL}${path}`,
     lastModified: now,
     changeFrequency: "monthly" as const,
