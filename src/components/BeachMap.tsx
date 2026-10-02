@@ -154,7 +154,7 @@ export default function BeachMap({
             <CircleMarker
               key={s.beach.id}
               center={[s.beach.lat, s.beach.lon]}
-              radius={s.beach.id === "micklers" ? 14 : s.beach.station_type === "beach" ? 11 : 10}
+              radius={s.beach.station_type === "beach" ? 11 : 10}
               pathOptions={{
                 color: hex,
                 weight: 4,

@@ -18,35 +18,59 @@ const BeachMap = dynamic(() => import("./BeachMap"), {
 export function MapSection({
   coast,
   selectedSummary,
+  initialSummaries,
+  summariesComplete = false,
+  initialSightings,
 }: {
   coast?: Coast;
   selectedSummary?: BeachSummary;
+  /**
+   * Cached scores rendered on the server, so the rankings are in the page
+   * HTML rather than appearing only after a client fetch.
+   */
+  initialSummaries?: BeachSummary[];
+  /** True when `initialSummaries` covers every station on the coast. */
+  summariesComplete?: boolean;
+  /** Recent sightings already loaded by the page. */
+  initialSightings?: Sighting[];
 } = {}) {
-  const [summaries, setSummaries] = useState<BeachSummary[] | null>(null);
-  const [sightings, setSightings] = useState<Sighting[]>([]);
+  const [summaries, setSummaries] = useState<BeachSummary[] | null>(
+    initialSummaries?.length ? initialSummaries : null,
+  );
+  const [sightings, setSightings] = useState<Sighting[]>(
+    initialSightings ?? [],
+  );
   const [error, setError] = useState(false);
+  const needSummaries = !summariesComplete;
+  const needSightings = !initialSightings;
 
   useEffect(() => {
+    if (!needSummaries && !needSightings) return;
     let active = true;
     Promise.all([
-      fetch(coast ? `/api/summaries?coast=${coast}` : "/api/summaries").then((response) => {
-        if (!response.ok) throw new Error("Summary request failed");
-        return response.json();
-      }),
-      fetch("/api/sightings")
-        .then((response) => (response.ok ? response.json() : { sightings: [] }))
-        .catch(() => ({ sightings: [] })),
+      needSummaries
+        ? fetch(coast ? `/api/summaries?coast=${coast}` : "/api/summaries").then((response) => {
+            if (!response.ok) throw new Error("Summary request failed");
+            return response.json();
+          })
+        : null,
+      needSightings
+        ? fetch("/api/sightings")
+            .then((response) => (response.ok ? response.json() : { sightings: [] }))
+            .catch(() => ({ sightings: [] }))
+        : null,
     ])
       .then(([summaryData, sightingData]) => {
         if (!active) return;
-        setSummaries(summaryData.summaries ?? []);
-        setSightings(sightingData.sightings ?? []);
+        if (summaryData) setSummaries(summaryData.summaries ?? []);
+        if (sightingData) setSightings(sightingData.sightings ?? []);
       })
+      // Keep the server-rendered scores if the refresh fails.
       .catch(() => active && setError(true));
     return () => {
       active = false;
     };
-  }, [coast]);
+  }, [coast, needSummaries, needSightings]);
 
   const displayedSummaries = useMemo(() => {
     if (!summaries) return null;
@@ -99,7 +123,7 @@ export function MapSection({
           </span>
         </div>
         <div className="h-80 w-full">
-          {displayedSummaries && !error ? (
+          {displayedSummaries ? (
             <BeachMap
               summaries={displayedSummaries}
               sightings={recentSightings}

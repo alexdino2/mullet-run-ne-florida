@@ -4,7 +4,7 @@ import { resolveSelection } from "@/lib/selection";
 import { STATIONS } from "@/lib/beaches";
 import { getRegion } from "@/lib/regions";
 import { CoastToggle } from "@/components/CoastToggle";
-import { computeBeachConditions } from "@/lib/conditions";
+import { computeBeachConditions, getCachedSummaries } from "@/lib/conditions";
 import { getRecentSightings } from "@/lib/sightings";
 import { getAlertRules } from "@/lib/alerts";
 import { BeachSwitcher } from "@/components/BeachSwitcher";
@@ -14,6 +14,7 @@ import { ConditionsGrid } from "@/components/ConditionsGrid";
 import { NextWindowCard } from "@/components/NextWindowCard";
 import { MapSection } from "@/components/MapSection";
 import { SightingList } from "@/components/SightingList";
+import { LatestSightings } from "@/components/LatestSightings";
 import { AlertRulesTable } from "@/components/AlertRulesTable";
 import { AdSlot } from "@/components/AdSlot";
 import { FaqSection } from "@/components/FaqSection";
@@ -47,9 +48,10 @@ export default async function DashboardPage({
   const gulf = coast === "gulf";
 
   const sightings = await getRecentSightings(100);
-  const [data, rules] = await Promise.all([
+  const [data, rules, cached] = await Promise.all([
     computeBeachConditions(selected, sightings),
     getAlertRules(),
+    getCachedSummaries(coast),
   ]);
 
   const generated = new Date(data.generatedAt).toLocaleTimeString(undefined, {
@@ -90,11 +92,6 @@ export default async function DashboardPage({
               {selected.name}
             </Link>
           </h2>
-          {selected.id === "micklers" && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
-              ★ Priority
-            </span>
-          )}
         </div>
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
           {getRegion(selected.region).label}
@@ -145,6 +142,9 @@ export default async function DashboardPage({
         <MapSection
           key={coast}
           coast={coast}
+          initialSummaries={cached.summaries}
+          summariesComplete={cached.complete}
+          initialSightings={sightings}
           selectedSummary={{
             beach: data.beach,
             score: data.score.score,
@@ -157,6 +157,31 @@ export default async function DashboardPage({
       </div>
 
       <AdSlot label="Advertisement" />
+
+      {sightings.length > 0 && (
+        <>
+          <div className="mt-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                Latest sightings
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Newest reports from both coasts. Tap a clip to watch it on
+                Instagram.
+              </p>
+            </div>
+            <Link
+              href="/sightings"
+              className="shrink-0 text-xs font-semibold text-ocean-600 hover:text-ocean-700"
+            >
+              View all →
+            </Link>
+          </div>
+          <div className="mt-3">
+            <LatestSightings sightings={sightings.slice(0, 10)} />
+          </div>
+        </>
+      )}
 
       <SectionTitle>Current conditions</SectionTitle>
       <ConditionsGrid conditions={data.conditions} coast={coast} />

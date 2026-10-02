@@ -136,13 +136,18 @@ export function InstagramPlayerDialog({
 
 /**
  * A whole sighting card that opens its Instagram post in the on-site player,
- * so a tap anywhere on the card plays the video.
+ * so a tap anywhere on the card (thumbnail included) plays the video.
  */
 export function InstagramSightingCard({
   post,
+  surface,
+  className,
   children,
 }: {
   post: InstagramPost;
+  /** Where the card sits, for analytics: "list", "latest", … */
+  surface: string;
+  className: string;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -154,27 +159,31 @@ export function InstagramSightingCard({
         onClick={() => {
           captureEvent("instagram_sighting_opened", {
             beach_id: post.beachId,
-            surface: "list",
+            surface,
           });
           setOpen(true);
         }}
-        className="block w-full rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-slate-100 transition hover:ring-fuchsia-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400"
+        className={`group text-left transition hover:shadow-md hover:ring-fuchsia-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400 ${className}`}
       >
         {children}
-        <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-fuchsia-50 px-2.5 py-1 text-xs font-bold text-fuchsia-700">
-          <span aria-hidden>▶</span>
-          {post.url.includes("/reel/") ? "Watch the Reel" : "View the post"}
-          {post.handle && (
-            <span className="font-medium text-fuchsia-600">
-              · @{post.handle}
-            </span>
-          )}
-        </span>
       </button>
       <InstagramPlayerDialog
         post={open ? post : null}
         onClose={() => setOpen(false)}
       />
     </>
+  );
+}
+
+/** "▶ Watch the Reel · @handle" pill for an Instagram sighting card. */
+export function InstagramWatchLabel({ post }: { post: InstagramPost }) {
+  return (
+    <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-fuchsia-50 px-2.5 py-1 text-xs font-bold text-fuchsia-700">
+      <span aria-hidden>▶</span>
+      {post.url.includes("/reel/") ? "Watch the Reel" : "View the post"}
+      {post.handle && (
+        <span className="font-medium text-fuchsia-600">· @{post.handle}</span>
+      )}
+    </span>
   );
 }

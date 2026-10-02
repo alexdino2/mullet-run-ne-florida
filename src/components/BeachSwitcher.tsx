@@ -36,11 +36,6 @@ export function BeachSwitcher({
                   : "border-slate-200 bg-white text-slate-600 hover:border-ocean-300"
               }`}
             >
-              {b.id === "micklers" && !active && (
-                <span className="mr-1 text-amber-500" aria-hidden>
-                  ★
-                </span>
-              )}
               {b.name}
             </button>
           );

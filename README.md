@@ -19,6 +19,11 @@ opportunity score**, and lets you log sightings alongside it:
 - **Sightings** — logged manually by you (beach, time, school size, notes, and
   optional browser location). Public Instagram posts and Reels can be connected
   to a beach while preserving the original permalink and account attribution.
+  Their preview images are served as thumbnails through
+  `/api/instagram-thumbnail/<shortcode>`, which reads the post's public
+  `og:image` on demand (only for posts attached to a sighting), caches it at
+  the CDN for a week, and stores nothing. Thumbnails load only after the page
+  has finished loading and the card scrolls near the viewport.
   Tracked and displayed, but **not part of the score yet** — the score uses
   public sources only until enough sightings are collected to be predictive.
 - **Daily beach checks** — a scheduled Google News RSS scan looks for recent,
@@ -188,6 +193,7 @@ ever sees the public anon key (protected by Row Level Security).
 | `NWS_USER_AGENT` | optional | Contact string sent to `api.weather.gov` per their etiquette |
 | `NEXT_PUBLIC_POSTHOG_KEY` | optional | Override the built-in PostHog project API key |
 | `NEXT_PUBLIC_POSTHOG_HOST` | optional | PostHog region host that `/ingest` proxies to; defaults to `https://us.i.posthog.com` |
+| `NEXT_PUBLIC_GTM_ID` | optional | Override the built-in Google Tag Manager container (`GTM-PMG6VKNN`), which carries the GA4 tag for property 556083705 |
 | `NEXT_PUBLIC_ADS_CLIENT` | optional | Overrides the AdSense publisher id (defaults to the approved `ca-pub-4183912956441070`) |
 | `NEXT_PUBLIC_ADS_SLOT` | optional | Overrides the AdSense ad-unit id for in-page `<AdSlot>` units (defaults to the `2953754323` in-content unit) |
 | `NEXT_PUBLIC_AMAZON_AFFILIATE_TAG` | optional | Amazon Associates tag appended to gear links; empty links stay un-tagged |
@@ -237,6 +243,11 @@ and Panhandle stations, the hourly feature log, and the alert log. All
 statements are idempotent.
 `0006_charter_leads.sql` stores charter listing requests; apply it before
 deploying the `/charters` listing form.
+`0007_score_history.sql` adds `mw_score_history(beach_id, days)`, which
+returns one station's hourly score, rating, wind, water temp and tide stage
+for up to 31 days. It is the only public read into `mw_feature_log` and
+powers the "Score history" block on the beach pages; until it is applied
+those pages simply leave the block out.
 
 **Row Level Security** is enabled on every table:
 
@@ -338,8 +349,27 @@ Articles are structured data in
 per-page metadata, `Article` JSON-LD, and internal linking. A `sitemap.xml` and
 `robots.txt` are generated for indexing
 ([`src/app/sitemap.ts`](src/app/sitemap.ts),
-[`src/app/robots.ts`](src/app/robots.ts)); new beach and guide pages are picked
-up automatically from their content files. Every absolute URL comes from
+[`src/app/robots.ts`](src/app/robots.ts)); new guide pages are picked up
+automatically from their content file.
+
+**What gets indexed.** Pages that are thin or placeholder are `noindex` and
+left out of the sitemap, so search engines and the AdSense site review judge
+the site on its substantial pages:
+
+- **Beach pages** — only the stations in `INDEXED_BEACH_IDS`
+  ([`src/lib/content/beaches.ts`](src/lib/content/beaches.ts)): those with
+  logged sightings or the fullest write-ups. Every station page is still built
+  and linked; add an id once its page has been expanded with first-hand detail.
+  Each beach page also server-renders its score history (daily highs, averages,
+  best hour, water temp, and the conditions at each sighting) and rebuilds
+  hourly.
+- **`/gear`, `/charters`, `/insider`** — noindexed until they carry original
+  content (hands-on gear reviews, verified captains, a launched membership).
+
+The homepage and `/florida-mullet-tracker` render the station rankings and the
+7-day sighting count from the cached snapshots on the server, so the scores are
+in the page HTML; the client fetches `/api/summaries` only for stations whose
+snapshot is missing or stale. Every absolute URL comes from
 `SITE_URL` in [`src/lib/site.ts`](src/lib/site.ts), which must match the host
 Vercel serves as primary (`www.floridamulletrun.com`; the apex 308-redirects
 to it). Submit `https://www.floridamulletrun.com/sitemap.xml` in Google Search
@@ -349,7 +379,7 @@ Console and Bing Webmaster Tools.
 
 | Feature | Where | How |
 | ------- | ----- | --- |
-| **Display ads** | `<AdSenseLoader>` in the root layout + `<AdSlot>` across pages | The AdSense script is rendered into `<head>` of the server HTML on every page, exactly as AdSense issues it, because AdSense's site review and crawler look for it in the page source. Ad units stay visible (with reserved space) even when AdSense leaves them unfilled. Auto ads (toggled in the AdSense dashboard) cover the whole site. Every page except `/insider` (the pre-launch waitlist, listed in `AD_FREE_PATHS`) also carries at least one `<AdSlot>` (the About, Contact and Privacy pages get theirs from `<InfoPage>`), so each page makes its own ad request, including after client-side navigation, where Auto ads don't re-run. `/insider` makes no ad requests; also exclude it under AdSense → Auto ads → Page exclusions. `<AdSlot>` renders the responsive in-content unit (`2953754323`, overridable per placement via `slot` or site-wide via `NEXT_PUBLIC_ADS_SLOT`). Swap the component's body for Raptive/Mediavine after crossing their traffic thresholds. |
+| **Display ads** | `<AdSenseLoader>` in the root layout + `<AdSlot>` across pages | **Currently paused:** `ADS_PAUSED` in [`src/lib/monetization.ts`](src/lib/monetization.ts) is `true`, so no page loads the AdSense script or renders a unit (`ads.txt` and the `google-adsense-account` meta tag stay up). Set it back to `false` before re-requesting AdSense review. The AdSense script is rendered into `<head>` of the server HTML on every page, exactly as AdSense issues it, because AdSense's site review and crawler look for it in the page source. Ad units stay visible (with reserved space) even when AdSense leaves them unfilled. Auto ads (toggled in the AdSense dashboard) cover the content pages. Manual `<AdSlot>` units sit only on pages with substantial content: the homepage, tracker, sightings, beaches hub, guide articles, and indexed beach pages. `AD_FREE_PATHS` (`/insider`, `/charters`, `/gear`, `/about`, `/contact`, `/privacy`) make no ad requests at all; mirror that list under AdSense → Auto ads → Page exclusions. `<AdSlot>` renders the responsive in-content unit (`2953754323`, overridable per placement via `slot` or site-wide via `NEXT_PUBLIC_ADS_SLOT`). Swap the component's body for Raptive/Mediavine after crossing their traffic thresholds. |
 | **`ads.txt`** | `/ads.txt` | Public authorized-sellers declaration for the verified AdSense publisher ([`src/app/ads.txt/route.ts`](src/app/ads.txt/route.ts)); available before display-ad units are enabled so AdSense can crawl it during site verification. |
 | **Affiliate gear** | `/gear` | Curated tackle catalog ([`src/lib/content/gear.ts`](src/lib/content/gear.ts)); links carry the Amazon Associates tag when configured, with an FTC disclosure and `rel="sponsored nofollow"`. |
 | **Charter lead-gen** | `/charters` | Atlantic and Gulf Coast directory where verified captains request a listing through an on-site form (Phase 2). |

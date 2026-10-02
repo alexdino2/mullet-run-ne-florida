@@ -66,7 +66,7 @@ const ATLANTIC_BEACH_CONTENT: BeachContent[] = [
       "Mickler's Landing mullet run guide: early-season bait on Ponte Vedra Beach, how to fish the clean NEFL surf, live conditions, and tips for tarpon and snook.",
     headline: "Mickler's Landing Mullet Run",
     summary:
-      "Ponte Vedra's priority beach — long, clean Atlantic surf that loads up early when the fall migration pushes out of Northeast Florida.",
+      "Ponte Vedra's go-to surf beach — long, clean Atlantic surf that loads up early when the fall migration pushes out of Northeast Florida.",
     region: "Northeast Florida",
     updated: "2026-09-26",
     keywords: [
@@ -86,7 +86,7 @@ const ATLANTIC_BEACH_CONTENT: BeachContent[] = [
         "https://commons.wikimedia.org/wiki/File:FL_Ponte_Vedra_Beach_ocean01.jpg",
     },
     about: [
-      "Mickler's Landing sits on Ponte Vedra Beach in St. Johns County — a wide, gently sloping Atlantic beach with public parking and a short walk to the water. It is this site's highest-priority station because Northeast Florida typically sees the mullet run first.",
+      "Mickler's Landing sits on Ponte Vedra Beach in St. Johns County — a wide, gently sloping Atlantic beach with public parking and a short walk to the water. Northeast Florida typically sees the mullet run first, so it is often one of the earliest stations to light up.",
       "Schools often hug the troughs outside the first sandbar on northeast and east winds. When birds work and the water looks nervous, predators are usually already on the edges of the bait.",
     ],
     whyFish: [
@@ -599,6 +599,34 @@ export function getBeachContentById(id: string): BeachContent | undefined {
 export function listBeachContent(beaches?: Beach[]): BeachContent[] {
   const ids = new Set((beaches ?? FALLBACK_BEACHES).map((b) => b.id));
   return BEACH_CONTENT.filter((b) => ids.has(b.id));
+}
+
+/**
+ * Beach pages offered to search engines. Every station page is still built
+ * and linked, but most carry only ~150 words of their own text in the same
+ * template, which reads as thin, mass-produced content. These are the pages
+ * with real sightings or the most written content (200+ words). Add a beach
+ * here once its page has been expanded with first-hand detail; the rest are
+ * `noindex` and left out of the sitemap until then.
+ */
+export const INDEXED_BEACH_IDS: ReadonlySet<string> = new Set([
+  // Atlantic: stations with logged sightings.
+  "micklers",
+  "cocoa-beach",
+  "sebastian-inlet",
+  "fort-pierce",
+  "jupiter-inlet",
+  "fort-lauderdale",
+  "miami-beach",
+  // Gulf: the most complete write-ups.
+  "pensacola-pass",
+  "st-george-island",
+  "st-marks",
+  "boca-grande-pass",
+]);
+
+export function isBeachIndexed(id: string): boolean {
+  return INDEXED_BEACH_IDS.has(id);
 }
 
 export function beachPath(slug: string): string {

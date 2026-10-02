@@ -1,11 +1,16 @@
 import Link from "next/link";
-import { InstagramSightingCard } from "@/components/InstagramPlayer";
+import {
+  InstagramSightingCard,
+  InstagramWatchLabel,
+  type InstagramPost,
+} from "@/components/InstagramPlayer";
+import { InstagramThumbnail } from "@/components/InstagramThumbnail";
 import { beachPath, getBeachContentById } from "@/lib/content/beaches";
 import type { Beach, Sighting } from "@/lib/types";
 import { SIZE_META, timeAgo } from "@/lib/ui";
 
 const CARD =
-  "block rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100";
+  "block w-full rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100";
 
 /**
  * Every card is a single click target: Instagram sightings play their post in
@@ -42,17 +47,27 @@ export function SightingList({
         const body = <SightingBody sighting={s} beachName={name} />;
 
         if (s.source_type === "instagram" && s.source_url) {
+          const post: InstagramPost = {
+            url: s.source_url,
+            handle: s.source_handle,
+            beachId: s.beach_id,
+            title: `${SIZE_META[s.school_size].label} school · ${name}`,
+          };
           return (
             <li key={s.id}>
               <InstagramSightingCard
-                post={{
-                  url: s.source_url,
-                  handle: s.source_handle,
-                  beachId: s.beach_id,
-                  title: `${SIZE_META[s.school_size].label} school · ${name}`,
-                }}
+                post={post}
+                surface="list"
+                className={`${CARD} flex gap-3`}
               >
-                {body}
+                <InstagramThumbnail
+                  postUrl={s.source_url}
+                  className="aspect-[9/16] w-16 shrink-0 self-start"
+                />
+                <span className="block min-w-0 flex-1">
+                  {body}
+                  <InstagramWatchLabel post={post} />
+                </span>
               </InstagramSightingCard>
             </li>
           );

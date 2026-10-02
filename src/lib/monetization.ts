@@ -59,18 +59,36 @@ export const monetization = {
     "insider@floridamulletrun.com",
 } as const;
 
-export const adsEnabled = Boolean(monetization.adsClient);
+/**
+ * Site-wide display-ad switch. While true, no page loads the AdSense script
+ * or renders an ad unit, which keeps pages fast. `ads.txt` and the
+ * `google-adsense-account` meta tag stay up so the site stays verified. Set
+ * back to false before re-requesting AdSense review: the review looks for
+ * the loader script in the page source.
+ */
+export const ADS_PAUSED = true;
+
+export const adsEnabled = !ADS_PAUSED && Boolean(monetization.adsClient);
 
 /** AdSense loader URL; loading it on every page also powers Auto ads. */
 export const adsScriptSrc = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${monetization.adsClient}`;
 
 /**
  * Pages that must not request ads, including Auto ads. Insider is still a
- * pre-launch waitlist. Mirror this list under AdSense → Ads → Auto ads →
- * Page exclusions, which also covers anchor ads that persist across
- * client-side navigation.
+ * pre-launch waitlist; Charters (no listings yet) and Gear (affiliate links)
+ * are noindexed until they carry original content; About, Contact and
+ * Privacy are site information, not content. Mirror this list under AdSense →
+ * Ads → Auto ads → Page exclusions, which also covers anchor ads that persist
+ * across client-side navigation.
  */
-export const AD_FREE_PATHS = ["/insider"] as const;
+export const AD_FREE_PATHS = [
+  "/insider",
+  "/charters",
+  "/gear",
+  "/about",
+  "/contact",
+  "/privacy",
+] as const;
 
 export function isAdFreePath(pathname: string | null): boolean {
   if (!pathname) return false;

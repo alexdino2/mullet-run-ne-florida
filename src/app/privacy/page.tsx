@@ -160,6 +160,28 @@ export default function PrivacyPage() {
           block these cookies in your browser settings or with a content blocker;
           the site keeps working.
         </p>
+        <p>
+          We also use Google Analytics to measure traffic: which pages are
+          visited, how visitors arrive, and roughly where they are. Google
+          Analytics sets cookies and receives your IP address and browser
+          details. See{" "}
+          <a
+            href="https://policies.google.com/technologies/partner-sites"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            how Google uses information from sites that use its services
+          </a>
+          , or opt out with the{" "}
+          <a
+            href="https://tools.google.com/dlpage/gaoptout"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Google Analytics opt-out browser add-on
+          </a>
+          .
+        </p>
       </InfoSection>
 
       <InfoSection title="Affiliate links">
@@ -201,8 +223,9 @@ export default function PrivacyPage() {
         </p>
         <p>
           We also link public Instagram posts about the run to beach pages, with
-          the original post and account credited. If you’d like a post or
-          sighting removed, email us and we’ll take it down.
+          the original post and account credited and the post’s public preview
+          image shown as a thumbnail. If you’d like a post or sighting removed,
+          email us and we’ll take it down.
         </p>
       </InfoSection>
 
@@ -274,8 +297,8 @@ export default function PrivacyPage() {
         <p>
           Cookies are small files a website stores in your browser. This site
           uses them for advertising (Google and its partners) and analytics
-          (PostHog), as described above. We don’t use cookies to log you in —
-          there are no accounts.
+          (PostHog and Google Analytics), as described above. We don’t use
+          cookies to log you in — there are no accounts.
         </p>
         <p>
           You can delete or block cookies in your browser settings, and use the
