@@ -14,3 +14,10 @@ export const CONTACT_EMAIL =
 
 /** Public Instagram account, linked from the footer, About and Contact. */
 export const INSTAGRAM_URL = "https://www.instagram.com/floridamulletrun/";
+
+/**
+ * Google Tag Manager container loaded on every page; it carries the GA4 tag
+ * for property 556083705. `NEXT_PUBLIC_GTM_ID` overrides it.
+ */
+export const GTM_CONTAINER_ID =
+  process.env.NEXT_PUBLIC_GTM_ID?.trim() || "GTM-PMG6VKNN";

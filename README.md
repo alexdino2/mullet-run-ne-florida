@@ -193,6 +193,7 @@ ever sees the public anon key (protected by Row Level Security).
 | `NWS_USER_AGENT` | optional | Contact string sent to `api.weather.gov` per their etiquette |
 | `NEXT_PUBLIC_POSTHOG_KEY` | optional | Override the built-in PostHog project API key |
 | `NEXT_PUBLIC_POSTHOG_HOST` | optional | PostHog region host that `/ingest` proxies to; defaults to `https://us.i.posthog.com` |
+| `NEXT_PUBLIC_GTM_ID` | optional | Override the built-in Google Tag Manager container (`GTM-PMG6VKNN`), which carries the GA4 tag for property 556083705 |
 | `NEXT_PUBLIC_ADS_CLIENT` | optional | Overrides the AdSense publisher id (defaults to the approved `ca-pub-4183912956441070`) |
 | `NEXT_PUBLIC_ADS_SLOT` | optional | Overrides the AdSense ad-unit id for in-page `<AdSlot>` units (defaults to the `2953754323` in-content unit) |
 | `NEXT_PUBLIC_AMAZON_AFFILIATE_TAG` | optional | Amazon Associates tag appended to gear links; empty links stay un-tagged |
