@@ -112,7 +112,7 @@ export const GUIDES: Guide[] = [
           "Start with the dedicated beach guides for early-season timing:",
         ],
         bullets: [
-          "[Mickler's Landing](/beaches/micklers) (Ponte Vedra) — the site's priority beach; long, clean surf that loads up early in the season.",
+          "[Mickler's Landing](/beaches/micklers) (Ponte Vedra) — long, clean surf that loads up early in the season.",
           "[Jacksonville Beach](/beaches/jax-beach) & [Mayport](/beaches/mayport) — pier and jetty structure at the St. Johns River mouth.",
           "[St. Augustine Beach](/beaches/st-augustine) — approachable surf with consistent early-season pods.",
         ],
