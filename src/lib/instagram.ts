@@ -32,6 +32,14 @@ export function normalizeInstagramHandle(value: string): string | null {
   return INSTAGRAM_HANDLE.test(handle) ? handle.toLowerCase() : null;
 }
 
+/**
+ * Instagram's iframe player for a normalized post or Reel permalink, so the
+ * video plays on our page instead of sending visitors to instagram.com.
+ */
+export function instagramEmbedUrl(postUrl: string): string {
+  return `${postUrl.endsWith("/") ? postUrl : `${postUrl}/`}embed/`;
+}
+
 const INSTAGRAM_SHORTCODE = /^[A-Za-z0-9_-]{5,64}$/;
 
 /** The post or Reel id from a stored permalink, e.g. `Dd4JOcrRgEO`. */
