@@ -1,0 +1,16 @@
+{
+  "name": "instagram-reel",
+  "private": true,
+  "description": "One-off renderer: turns floridamulletrun.com sightings into a 1080x1920 Instagram Reel.",
+  "type": "module",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "@fontsource/figtree": "5.1.1",
+    "@fontsource/syne": "5.1.1",
+    "d3-geo": "3.1.1",
+    "topojson-client": "3.1.0",
+    "us-atlas": "3.0.1"
+  }
+}
