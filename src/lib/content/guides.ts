@@ -136,6 +136,7 @@ export const GUIDES: Guide[] = [
         bullets: [
           "[Fort Pierce Inlet](/beaches/fort-pierce) — strong current and deep cuts hold big predators.",
           "[Jupiter Inlet](/beaches/jupiter-inlet) — clear water and a well-known tarpon corridor.",
+          "[Lake Worth Inlet](/beaches/lake-worth-inlet) — Palm Beach Inlet's jetties, where pods cross a deep ship channel.",
           "[Fort Lauderdale](/beaches/fort-lauderdale) & [Miami Beach](/beaches/miami-beach) — the tail end of the run as pods push south later in fall.",
         ],
       },

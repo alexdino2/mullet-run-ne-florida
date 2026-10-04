@@ -265,6 +265,9 @@ powers the "Score history" block on the beach pages; until it is applied
 those pages simply leave the block out.
 `0008_instagram_candidates.sql` adds the Instagram review queue; apply it
 before starting the `instagram-hashtags` job.
+`0009_lake_worth_inlet.sql` adds the Lake Worth Inlet (Palm Beach Inlet)
+station between Jupiter Inlet and Fort Lauderdale; apply it before deploying
+so sightings can be logged there.
 
 **Row Level Security** is enabled on every table:
 
@@ -302,7 +305,7 @@ deprecated):
 All use restart policy `NEVER` and watch `src/lib/**`, `worker/**`, and the
 package files, so site-only changes don't rebuild them.
 
-The refresh scores all 33 stations, upserts `mw_conditions_cache`, writes one
+The refresh scores all 34 stations, upserts `mw_conditions_cache`, writes one
 `mw_feature_log` row per station for the hour, and emails matching alert rules
 (once per rule, station, and day). Both jobs are safe to re-run, log one JSON
 line per event, and email `ALERT_EMAIL_TO` through Resend if they fail.

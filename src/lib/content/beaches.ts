@@ -481,7 +481,44 @@ const ATLANTIC_BEACH_CONTENT: BeachContent[] = [
       "Nearshore conditions often reference the Hollywood buoy corridor.",
       "Respect natural-area rules and limited parking on busy weekends.",
     ],
-    nearby: ["fort-pierce", "fort-lauderdale", "sebastian-inlet"],
+    nearby: ["fort-pierce", "lake-worth-inlet", "fort-lauderdale"],
+  },
+  {
+    id: "lake-worth-inlet",
+    slug: "lake-worth-inlet",
+    title: "Lake Worth Inlet Mullet Run — Palm Beach Inlet Guide",
+    description:
+      "Lake Worth Inlet mullet run: Palm Beach Inlet jetties, Singer Island surf, and deep-water predators as the fall migration pushes through Palm Beach County.",
+    headline: "Lake Worth Inlet Mullet Run",
+    summary:
+      "A deep, jettied ship channel at Singer Island — where pods squeeze past the inlet mouth and snook, tarpon, and jacks wait on the edges.",
+    region: "Southeast Florida",
+    updated: "2026-10-04",
+    keywords: [
+      "lake worth inlet mullet run",
+      "palm beach inlet fishing",
+      "singer island mullet run",
+    ],
+    about: [
+      "Lake Worth Inlet — known locally as Palm Beach Inlet — cuts between Singer Island and Palm Beach as the deep-water entrance to the Port of Palm Beach. The rock jetties on both sides and the Lake Worth Lagoon behind it make it one of the busiest inlets on the lower Atlantic coast.",
+      "It sits between Jupiter Inlet and Fort Lauderdale on the migration corridor, so timing usually trails Jupiter by days and runs ahead of Broward. When pods hug the beach heading south, they have to cross the inlet mouth, and that is where predators stack up.",
+    ],
+    whyFish: [
+      "Pods crossing the inlet mouth are easy targets — and easy to spot from the jetties.",
+      "Deep, fast water holds snook, tarpon, jacks, and sharks right off the rocks.",
+      "Singer Island beaches to the north give a surf option when the jetty is crowded.",
+    ],
+    tips: [
+      "Work the north jetty and the beach just north of it as bait slides south on a northeast wind.",
+      "Falling tide pulls bait out of the lagoon — fish the first hours of the outgoing.",
+      "Heavy leaders and stout tackle: inlet fish run hard toward the rocks and channel.",
+    ],
+    access: [
+      "Ocean Reef Park and the north jetty on Singer Island; Phil Foster Park and Peanut Island inside the inlet.",
+      "Tide via Port of West Palm Beach; wind via the Lake Worth station; seas from the Hollywood buoy.",
+      "Commercial ship traffic uses the channel — stay clear of the fairway if fishing from a boat.",
+    ],
+    nearby: ["jupiter-inlet", "fort-lauderdale", "miami-beach"],
   },
   {
     id: "fort-lauderdale",
@@ -528,7 +565,7 @@ const ATLANTIC_BEACH_CONTENT: BeachContent[] = [
       "Tide via South Port Everglades; nearshore seas from Hollywood buoy.",
       "Metered parking and seasonal crowds — plan sunrise sessions.",
     ],
-    nearby: ["jupiter-inlet", "miami-beach", "fort-pierce"],
+    nearby: ["lake-worth-inlet", "jupiter-inlet", "miami-beach"],
   },
   {
     id: "miami-beach",

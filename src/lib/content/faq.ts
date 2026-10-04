@@ -19,7 +19,7 @@ export const FAQ: FaqItem[] = [
   {
     question: "Where are the mullet right now in Florida?",
     answer:
-      "On the Atlantic side the mullet run moves north to south down the beaches through the fall; on the Gulf side schools leave bays and rivers through the passes, starting in the Panhandle and Big Bend and finishing around Charlotte Harbor, Naples, and Marco Island. The freshest answer is the live sightings map on this site. Anglers report schools as they spot them, station by station — from Mickler's Landing and Jacksonville Beach in Northeast Florida down through Ponce Inlet, Cocoa Beach, Sebastian Inlet, Fort Pierce, and Jupiter to Fort Lauderdale and Miami Beach. On the Gulf, check the passes — Pensacola, Destin, Egmont Key, Boca Grande — and the Big Bend river mouths. Check the map plus each station's live score to see where bait and predators are stacking up today.",
+      "On the Atlantic side the mullet run moves north to south down the beaches through the fall; on the Gulf side schools leave bays and rivers through the passes, starting in the Panhandle and Big Bend and finishing around Charlotte Harbor, Naples, and Marco Island. The freshest answer is the live sightings map on this site. Anglers report schools as they spot them, station by station — from Mickler's Landing and Jacksonville Beach in Northeast Florida down through Ponce Inlet, Cocoa Beach, Sebastian Inlet, Fort Pierce, Jupiter, and Lake Worth Inlet to Fort Lauderdale and Miami Beach. On the Gulf, check the passes — Pensacola, Destin, Egmont Key, Boca Grande — and the Big Bend river mouths. Check the map plus each station's live score to see where bait and predators are stacking up today.",
   },
   {
     question: "When is the Florida mullet run in 2026?",
@@ -29,7 +29,7 @@ export const FAQ: FaqItem[] = [
   {
     question: "What are the best places to see the mullet run?",
     answer:
-      "Inlets are the highest-percentage spots because moving water funnels the bait through a narrow gap and gamefish stack up to ambush it. Going roughly north to south: Mickler's Landing, the St. Johns River mouth at Mayport, St. Augustine Beach, Ponce Inlet, Cocoa Beach, Sebastian Inlet, Fort Pierce Inlet, Jupiter Inlet, and on to Fort Lauderdale and Miami Beach late in the season.",
+      "Inlets are the highest-percentage spots because moving water funnels the bait through a narrow gap and gamefish stack up to ambush it. Going roughly north to south: Mickler's Landing, the St. Johns River mouth at Mayport, St. Augustine Beach, Ponce Inlet, Cocoa Beach, Sebastian Inlet, Fort Pierce Inlet, Jupiter Inlet, Lake Worth Inlet, and on to Fort Lauderdale and Miami Beach late in the season.",
   },
   {
     question: "What triggers the mullet run?",
@@ -66,7 +66,7 @@ export const TRACKER_FAQ: FaqItem[] = [
   {
     question: "Where are the mullet right now in Florida?",
     answer:
-      "Open the live migration map on the tracker and scan recent crowd reports station by station. The run moves north to south, so Northeast Florida beaches usually light up first, then Ponce Inlet, Cocoa Beach, Sebastian Inlet, Fort Pierce, Jupiter, and eventually Fort Lauderdale and Miami Beach. Pair the map with each beach's opportunity score before you drive.",
+      "Open the live migration map on the tracker and scan recent crowd reports station by station. The run moves north to south, so Northeast Florida beaches usually light up first, then Ponce Inlet, Cocoa Beach, Sebastian Inlet, Fort Pierce, Jupiter, Lake Worth Inlet, and eventually Fort Lauderdale and Miami Beach. Pair the map with each beach's opportunity score before you drive.",
   },
   {
     question: "When should I check the Florida mullet tracker during the run?",
