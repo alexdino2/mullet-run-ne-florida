@@ -58,7 +58,7 @@ its weight (all pure functions in [`src/lib/score.ts`](src/lib/score.ts)):
 | ------------------- | -----: | --------------- |
 | Season window       | 30 | North-to-south migration timing — NE Florida baseline shifts later toward Miami |
 | Wind direction      | 18 | Broad NE-through-E band favored; offshore-W poor |
-| Recent NE–E pattern | 12 | Share of recent hours blowing from NE, ENE, or E |
+| Recent NE–E pattern | 12 | Share of recent hours blowing from NE, ENE, or E; nearby bearings get tapered partial credit |
 | Tide stage          | 22 | Moving water (falling best, then rising); slack is weaker |
 | Wind speed          | 18 | Moderate 10–17 kt best; calm or blown-out poor |
 
