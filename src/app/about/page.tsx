@@ -43,7 +43,7 @@ const ATLANTIC_FACTORS = [
     name: "Recent NE–E pattern",
     weight: WEIGHTS.recentEasterly,
     rewards:
-      "How much of the last 18 hours the wind has blown from the northeast to east.",
+      "How much of the last 18 hours the wind has blown from the northeast to east. Hours just outside that range, like east-southeast, still earn partial credit.",
   },
 ];
 

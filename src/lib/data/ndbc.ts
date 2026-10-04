@@ -6,7 +6,7 @@ import {
   degreesToCompass,
   safeFetchText,
 } from "./http";
-import { isFavorableEasterlyDirection } from "@/lib/wind";
+import { easterlyDirectionWeight } from "@/lib/wind";
 
 export interface BuoyResult {
   wind?: WindObservation;
@@ -94,9 +94,9 @@ function num(token: string | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** Include the full NE, ENE, and E compass bins when there is a real breeze. */
-function isFavorableEasterly(dirDeg: number, speedMps: number): boolean {
-  return isFavorableEasterlyDirection(dirDeg) && speedMps >= 2;
+/** NE–E credit (with tapered shoulders) when there is a real breeze. */
+function easterlyWeight(dirDeg: number, speedMps: number): number {
+  return speedMps >= 2 ? easterlyDirectionWeight(dirDeg) : 0;
 }
 
 /**
@@ -166,13 +166,13 @@ export async function getBuoy(
 
   // Recent NE-through-E pattern over the last 18 hours. Counting rows would
   // cover only ~2 hours on 6-minute stations versus 18 hours on hourly buoys.
-  let easterlyCount = 0;
+  let easterlyCredit = 0;
   let validCount = 0;
   for (const r of readings) {
     if (r.t < nowMs - 18 * HOUR_MS) break;
     if (r.wdir == null || r.wspd == null) continue;
     validCount += 1;
-    if (isFavorableEasterly(r.wdir, r.wspd)) easterlyCount += 1;
+    easterlyCredit += easterlyWeight(r.wdir, r.wspd);
   }
 
   // Latest non-missing pressure / water temp / waves, if recent enough.
@@ -211,6 +211,6 @@ export async function getBuoy(
     waterTempF: wtmpNow != null ? Math.round(cToF(wtmpNow)) : undefined,
     waveHeightFt: wvht != null ? Math.round(wvht * M_TO_FT * 10) / 10 : undefined,
     recentEasterlyFraction:
-      validCount > 0 ? easterlyCount / validCount : undefined,
+      validCount > 0 ? easterlyCredit / validCount : undefined,
   };
 }

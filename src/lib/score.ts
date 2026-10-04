@@ -5,7 +5,7 @@ import type {
   TideStage,
   WindObservation,
 } from "@/lib/types";
-import { isFavorableEasterlyDirection } from "@/lib/wind";
+import { easterlyDirectionWeight } from "@/lib/wind";
 
 /**
  * Mullet opportunity score.
@@ -146,8 +146,8 @@ export function recentEasterlyFactor(
     return { factor: clamp01(0.15 + 0.85 * fraction), estimated: false };
   }
   if (currentWind) {
-    const favorable = isFavorableEasterlyDirection(currentWind.directionDeg);
-    return { factor: favorable ? 0.5 : 0.2, estimated: true };
+    const weight = easterlyDirectionWeight(currentWind.directionDeg);
+    return { factor: 0.2 + 0.3 * weight, estimated: true };
   }
   return { factor: NEUTRAL, estimated: true };
 }
@@ -215,7 +215,7 @@ export function computeScore(input: ScoreInputs): ScoreResult {
     available: conditions.recentEasterlyFraction != null,
     reason:
       conditions.recentEasterlyFraction != null
-        ? `${Math.round(conditions.recentEasterlyFraction * 100)}% of recent hourly readings blew from NE through E.`
+        ? `Recent hours rate ${Math.round(conditions.recentEasterlyFraction * 100)}% for NE–E wind (partial credit just outside that range).`
         : "Estimated from current wind (no recent history).",
   });
 

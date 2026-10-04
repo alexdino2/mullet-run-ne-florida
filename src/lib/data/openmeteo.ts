@@ -1,5 +1,5 @@
 import type { HourlyForecast, WindObservation } from "@/lib/types";
-import { isFavorableEasterlyDirection } from "@/lib/wind";
+import { easterlyDirectionWeight } from "@/lib/wind";
 import { isNortherlyDirection } from "./ndbc";
 import { degreesToCompass, safeFetchJson } from "./http";
 
@@ -90,7 +90,7 @@ export async function getOpenMeteo(
   const h = data.hourly;
   const hourly: HourlyForecast[] = [];
   const nowMs = Date.now();
-  let easterlyCount = 0;
+  let easterlyCredit = 0;
   let validCount = 0;
   let northCount = 0;
   let northValid = 0;
@@ -113,9 +113,7 @@ export async function getOpenMeteo(
         // Past hour → contributes to the recent NE-through-E pattern.
         if (dir != null && spd != null && t >= nowMs - 18 * 3600 * 1000) {
           validCount += 1;
-          if (isFavorableEasterlyDirection(dir) && spd >= 4) {
-            easterlyCount += 1;
-          }
+          if (spd >= 4) easterlyCredit += easterlyDirectionWeight(dir);
         }
       } else {
         // Future hour → next-window forecast.
@@ -136,7 +134,7 @@ export async function getOpenMeteo(
     current,
     hourly,
     recentEasterlyFraction:
-      validCount > 0 ? easterlyCount / validCount : undefined,
+      validCount > 0 ? easterlyCredit / validCount : undefined,
     recentNortherlyFraction:
       northValid > 0 ? northCount / northValid : undefined,
     pressureHpa: latest?.hpa,
