@@ -368,6 +368,7 @@ export const GUIDES: Guide[] = [
           "[Sebastian Inlet](/beaches/sebastian-inlet): about Oct 4 – Oct 29",
           "[Fort Pierce Inlet](/beaches/fort-pierce): about Oct 6 – Oct 31",
           "[Jupiter Inlet](/beaches/jupiter-inlet): about Oct 8 – Nov 2",
+          "[Lake Worth Inlet](/beaches/lake-worth-inlet): about Oct 9 – Nov 3",
           "[Fort Lauderdale](/beaches/fort-lauderdale): about Oct 11 – Nov 5",
           "[Miami Beach](/beaches/miami-beach): about Oct 13 – Nov 7",
         ],
