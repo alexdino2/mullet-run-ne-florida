@@ -307,7 +307,7 @@ export const GUIDES: Guide[] = [
       {
         heading: "Throwing a cast net for live bait",
         paragraphs: [
-          "A cast net lets you catch fresh mullet and other baitfish where harvest is legal. Start by practicing on grass, make sure the mesh and lead line are clear before every throw, and never throw over people, submerged structure, or protected wildlife. Check current FWC rules for the water you are fishing before keeping bait.",
+          "A cast net lets you catch fresh mullet and other baitfish where harvest is legal. Start by practicing on grass, make sure the mesh and lead line are clear before every throw, and never throw over people, submerged structure, or protected wildlife. Check current FWC rules for the water you are fishing before keeping bait. The full [cast net guide](/guide/cast-net) walks through choosing a net, loading it, and fixing a throw that won't open.",
         ],
         video: {
           youtubeId: "YcTUyswezwE",
@@ -330,7 +330,240 @@ export const GUIDES: Guide[] = [
         ],
       },
     ],
-    related: ["locations", "biology", "gear-shop"],
+    related: ["cast-net", "run-timing", "locations", "gear-shop"],
+  },
+  {
+    slug: "run-timing",
+    title: "Mullet Run Timing by Coast: When the Run Peaks Where You Fish",
+    category: "Locations",
+    emoji: "📅",
+    summary:
+      "Station-by-station peak windows for the Atlantic and Gulf runs, why the Gulf runs later, and how weather can move the dates in any given year.",
+    updated: "2026-10-13",
+    readMinutes: 8,
+    sections: [
+      {
+        paragraphs: [
+          "\"When is the mullet run?\" sounds like it should have one answer. It doesn't. Florida has two runs that work in different ways, and each one moves along the coast over about two months. Mickler's Landing in Ponte Vedra can be past its peak by the time Miami Beach is just getting going, and the passes around Naples are still producing well after the Atlantic beaches have gone quiet.",
+          "This guide lists the peak window this site uses for every station it scores, explains where those dates come from, and covers what can push a given year earlier or later. If you only want today's answer, the [live tracker](/florida-mullet-tracker) already has this timing built into every score.",
+        ],
+      },
+      {
+        heading: "Two coasts, two different runs",
+        paragraphs: [
+          "On the Atlantic side, the run moves along the beach. Mullet leave the rivers and estuaries of Georgia and Northeast Florida and work south through the surf zone, close to shore, past one inlet after another. A pod you see at Jacksonville Beach can be at Ponce Inlet days later. Timing there comes down to latitude: the farther south you are, the later the fish arrive.",
+          "The Gulf side is a series of departures. Mullet spend the summer feeding in protected bays, marshes, and river mouths, then leave through the passes to spawn far offshore. Fish in each bay go when their own conditions line up, usually a strong cold front with a big outgoing tide. Latitude still sets the season, but individual fronts set the days. The [Gulf Coast guide](/guide/gulf-coast) covers those triggers in detail.",
+        ],
+      },
+      {
+        heading: "Atlantic coast: peak windows by station",
+        paragraphs: [
+          "The Atlantic season model starts with a core window of roughly September 25 to October 20 in Northeast Florida. It shifts about four days later for every degree of latitude you move south, with a cap of 20 days. Inside the core window the season factor is at its maximum. September ramps up toward it, and November tapers off a little more slowly, because the tail of the run lingers.",
+        ],
+        bullets: [
+          "[Mickler's Landing](/beaches/micklers), [Jacksonville Beach](/beaches/jax-beach) and [Mayport](/beaches/mayport): about Sep 25 – Oct 20",
+          "[St. Augustine Beach](/beaches/st-augustine): about Sep 26 – Oct 21",
+          "[Ponce Inlet](/beaches/ponce-inlet): about Sep 29 – Oct 24",
+          "[Cocoa Beach](/beaches/cocoa-beach): about Oct 3 – Oct 28",
+          "[Sebastian Inlet](/beaches/sebastian-inlet): about Oct 4 – Oct 29",
+          "[Fort Pierce Inlet](/beaches/fort-pierce): about Oct 6 – Oct 31",
+          "[Jupiter Inlet](/beaches/jupiter-inlet): about Oct 8 – Nov 2",
+          "[Fort Lauderdale](/beaches/fort-lauderdale): about Oct 11 – Nov 5",
+          "[Miami Beach](/beaches/miami-beach): about Oct 13 – Nov 7",
+        ],
+      },
+      {
+        paragraphs: [
+          "Do the math on that list and the whole Atlantic run covers about seven weeks, from late September in Ponte Vedra to early November in Miami. That's more than 300 miles of coast, with the core window moving south around 18 days end to end. If you can travel, you can follow the run. If you can't, the shoulder weeks at your home beach are still worth fishing: early September pods and the November stragglers both draw predators.",
+        ],
+      },
+      {
+        heading: "Gulf coast: peak windows by region",
+        paragraphs: [
+          "The Gulf model starts later. Its core window runs from about October 5 to November 14 in the western Panhandle, and it shifts about five days later for every degree south, with a cap of 25 days. The Gulf window is also wider than the Atlantic one, because fish leave the bays in waves, one front at a time, rather than in one steady procession.",
+        ],
+        bullets: [
+          "Panhandle (Pensacola Pass, Navarre, Destin East Pass, St. Andrew Pass): about Oct 5 – Nov 14",
+          "Forgotten Coast (Cape San Blas, St. George Island): about Oct 8 – Nov 18",
+          "Big Bend (St. Marks, Steinhatchee): about Oct 7 – Nov 18",
+          "Nature Coast (Cedar Key and the Suwannee, Crystal River, Homosassa): about Oct 11 – Nov 22",
+          "Tampa Bay (Egmont Key and Fort De Soto, Anna Maria Island, Longboat Pass): about Oct 19 – Nov 29",
+          "Venice to Charlotte Harbor (Venice Inlet, Stump Pass, Boca Grande Pass): about Oct 21 – Dec 2",
+          "Southwest Florida (Redfish Pass, Blind Pass, Wiggins Pass, Naples, Marco Island): about Oct 24 – Dec 6",
+        ],
+      },
+      {
+        paragraphs: [
+          "Put the two coasts side by side and the pattern is clear. When the Atlantic run winds down in Miami in early November, the Gulf is only halfway through, and Southwest Florida has its best weeks still ahead. If you live in Central Florida and can drive to either coast, October belongs to the Atlantic beaches and November belongs to the Gulf passes.",
+        ],
+      },
+      {
+        heading: "What moves the dates in a given year",
+        paragraphs: [
+          "Calendar windows are a starting point, not a promise. The fish respond to conditions, and conditions change from year to year. These are the things that can push a run early or late:",
+        ],
+        bullets: [
+          "Water temperature: mullet start moving as nearshore water cools toward the upper 60s. A warm fall delays the run. An early cool snap can bring it forward by a week or more.",
+          "The first real cold front: the first strong front of the fall, with a sharp pressure drop and a hard north or northeast wind behind it, often sets off the first big push.",
+          "Wind on the Atlantic side: a run of northeast to east wind stacks bait against the beach. A stretch of west or offshore wind can push pods out past casting range, so the fish are there but harder to find.",
+          "Tide and moon on the Gulf side: exits cluster around strong outgoing tides, which are biggest near new and full moons. A front that lands on a spring tide tends to be the one that empties a bay.",
+          "Hurricanes and big storms: a late-season storm can scatter bait and muddy the water for days, then a cleaner, cooler pattern afterward can bring a strong push.",
+        ],
+      },
+      {
+        heading: "How this site turns timing into a score",
+        paragraphs: [
+          "Season timing is one part of each station's 0–100 opportunity score. On the Atlantic it carries 30 of 100 points, the biggest single factor, because the beach run follows the calendar so closely. On the Gulf it carries less, because fronts, tides, and river flow decide which days the fish actually leave. Every score has a \"why this score\" breakdown, so you can see how much of today's number comes from the season and how much from the weather.",
+          "These windows are a research-based starting point, not a trained model. Each station's inputs are logged every hour. Once a full season of sightings is in, the windows will be checked against what actually happened on the water. If you see bait, [log a sighting](/sightings). Every report makes next year's dates more accurate.",
+        ],
+      },
+      {
+        heading: "Planning a trip around the run",
+        bullets: [
+          "Pick your window from the lists above, then watch the 7-day forecast for the first strong front inside it.",
+          "On the Atlantic, plan for the morning after a front, when the wind has swung north to northeast.",
+          "On the Gulf, plan around a falling tide close to a new or full moon, ideally right behind a front.",
+          "Check the [live map](/sightings) the day before you drive. Recent sightings beat any calendar.",
+          "Confirm current [regulations](/guide/regulations) before you keep bait or gamefish.",
+        ],
+      },
+    ],
+    related: ["locations", "gulf-coast", "biology", "beaches-hub"],
+  },
+  {
+    slug: "cast-net",
+    title: "How to Throw a Cast Net for Mullet: A Step-by-Step Guide",
+    category: "Tactics",
+    emoji: "🕸️",
+    summary:
+      "Choosing a net, loading it, and throwing a clean, full circle from the beach or a seawall. Includes the common mistakes that cause pancakes, plus how to fish a pod of mullet during the run.",
+    updated: "2026-10-13",
+    readMinutes: 9,
+    sections: [
+      {
+        paragraphs: [
+          "During the fall run, the best bait on the beach is the mullet swimming past your feet. A cast net turns that bait into a livewell full of fresh mullet in a few throws, but only if the net opens. Most new throwers spend the first few sessions landing a tangled ball of mesh, which anglers call a \"banana\" or a \"taco.\" The good news is that a clean throw comes from a few repeatable habits, not raw strength.",
+          "This guide covers how to pick a net, how to load it, how to throw it, and how to fish a moving pod of mullet once you have the throw down.",
+        ],
+      },
+      {
+        heading: "Parts of a cast net",
+        paragraphs: [
+          "Know the parts first, because every step below refers to them:",
+        ],
+        bullets: [
+          "Hand line: the long rope you tie to your wrist. It pulls the net closed and brings it back.",
+          "Horn: the ring at the top of the net that the hand line runs through.",
+          "Brail lines: thin lines running from the horn down to the lead line. When you pull the hand line, they draw the bottom of the net up and trap the fish.",
+          "Mesh (or webbing): the net itself.",
+          "Lead line: the weighted line around the bottom edge. The weight is what spreads the net and sinks it fast.",
+        ],
+      },
+      {
+        heading: "Choosing a net for mullet",
+        paragraphs: [
+          "Net size is measured by radius, the distance from the horn to the lead line. A bigger net covers more water but is heavier and harder to open. Mesh size is the gap between knots: small mesh catches small bait but sinks slowly, and larger mesh sinks faster but lets small fish through.",
+        ],
+        bullets: [
+          "First net: a 5- or 6-foot radius is a common place to start. It is light enough to learn on and big enough to catch bait.",
+          "Finger mullet (3 to 5 inches): small mesh, around 3/8 inch, holds them without gilling them.",
+          "Larger run mullet: bigger mesh sinks faster, which matters when a pod is moving quickly. Many anglers use 1/2-inch mesh or larger.",
+          "Weight: more lead per foot sinks the net faster in surf and current, and a heavier net is harder to throw. Match the weight to where you fish most.",
+        ],
+      },
+      {
+        paragraphs: [
+          "Before you buy, check the Florida Fish and Wildlife Conservation Commission (FWC) rules on cast net size and the waters where cast nets are allowed. Some areas have their own limits. The [regulations guide](/guide/regulations) has an overview, but FWC is the final word.",
+        ],
+      },
+      {
+        heading: "Loading the net",
+        paragraphs: [
+          "Most bad throws are decided before the net leaves your hands. Take your time loading it until the steps are automatic.",
+        ],
+        bullets: [
+          "Slip the hand-line loop over the wrist of your throwing hand and cinch it. Never wrap the line around your fingers or hand, because a big fish or a snag can trap them.",
+          "Coil the hand line in neat, even loops in that same hand, working toward the horn.",
+          "Hold the net at the horn and shake it so it hangs straight, with no twists and the brail lines clear.",
+          "Grab the net about a third of the way down from the horn, near your waist, and hold the gathered net and the coiled line together in your throwing hand.",
+          "Reach down and pick up a section of the lead line, roughly a third of it, with your other hand. Some throwers drape that section over their throwing shoulder instead.",
+          "Many throwers hold one point of the lead line lightly in their teeth to keep the shape. It works, but it's optional, and it only makes sense with a clean net.",
+        ],
+      },
+      {
+        heading: "The throw, step by step",
+        paragraphs: [
+          "Right-handed directions are below. Reverse them if you throw left-handed.",
+        ],
+        bullets: [
+          "Stand with your feet about shoulder width apart, left shoulder pointed roughly at your target.",
+          "Rotate your upper body to the right and load your weight on your back foot, as if you were winding up for a sidearm throw.",
+          "Swing back through toward the target, leading with your hips. The power comes from turning your body, not from your arms.",
+          "Let go in sequence: your throwing hand releases first, then your other hand releases the lead line a split second later. If you're holding the lead line in your teeth, open your mouth as the net leaves.",
+          "Follow through in a flat, sweeping motion and keep the hand line free. The spin you put on the net is what makes it open into a circle.",
+          "Let the net sink all the way to the bottom. In the surf, give it a couple of seconds longer than you think.",
+          "Pull the hand line steadily, hand over hand, to close the net, then bring it in. Lift it by the horn and open the lead line over a bucket to drop the bait.",
+        ],
+      },
+      {
+        heading: "Learn on grass first",
+        paragraphs: [
+          "Practice in a yard or a park before you take the net to the beach. A dry net on grass shows you exactly what shape you're making. Aim for a full circle every time, then work on distance. Twenty throws a day for a week will do more than one long afternoon. Rinse the grass and dirt out of the net before it goes in the water.",
+        ],
+        video: {
+          youtubeId: "YcTUyswezwE",
+          title: "How to Throw a Cast Net",
+          description:
+            "Florida Sportsman demonstrates how to load, rotate, and release a cast net so it opens cleanly.",
+          creator: "Florida Sportsman",
+        },
+      },
+      {
+        heading: "Common mistakes and fixes",
+        bullets: [
+          "Net lands as a banana or half-moon: you released both hands at once, or you threw with your arms only. Turn your hips more and let the lead line go a beat after the main net.",
+          "Net lands in a ball: there was a twist or tangle in the mesh before you threw. Shake the net out fully and look for crossed brail lines each time you load it.",
+          "Net opens but falls short: you're throwing up into the air. Keep the throw flat and low. A net thrown high stalls and closes before it lands.",
+          "Fish escape before you pull: you started pulling while the net was still sinking. Wait for the lead line to touch bottom.",
+          "Rope burns or a stuck hand: the hand line was wrapped around your hand instead of looped on your wrist. Fix the loop every time you load.",
+        ],
+      },
+      {
+        heading: "Throwing on a pod of mullet",
+        paragraphs: [
+          "During the run, mullet move along the beach in pods. You'll see them as dark patches, flickering silver, or nervous water on the surface. A few habits make a big difference:",
+        ],
+        bullets: [
+          "Throw ahead of the pod, not on top of it. The school will swim into the net as it sinks. If you throw straight on top of a moving pod, most of the fish will be past it before it hits bottom.",
+          "Throw toward the edge of the pod. The edges are thinner and easier to cover, and that's where the stragglers are.",
+          "Wade only as deep as you're comfortable in moving surf. A cast net is heavy when it's full and wet, and the waves still keep coming.",
+          "Watch for what's chasing the bait. Snook, tarpon, jacks, and sharks follow the run, and a fish hitting your net or bucket is a real risk. Keep your bait bucket out of the wash.",
+          "Keep only what you'll use. A dozen lively mullet in an aerated bucket fish better than fifty half-dead ones.",
+        ],
+      },
+      {
+        heading: "Safety and etiquette",
+        bullets: [
+          "Look behind you and to the sides before every throw. Never throw near swimmers, other anglers, or anyone walking past.",
+          "Don't throw over rocks, pilings, or debris you can't see. A snagged net costs you the net and often time in the water to free it.",
+          "Avoid sea turtles, manatees, and birds. If a protected animal gets in your net, keep it in the water and release it as carefully as you can.",
+          "Respect posted closures and pier rules. Many fishing piers don't allow cast nets during busy hours, or at all.",
+        ],
+      },
+      {
+        heading: "Taking care of the net",
+        paragraphs: [
+          "Saltwater, sand, and sun wear a net out fast. Rinse it in fresh water after every trip, let it dry hanging up rather than in a bucket, and store it out of direct sunlight. Look over the brail lines and horn every so often. A frayed brail line usually snaps on the throw that matters most. A net cared for this way can last several seasons.",
+        ],
+      },
+      {
+        heading: "Putting it to work",
+        paragraphs: [
+          "Once your bucket is full, the next question is where to fish it. The [tactics guide](/guide/tactics) covers rigging live mullet for the predators that follow the run, and the [timing guide](/guide/run-timing) shows when the run should be at your beach. To find out where the bait is today, check the [live sightings map](/sightings).",
+        ],
+      },
+    ],
+    related: ["tactics", "regulations", "run-timing", "gear-shop"],
   },
 ];
 
