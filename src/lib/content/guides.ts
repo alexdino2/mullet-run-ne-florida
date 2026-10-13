@@ -447,6 +447,13 @@ export const GUIDES: Guide[] = [
         ],
       },
       {
+        heading: "Why I wrote this one",
+        paragraphs: [
+          "I learned to throw a cast net one lopsided throw at a time. Nobody hands you a clean circle. Now my fall weekends are at [Mickler's Landing](/beaches/micklers), teaching my son the same thing: load it, turn your hips, let go in order. He's working through the same pile of tacos and bananas I did, and that's fine. When the net finally opens full over a pod of mullet, you can see it click. It's not something you can buy. You earn it on the beach.",
+          "Everything below is what we've worked out on that beach, passed along to you. Go practice on the grass, then come find the bait.",
+        ],
+      },
+      {
         heading: "Parts of a cast net",
         paragraphs: [
           "Know the parts first, because every step below refers to them:",
