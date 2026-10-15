@@ -1,0 +1,88 @@
+{
+  "_note": "Each scene is one visual. 'say' is what the voice reads (spelled for TTS); 'show' is the on-screen caption. Facts come from src/lib/content/guides.ts (biology, locations, run-timing, tactics).",
+  "scenes": [
+    {
+      "id": "intro",
+      "visual": "intro",
+      "leadIn": 2.2,
+      "lines": [
+        { "say": "Every fall, a river of silver moves down Florida's Atlantic coast.", "show": "Every fall, a river of silver moves down Florida's Atlantic coast." },
+        { "say": "Anglers call it the mullet run.", "show": "Anglers call it the mullet run." },
+        { "say": "Here's how it works, from Northeast Florida all the way to Miami.", "show": "Here's how it works, from Northeast Florida all the way to Miami." }
+      ]
+    },
+    {
+      "id": "fish",
+      "visual": "fish",
+      "lines": [
+        { "say": "The main event is the striped mullet, joined by silver and fantail mullet.", "show": "The main event is the striped mullet, joined by silver and fantail mullet." },
+        { "say": "They spend the summer in rivers, tidal creeks, and brackish estuaries, grazing on algae and detritus.", "show": "They spend the summer in rivers, tidal creeks, and brackish estuaries, grazing on algae and detritus." }
+      ]
+    },
+    {
+      "id": "trigger",
+      "visual": "trigger",
+      "lines": [
+        { "say": "As summer ends, the water cools.", "show": "As summer ends, the water cools." },
+        { "say": "When nearshore temperatures drop toward about sixty-eight degrees, mullet bunch up and head for the ocean.", "show": "When nearshore temperatures drop toward about 68°F, mullet bunch up and head for the ocean." },
+        { "say": "The first cold fronts dial it up.", "show": "The first cold fronts dial it up." },
+        { "say": "Falling pressure and a north or northeast wind push the biggest pods tight against the beach.", "show": "Falling pressure and a north or northeast wind push the biggest pods tight against the beach." }
+      ]
+    },
+    {
+      "id": "north",
+      "visual": "map",
+      "lines": [
+        { "say": "Then the run turns south.", "show": "Then the run turns south." },
+        { "say": "Northeast Florida sees it first.", "show": "Northeast Florida sees it first." },
+        { "say": "At Mayport, Jacksonville Beach, and Mickler's Landing, the core window runs from about September twenty-fifth to October twentieth.", "show": "At Mayport, Jacksonville Beach and Mickler's Landing, the core window runs from about Sept. 25 to Oct. 20." }
+      ]
+    },
+    {
+      "id": "middle",
+      "visual": "map",
+      "lines": [
+        { "say": "From there, the schools work down the surf zone, past one inlet after another.", "show": "From there, the schools work down the surf zone, past one inlet after another." },
+        { "say": "Ponce Inlet. Cocoa Beach. Sebastian. Fort Pierce. Jupiter.", "show": "Ponce Inlet. Cocoa Beach. Sebastian. Fort Pierce. Jupiter." },
+        { "say": "The peak slides about four days later for every degree of latitude you move south.", "show": "The peak slides about four days later for every degree of latitude you move south." }
+      ]
+    },
+    {
+      "id": "south",
+      "visual": "map",
+      "lines": [
+        { "say": "Miami Beach peaks from about October thirteenth to November seventh.", "show": "Miami Beach peaks from about Oct. 13 to Nov. 7." },
+        { "say": "End to end, that's more than three hundred miles of coast in about seven weeks.", "show": "End to end, that's more than 300 miles of coast in about seven weeks." },
+        { "say": "Then the mature adults head offshore to spawn.", "show": "Then the mature adults head offshore to spawn." }
+      ]
+    },
+    {
+      "id": "blitz",
+      "visual": "blitz",
+      "lines": [
+        { "say": "Pods can stretch hundreds of yards long.", "show": "Pods can stretch hundreds of yards long." },
+        { "say": "Tarpon, snook, redfish, jack crevalle, bluefish, and sharks follow the bait, and pin it against beaches, jetties, and inlet mouths.", "show": "Tarpon, snook, redfish, jack crevalle, bluefish and sharks follow the bait, and pin it against beaches, jetties and inlet mouths." },
+        { "say": "That's the blitz.", "show": "That's the blitz." }
+      ]
+    },
+    {
+      "id": "setup",
+      "visual": "setup",
+      "lines": [
+        { "say": "The classic setup is a falling tide near an inlet, on a northeast wind.", "show": "The classic setup is a falling tide near an inlet, on a northeast wind." },
+        { "say": "Fish the edges of the pod, not the middle, and be out at first and last light.", "show": "Fish the edges of the pod, not the middle, and be out at first and last light." },
+        { "say": "If you keep bait, check the current F W C rules first.", "show": "If you keep bait, check the current FWC rules first." }
+      ]
+    },
+    {
+      "id": "outro",
+      "visual": "outro",
+      "tail": 3.5,
+      "lines": [
+        { "say": "Want to know where the run is today?", "show": "Want to know where the run is today?" },
+        { "say": "Florida Mullet Run dot com scores every beach from live wind, tide, and season data, and maps fresh sightings.", "show": "floridamulletrun.com scores every beach from live wind, tide and season data, and maps fresh sightings." },
+        { "say": "If you see bait, log it. See you on the beach.", "show": "If you see bait, log it. See you on the beach." }
+      ]
+    }
+  ]
+}
