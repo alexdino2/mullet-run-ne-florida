@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mullet Run Explainer</title>
+<style>
+  html, body { margin: 0; background: #000; }
+  canvas { display: block; width: 100vw; height: auto; max-width: 1920px; margin: 0 auto; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+/*
+ * Florida mullet run explainer — every frame is a pure function of time t
+ * (seconds), so render.cjs can step through it frame by frame.
+ *
+ * Inputs (injected by render.cjs, or fetched when opened over http):
+ *   window.TIMELINE  build/timeline.json  (scene + caption timings from voiceover.py)
+ *   window.FLORIDA   data/florida.json    (state outline + Atlantic coastline)
+ * Preview: serve the video/ folder and open explainer.html?play or ?t=48
+ */
+const W = 1920, H = 1080, TAU = Math.PI * 2;
+const cv = document.getElementById("c");
+const ctx = cv.getContext("2d");
+const bufA = Object.assign(document.createElement("canvas"), { width: W, height: H });
+const bufB = Object.assign(document.createElement("canvas"), { width: W, height: H });
+
+const C = {
+  ink: "#f4f8fb", dim: "#a9c8da", faint: "#6f93a8",
+  deep: "#051e2e", ocean: "#0a2d44", ocean2: "#0f5479",
+  accent: "#38bdec", accent2: "#78d7f7",
+  sand: "#e9dec4", sand2: "#d3c39c", neighbor: "#b9ad8e",
+  warm: "#f5a524", hot: "#ef6b47", cold: "#69b7ff", good: "#4ade80",
+};
+const FD = '"Inter Display", Inter, sans-serif';
+const FB = "Inter, sans-serif";
+
+// ---------- small helpers ----------
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const smooth = (a, b, x) => clamp((x - a) / (b - a));
+const easeOut = (k) => 1 - Math.pow(1 - clamp(k), 3);
+const easeInOut = (k) => { k = clamp(k); return k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
+function rng(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function gauss(r) { return Math.sqrt(-2 * Math.log(r() + 1e-9)) * Math.cos(TAU * r()); }
+function mixColor(a, b, k) {
+  const pa = a.match(/\w\w/g).map((h) => parseInt(h, 16));
+  const pb = b.match(/\w\w/g).map((h) => parseInt(h, 16));
+  return "rgb(" + pa.map((v, i) => Math.round(lerp(v, pb[i], clamp(k)))).join(",") + ")";
+}
+function rrect(g, x, y, w, h, r) {
+  g.beginPath();
+  g.roundRect(x, y, w, h, r);
+}
+function text(g, s, x, y, o = {}) {
+  g.save();
+  g.globalAlpha *= o.alpha ?? 1;
+  g.font = `${o.italic ? "italic " : ""}${o.weight ?? 600} ${o.size ?? 40}px ${o.fam ?? FB}`;
+  g.fillStyle = o.color ?? C.ink;
+  g.textAlign = o.align ?? "left";
+  g.textBaseline = o.base ?? "alphabetic";
+  g.letterSpacing = (o.ls ?? 0) + "px";
+  if (o.shadow) { g.shadowColor = "rgba(0,0,0,0.5)"; g.shadowBlur = o.shadow; g.shadowOffsetY = 2; }
+  g.fillText(s, x, y);
+  const w = g.measureText(s).width;
+  g.restore();
+  return w;
+}
+function wrap(g, s, maxW) {
+  const words = s.split(" ");
+  const lines = [];
+  let cur = "";
+  for (const w of words) {
+    const test = cur ? cur + " " + w : w;
+    if (g.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; } else cur = test;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+// Fade + slide-up reveal, returns [alpha, dy]
+function reveal(lt, at, dur = 0.6, dist = 24) {
+  const k = easeOut(smooth(at, at + dur, lt));
+  return [k, (1 - k) * dist];
+}
+function kicker(g, s, x, y, alpha = 1) {
+  g.save(); g.globalAlpha *= alpha;
+  g.fillStyle = C.accent; g.fillRect(x, y - 15, 34, 4);
+  g.restore();
+  text(g, s, x + 48, y - 4, { size: 22, weight: 700, color: C.accent, ls: 4, alpha });
+}
+function heading(g, s, x, y, alpha = 1, size = 60) {
+  text(g, s, x, y, { size, weight: 800, fam: FD, alpha, shadow: 12 });
+}
+
+// ---------- season model (mirrors src/lib/score.ts seasonFactor) ----------
+const SEASON = { plateauStart: 268, plateauEnd: 293, riseSigma: 20, fallSigma: 26, floor: 0.08 };
+function seasonFactor(doy, lat) {
+  const delay = Math.round(Math.max(0, Math.min(20, (30.2 - lat) * 4)));
+  const s = SEASON.plateauStart + delay, e = SEASON.plateauEnd + delay;
+  let g = 1;
+  if (doy < s) g = Math.exp(-((s - doy) ** 2) / (2 * SEASON.riseSigma ** 2));
+  else if (doy > e) g = Math.exp(-((doy - e) ** 2) / (2 * SEASON.fallSigma ** 2));
+  return Math.max(SEASON.floor, g);
+}
+// "How strongly is the run on" for visuals: 0 off-season → 1 core window
+// Same core windows as the model, with tighter shoulders so the southward march reads on the map.
+function runLevel(doy, lat) {
+  const delay = Math.round(Math.max(0, Math.min(20, (30.2 - lat) * 4)));
+  const s = SEASON.plateauStart + delay, e = SEASON.plateauEnd + delay;
+  if (doy < s) return Math.exp(-((s - doy) ** 2) / (2 * 6 * 6));
+  if (doy > e) return Math.exp(-((doy - e) ** 2) / (2 * 8 * 8));
+  return 1;
+}
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MDAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+function doyOf(m, d) { let n = d; for (let i = 0; i < m - 1; i++) n += MDAYS[i]; return n; }
+function dateOf(doy) {
+  let d = Math.floor(doy), m = 0;
+  while (d > MDAYS[m]) { d -= MDAYS[m]; m++; }
+  return [m, d];
+}
+
+// Peak windows as published in the run-timing guide (src/lib/content/guides.ts)
+const ROWS = [
+  { name: "Mayport · Jax Beach · Mickler's", lat: 30.2016, win: "Sep 25 – Oct 20" },
+  { name: "St. Augustine Beach", lat: 29.8497, win: "Sep 26 – Oct 21" },
+  { name: "Ponce Inlet", lat: 29.0808, win: "Sep 29 – Oct 24" },
+  { name: "Cocoa Beach", lat: 28.3206, win: "Oct 3 – Oct 28" },
+  { name: "Sebastian Inlet", lat: 27.8609, win: "Oct 4 – Oct 29" },
+  { name: "Fort Pierce Inlet", lat: 27.4467, win: "Oct 6 – Oct 31" },
+  { name: "Jupiter Inlet", lat: 26.9434, win: "Oct 8 – Nov 2" },
+  { name: "Lake Worth Inlet", lat: 26.7725, win: "Oct 9 – Nov 3" },
+  { name: "Fort Lauderdale", lat: 26.1224, win: "Oct 11 – Nov 5" },
+  { name: "Miami Beach", lat: 25.7907, win: "Oct 13 – Nov 7" },
+];
+const STATIONS = [
+  [30.3936, -81.4137], [30.2775, -81.3933], [30.2016, -81.3702], [29.8497, -81.2653],
+  [29.0808, -80.925], [28.3206, -80.6076], [27.8609, -80.4483], [27.4467, -80.3256],
+  [26.9434, -80.073], [26.7725, -80.0365], [26.1224, -80.104], [25.7907, -80.13],
+];
+
+// ---------- geography ----------
+let FL = null, TL = null, SEGS = [], LINES = [];
+const K28 = Math.cos((28 * Math.PI) / 180);
+function makeProj(cLon, cLat, scale, ox, oy) {
+  return (lon, lat) => [ox + (lon - cLon) * scale * K28, oy - (lat - cLat) * scale];
+}
+// Rough Georgia/Alabama land so Florida isn't floating
+const NEIGHBORS = [
+  [-81.49, 30.73], [-81.42, 31.0], [-81.28, 31.3], [-81.17, 31.6], [-81.05, 32.0], [-80.85, 32.3],
+  [-80.6, 33.5], [-92, 33.5], [-92, 29.6], [-90.5, 29.9], [-89.5, 30.2], [-88.5, 30.35], [-87.6, 30.27],
+];
+function polyPath(g, P, pts) {
+  g.beginPath();
+  pts.forEach((p, i) => { const [x, y] = P(p[0], p[1]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+  g.closePath();
+}
+function drawLand(g, P, o = {}) {
+  polyPath(g, P, NEIGHBORS);
+  g.fillStyle = o.neighbor ?? C.neighbor; g.fill();
+  for (const poly of FL.polygons) {
+    polyPath(g, P, poly);
+    g.fillStyle = o.fill ?? C.sand; g.fill();
+    g.lineWidth = o.lw ?? 2; g.strokeStyle = o.stroke ?? "rgba(255,255,255,0.65)"; g.stroke();
+  }
+}
+// Atlantic path, extended north into Georgia so the fish enter from off-map
+let COAST = null;
+function buildCoast() {
+  const pts = [[-80.9, 32.2], [-81.12, 31.6], [-81.3, 31.15], ...FL.atlantic];
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++) {
+    const dx = (pts[i][0] - pts[i - 1][0]) * K28, dy = pts[i][1] - pts[i - 1][1];
+    cum.push(cum[i - 1] + Math.hypot(dx, dy));
+  }
+  COAST = { pts, cum, len: cum[cum.length - 1] };
+}
+// position at arc fraction s: [lon, lat, tangentLon, tangentLat]
+function coastAt(s) {
+  const target = clamp(s) * COAST.len, { pts, cum } = COAST;
+  let i = 1;
+  while (i < cum.length - 1 && cum[i] < target) i++;
+  const k = (target - cum[i - 1]) / (cum[i] - cum[i - 1] || 1);
+  const a = pts[i - 1], b = pts[i];
+  return [lerp(a[0], b[0], k), lerp(a[1], b[1], k), b[0] - a[0], b[1] - a[1]];
+}
+
+// ---------- fish drawing ----------
+function mulletPath(g) {
+  g.beginPath();
+  g.moveTo(0.5, 0.005);
+  g.bezierCurveTo(0.49, -0.06, 0.42, -0.1, 0.32, -0.118);
+  g.bezierCurveTo(0.15, -0.145, -0.1, -0.135, -0.27, -0.075);
+  g.bezierCurveTo(-0.31, -0.06, -0.34, -0.047, -0.36, -0.04);
+  g.lineTo(-0.47, -0.165);
+  g.quadraticCurveTo(-0.5, -0.172, -0.505, -0.155);
+  g.quadraticCurveTo(-0.465, -0.07, -0.44, 0);
+  g.quadraticCurveTo(-0.465, 0.07, -0.505, 0.155);
+  g.quadraticCurveTo(-0.5, 0.172, -0.47, 0.165);
+  g.lineTo(-0.36, 0.04);
+  g.bezierCurveTo(-0.3, 0.062, -0.15, 0.115, 0.05, 0.122);
+  g.bezierCurveTo(0.25, 0.122, 0.4, 0.1, 0.47, 0.055);
+  g.quadraticCurveTo(0.505, 0.03, 0.5, 0.005);
+  g.closePath();
+}
+function fin(g, pts, color) {
+  g.beginPath();
+  g.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+  g.closePath();
+  g.fillStyle = color; g.fill();
+}
+function drawMullet(g, x, y, len, ang = 0, alpha = 1) {
+  g.save();
+  g.translate(x, y); g.rotate(ang); g.scale(len, Math.cos(ang) < 0 ? -len : len);
+  g.globalAlpha *= alpha;
+  const finC = "rgba(96,118,132,0.92)";
+  fin(g, [[0.09, -0.128], [0.03, -0.235], [-0.01, -0.232], [-0.04, -0.13]], finC);
+  fin(g, [[-0.13, -0.118], [-0.18, -0.2], [-0.225, -0.19], [-0.25, -0.092]], finC);
+  fin(g, [[-0.13, 0.108], [-0.185, 0.18], [-0.23, 0.17], [-0.25, 0.082]], finC);
+  fin(g, [[0.13, 0.118], [0.07, 0.2], [0.035, 0.19], [0.04, 0.12]], finC);
+  mulletPath(g);
+  const body = g.createLinearGradient(0, -0.14, 0, 0.125);
+  body.addColorStop(0, "#2f4556"); body.addColorStop(0.32, "#728c9d");
+  body.addColorStop(0.55, "#c8d5dd"); body.addColorStop(1, "#f3f6f7");
+  g.fillStyle = body; g.fill();
+  g.save();
+  mulletPath(g); g.clip();
+  g.lineWidth = 0.009; g.strokeStyle = "rgba(34,52,66,0.42)";
+  for (let k = 0; k < 6; k++) {
+    const y0 = -0.105 + k * 0.032;
+    g.beginPath(); g.moveTo(0.34, y0 * 0.75); g.quadraticCurveTo(0, y0 * 1.08, -0.4, y0 * 0.35); g.stroke();
+  }
+  const sheen = g.createLinearGradient(0, -0.02, 0, 0.05);
+  sheen.addColorStop(0, "rgba(255,255,255,0)"); sheen.addColorStop(0.5, "rgba(255,255,255,0.28)"); sheen.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = sheen; g.fillRect(-0.4, -0.02, 0.8, 0.07);
+  g.restore();
+  g.lineWidth = 0.006; g.strokeStyle = "rgba(50,72,88,0.55)";
+  g.beginPath(); g.moveTo(0.315, -0.095); g.quadraticCurveTo(0.27, 0, 0.31, 0.085); g.stroke();
+  fin(g, [[0.25, 0.0], [0.14, -0.045], [0.12, -0.02], [0.15, 0.012]], "rgba(80,102,118,0.85)");
+  g.beginPath(); g.arc(0.415, -0.03, 0.03, 0, TAU); g.fillStyle = "#e3d39a"; g.fill();
+  g.beginPath(); g.arc(0.418, -0.03, 0.018, 0, TAU); g.fillStyle = "#0e1418"; g.fill();
+  g.beginPath(); g.arc(0.425, -0.038, 0.006, 0, TAU); g.fillStyle = "#fff"; g.fill();
+  g.lineWidth = 0.005; g.strokeStyle = "rgba(30,40,48,0.7)";
+  g.beginPath(); g.moveTo(0.498, 0.018); g.lineTo(0.465, 0.026); g.stroke();
+  mulletPath(g); g.lineWidth = 0.004; g.strokeStyle = "rgba(15,30,40,0.35)"; g.stroke();
+  g.restore();
+}
+function miniFish(g, x, y, len, ang, alpha = 1, col = "#dfe9ef") {
+  g.save();
+  g.translate(x, y); g.rotate(ang);
+  if (Math.cos(ang) < 0) g.scale(1, -1);
+  g.globalAlpha *= alpha;
+  g.fillStyle = col;
+  g.beginPath(); g.ellipse(0, 0, len * 0.5, len * 0.15, 0, 0, TAU); g.fill();
+  g.beginPath();
+  g.moveTo(-len * 0.4, 0); g.lineTo(-len * 0.7, -len * 0.17); g.lineTo(-len * 0.62, 0); g.lineTo(-len * 0.7, len * 0.17);
+  g.closePath(); g.fill();
+  g.fillStyle = "rgba(40,70,90,0.55)";
+  g.beginPath(); g.ellipse(len * 0.05, -len * 0.06, len * 0.38, len * 0.07, 0, 0, TAU); g.fill();
+  g.restore();
+}
+function predatorPath(g, kind) {
+  g.beginPath();
+  if (kind === "shark") {
+    g.moveTo(0.5, 0.0);
+    g.quadraticCurveTo(0.45, -0.075, 0.33, -0.09);
+    g.bezierCurveTo(0.12, -0.12, -0.15, -0.1, -0.33, -0.035);
+    g.lineTo(-0.5, -0.22); g.lineTo(-0.44, -0.01); g.lineTo(-0.47, 0.11); g.lineTo(-0.34, 0.03);
+    g.bezierCurveTo(-0.2, 0.08, 0.1, 0.11, 0.3, 0.075);
+    g.quadraticCurveTo(0.45, 0.05, 0.5, 0.0);
+    g.moveTo(0.1, -0.11); g.lineTo(-0.02, -0.27); g.lineTo(-0.09, -0.1);
+    g.moveTo(0.2, 0.07); g.lineTo(0.06, 0.21); g.lineTo(0.08, 0.075);
+  } else {
+    const deep = kind === "jack" ? 1.6 : kind === "snook" ? 0.85 : 1;
+    g.moveTo(0.5, -0.04 * deep);
+    g.quadraticCurveTo(0.44, -0.075 * deep, 0.35, -0.095 * deep);
+    g.bezierCurveTo(0.2, -0.155 * deep, 0.0, -0.17 * deep, -0.15, -0.13 * deep);
+    g.lineTo(-0.31, -0.05);
+    g.lineTo(-0.5, -0.21); g.lineTo(-0.44, 0); g.lineTo(-0.5, 0.21);
+    g.lineTo(-0.31, 0.05);
+    g.bezierCurveTo(-0.1, 0.13 * deep, 0.15, 0.14 * deep, 0.3, 0.1 * deep);
+    g.quadraticCurveTo(0.45, 0.06 * deep, 0.5, -0.04 * deep);
+    if (kind === "tarpon") { g.moveTo(0.02, -0.16); g.lineTo(-0.06, -0.26); g.lineTo(-0.24, -0.3); g.lineTo(-0.11, -0.145); }
+    else { g.moveTo(0.05, -0.16 * deep); g.lineTo(-0.05, -0.25 * deep); g.lineTo(-0.15, -0.13 * deep); }
+  }
+}
+function drawPredator(g, kind, x, y, len, ang, alpha = 1) {
+  g.save();
+  g.translate(x, y); g.rotate(ang); g.scale(len, Math.cos(ang) < 0 ? -len : len);
+  g.globalAlpha *= alpha;
+  predatorPath(g, kind);
+  const grd = g.createLinearGradient(0, -0.2, 0, 0.15);
+  if (kind === "shark") { grd.addColorStop(0, "#22323d"); grd.addColorStop(1, "#7b8f9b"); }
+  else if (kind === "jack") { grd.addColorStop(0, "#2b3b2f"); grd.addColorStop(1, "#c9c48f"); }
+  else { grd.addColorStop(0, "#26394a"); grd.addColorStop(0.6, "#9fb3c0"); grd.addColorStop(1, "#e4ecf0"); }
+  g.fillStyle = grd; g.fill("nonzero");
+  if (kind === "snook") {
+    g.strokeStyle = "rgba(10,10,10,0.8)"; g.lineWidth = 0.012;
+    g.beginPath(); g.moveTo(0.3, -0.03); g.quadraticCurveTo(0, -0.05, -0.42, 0); g.stroke();
+  }
+  g.beginPath(); g.arc(0.4, -0.035, 0.016, 0, TAU); g.fillStyle = "#0b0f12"; g.fill();
+  g.restore();
+}
+function gull(g, x, y, s, flap, alpha = 0.85) {
+  g.save(); g.globalAlpha *= alpha;
+  g.strokeStyle = "#16222b"; g.lineWidth = Math.max(2, s * 0.12); g.lineCap = "round";
+  const w = Math.sin(flap) * s * 0.35;
+  g.beginPath();
+  g.moveTo(x - s, y - w); g.quadraticCurveTo(x - s * 0.45, y - s * 0.4 - w * 0.4, x, y);
+  g.quadraticCurveTo(x + s * 0.45, y - s * 0.4 - w * 0.4, x + s, y - w);
+  g.stroke();
+  g.restore();
+}
+function arrow(g, x1, y1, x2, y2, color, width, head = width * 3.2) {
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  g.save();
+  g.strokeStyle = color; g.fillStyle = color; g.lineWidth = width; g.lineCap = "round";
+  g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2 - Math.cos(a) * head * 0.8, y2 - Math.sin(a) * head * 0.8); g.stroke();
+  g.beginPath();
+  g.moveTo(x2, y2);
+  g.lineTo(x2 - Math.cos(a - 0.45) * head, y2 - Math.sin(a - 0.45) * head);
+  g.lineTo(x2 - Math.cos(a + 0.45) * head, y2 - Math.sin(a + 0.45) * head);
+  g.closePath(); g.fill();
+  g.restore();
+}
+function lightRays(g, t, alpha, top = 0) {
+  g.save();
+  g.globalCompositeOperation = "lighter";
+  for (let i = 0; i < 7; i++) {
+    const x = ((i * 337 + t * 18) % (W + 600)) - 300;
+    const grd = g.createLinearGradient(0, top, 0, H);
+    grd.addColorStop(0, `rgba(170,230,255,${0.07 * alpha})`);
+    grd.addColorStop(1, "rgba(170,230,255,0)");
+    g.fillStyle = grd;
+    g.beginPath();
+    g.moveTo(x, top); g.lineTo(x + 70 + (i % 3) * 30, top); g.lineTo(x + 360, H); g.lineTo(x + 180, H);
+    g.closePath(); g.fill();
+  }
+  g.restore();
+}
+function motes(g, t, n, seed, color, alpha = 0.5) {
+  const r = rng(seed);
+  g.save(); g.fillStyle = color;
+  for (let i = 0; i < n; i++) {
+    const x0 = r() * W, y0 = r() * H, sp = 6 + r() * 14, sz = 1 + r() * 2.5;
+    const y = ((y0 - t * sp) % H + H) % H;
+    const x = x0 + Math.sin(t * 0.4 + i) * 12;
+    g.globalAlpha = alpha * (0.3 + 0.7 * r());
+    g.beginPath(); g.arc(x, y, sz, 0, TAU); g.fill();
+  }
+  g.restore();
+}
+function icon(g, kind, x, y, s, color) {
+  g.save(); g.translate(x, y); g.strokeStyle = color; g.fillStyle = color; g.lineWidth = s * 0.1; g.lineCap = "round"; g.lineJoin = "round";
+  if (kind === "check") {
+    g.beginPath(); g.moveTo(-s * 0.32, 0); g.lineTo(-s * 0.08, s * 0.24); g.lineTo(s * 0.34, -s * 0.24); g.stroke();
+  } else if (kind === "temp") {
+    g.beginPath(); g.roundRect(-s * 0.1, -s * 0.42, s * 0.2, s * 0.55, s * 0.1); g.stroke();
+    g.beginPath(); g.arc(0, s * 0.25, s * 0.17, 0, TAU); g.fill();
+  } else if (kind === "fish") {
+    g.beginPath(); g.ellipse(s * 0.05, 0, s * 0.3, s * 0.15, 0, 0, TAU); g.fill();
+    g.beginPath(); g.moveTo(-s * 0.2, 0); g.lineTo(-s * 0.42, -s * 0.16); g.lineTo(-s * 0.42, s * 0.16); g.closePath(); g.fill();
+  } else if (kind === "front") {
+    g.beginPath(); g.moveTo(-s * 0.42, s * 0.2); g.lineTo(s * 0.42, s * 0.2); g.stroke();
+    for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(i * s * 0.28 - s * 0.11, s * 0.2); g.lineTo(i * s * 0.28, -s * 0.12); g.lineTo(i * s * 0.28 + s * 0.11, s * 0.2); g.closePath(); g.fill(); }
+  } else if (kind === "wind") {
+    for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(-s * 0.4, -s * 0.22 + i * s * 0.22); g.lineTo(s * 0.25 - (i % 2) * s * 0.15, -s * 0.22 + i * s * 0.22); g.stroke(); }
+    g.beginPath(); g.arc(s * 0.25, -s * 0.33, s * 0.11, Math.PI * 0.5, Math.PI * 2.2); g.stroke();
+  } else if (kind === "tide") {
+    for (let i = 0; i < 2; i++) { g.beginPath(); for (let k = 0; k <= 12; k++) { const xx = -s * 0.42 + k * s * 0.07, yy = -s * 0.12 + i * s * 0.26 + Math.sin(k * 0.9) * s * 0.07; k ? g.lineTo(xx, yy) : g.moveTo(xx, yy); } g.stroke(); }
+  } else if (kind === "pin") {
+    g.beginPath(); g.arc(0, -s * 0.12, s * 0.22, Math.PI * 0.85, Math.PI * 2.15); g.lineTo(0, s * 0.4); g.closePath(); g.fill();
+    g.beginPath(); g.arc(0, -s * 0.12, s * 0.08, 0, TAU); g.fillStyle = "#06263a"; g.fill();
+  } else if (kind === "sun") {
+    g.beginPath(); g.arc(0, 0, s * 0.18, 0, TAU); g.fill();
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU; g.beginPath(); g.moveTo(Math.cos(a) * s * 0.28, Math.sin(a) * s * 0.28); g.lineTo(Math.cos(a) * s * 0.4, Math.sin(a) * s * 0.4); g.stroke(); }
+  } else if (kind === "info") {
+    g.beginPath(); g.arc(0, 0, s * 0.38, 0, TAU); g.stroke();
+    g.beginPath(); g.moveTo(0, -s * 0.02); g.lineTo(0, s * 0.18); g.stroke();
+    g.beginPath(); g.arc(0, -s * 0.17, s * 0.04, 0, TAU); g.fill();
+  } else if (kind === "gauge") {
+    g.beginPath(); g.arc(0, s * 0.12, s * 0.38, Math.PI, TAU); g.stroke();
+    g.beginPath(); g.moveTo(0, s * 0.12); g.lineTo(s * 0.22, -s * 0.12); g.stroke();
+  } else if (kind === "map") {
+    g.beginPath(); g.moveTo(-s * 0.4, -s * 0.28); g.lineTo(-s * 0.13, -s * 0.38); g.lineTo(s * 0.13, -s * 0.28); g.lineTo(s * 0.4, -s * 0.38); g.lineTo(s * 0.4, s * 0.3); g.lineTo(s * 0.13, s * 0.4); g.lineTo(-s * 0.13, s * 0.3); g.lineTo(-s * 0.4, s * 0.4); g.closePath(); g.stroke();
+  }
+  g.restore();
+}
+function card(g, x, y, w, h, alpha, o = {}) {
+  g.save(); g.globalAlpha *= alpha;
+  rrect(g, x, y, w, h, o.r ?? 18);
+  g.fillStyle = o.fill ?? "rgba(6,30,46,0.72)"; g.fill();
+  g.lineWidth = 1.5; g.strokeStyle = o.stroke ?? "rgba(120,215,247,0.28)"; g.stroke();
+  g.restore();
+}
+
+// ---------- timeline helpers ----------
+function segLines(seg) { return seg.scenes.flatMap((s) => s.lines); }
+function lineAt(seg, k) { return segLines(seg)[k]; } // absolute times
+function sceneOf(seg, id) { return seg.scenes.find((s) => s.id === id); }
+
+// =====================================================================
+// Scenes. Each gets (g, lt = seconds into this visual, seg, t = absolute)
+// =====================================================================
+function sceneIntro(g, lt, seg) {
+  const horizon = 470;
+  const sky = g.createLinearGradient(0, 0, 0, horizon);
+  sky.addColorStop(0, "#071d30"); sky.addColorStop(0.55, "#1d4767"); sky.addColorStop(0.86, "#c9805e"); sky.addColorStop(1, "#f2b27a");
+  g.fillStyle = sky; g.fillRect(0, 0, W, horizon);
+  // sun rising
+  const sunY = horizon + 30 - easeOut(lt / 12) * 70;
+  const glow = g.createRadialGradient(1440, sunY, 10, 1440, sunY, 420);
+  glow.addColorStop(0, "rgba(255,214,150,0.9)"); glow.addColorStop(0.2, "rgba(255,170,110,0.35)"); glow.addColorStop(1, "rgba(255,150,100,0)");
+  g.fillStyle = glow; g.fillRect(0, 0, W, horizon);
+  g.save(); g.beginPath(); g.rect(0, 0, W, horizon); g.clip();
+  g.beginPath(); g.arc(1440, sunY, 62, 0, TAU); g.fillStyle = "#ffe2b0"; g.fill();
+  g.restore();
+  for (let i = 0; i < 5; i++) {
+    const bx = ((i * 410 + lt * (22 + i * 4)) % (W + 300)) - 150;
+    gull(g, bx, 150 + i * 38 + Math.sin(lt + i) * 10, 18 + (i % 3) * 5, lt * 7 + i * 1.3, 0.75);
+  }
+  // water
+  const sea = g.createLinearGradient(0, horizon, 0, H);
+  sea.addColorStop(0, "#2c7d98"); sea.addColorStop(0.18, "#145b7c"); sea.addColorStop(1, "#04192a");
+  g.fillStyle = sea; g.fillRect(0, horizon, W, H - horizon);
+  // sun glitter + surface lines
+  g.save();
+  for (let i = 0; i < 46; i++) {
+    const r = rng(i + 3);
+    const y = horizon + 6 + Math.pow(r(), 1.6) * 70;
+    const x = 1440 + gauss(r) * (60 + (y - horizon) * 2.5) + Math.sin(lt * 2 + i) * 6;
+    g.globalAlpha = 0.35 + 0.4 * Math.sin(lt * 3 + i * 2) ** 2;
+    g.fillStyle = "#ffe7c2"; g.fillRect(x, y, 14 + r() * 26, 2);
+  }
+  g.restore();
+  lightRays(g, lt, 1.0, horizon);
+  motes(g, lt, 70, 11, "#cfefff", 0.35);
+  // the run: a long ribbon of mullet streaming across
+  const r = rng(42);
+  const N = 300;
+  for (let i = 0; i < N; i++) {
+    const u = r(), off = gauss(r), sz = 22 + r() * 18, ph = r() * TAU, sp = 150 + r() * 25;
+    let x = W + 300 - ((u * 3200 + lt * sp) % 3200);
+    const yc = 760 + Math.sin(x / 340 + lt * 0.5) * 70 - (x - W / 2) * 0.08;
+    const y = yc + off * 46 + Math.sin(lt * 3 + ph) * 4;
+    const slope = Math.atan(Math.cos(x / 340 + lt * 0.5) * 70 / 340 - 0.08);
+    const depth = 0.55 + 0.45 * clamp(1 - Math.abs(off) / 2.4);
+    miniFish(g, x, y, sz, Math.PI - slope + Math.sin(lt * 6 + ph) * 0.05, depth * 0.95);
+  }
+  // title
+  const [a1, d1] = reveal(lt, 0.4, 0.9, 30);
+  const [a2, d2] = reveal(lt, 0.9, 0.9, 30);
+  const [a3, d3] = reveal(lt, 1.5, 0.9, 20);
+  text(g, "THE ANNUAL", W / 2, 150 + d1, { size: 30, weight: 700, align: "center", ls: 12, color: C.accent2, alpha: a1, shadow: 10 });
+  text(g, "Florida Mullet Run", W / 2, 270 + d2, { size: 128, weight: 800, fam: FD, align: "center", alpha: a2, shadow: 30, ls: -2 });
+  text(g, "How the fall migration moves from Northeast Florida to Miami", W / 2, 340 + d3, { size: 36, weight: 500, align: "center", color: "#e6eff5", alpha: a3, shadow: 12 });
+}
+
+function sceneFish(g, lt, seg) {
+  const bg = g.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, "#1f6e6a"); bg.addColorStop(0.45, "#0f4a4e"); bg.addColorStop(1, "#06262b");
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  lightRays(g, lt, 1.2, 0);
+  motes(g, lt, 120, 5, "#d8f2d8", 0.35);
+  // background mullet, soft
+  for (let i = 0; i < 9; i++) {
+    const r = rng(100 + i);
+    const sp = 30 + r() * 25, y = 160 + r() * 520, s = 90 + r() * 70;
+    const x = ((r() * W + lt * sp) % (W + 400)) - 200;
+    drawMullet(g, x, y + Math.sin(lt + i) * 8, s, Math.sin(lt * 0.8 + i) * 0.04, 0.22);
+  }
+  // marsh grass silhouettes
+  for (let i = 0; i < 90; i++) {
+    const r = rng(500 + i);
+    const x = r() * W, h = 90 + r() * 170, lean = Math.sin(lt * 0.9 + i * 0.7) * 10 + (r() - 0.5) * 30;
+    g.strokeStyle = `rgba(6,${30 + Math.floor(r() * 20)},28,${0.7 + r() * 0.3})`;
+    g.lineWidth = 3 + r() * 4;
+    g.beginPath(); g.moveTo(x, H); g.quadraticCurveTo(x + lean * 0.3, H - h * 0.6, x + lean, H - h); g.stroke();
+  }
+  // hero mullet
+  const [ha] = reveal(lt, 0.0, 1.2, 0);
+  const hx = lerp(700, 760, easeInOut(lt / 12)), hy = 470 + Math.sin(lt * 1.1) * 10;
+  drawMullet(g, hx, hy, 840, Math.sin(lt * 0.9) * 0.025, ha);
+
+  kicker(g, "THE FISH", 120, 120, reveal(lt, 0.2)[0]);
+  heading(g, "Meet the mullet", 120, 190, reveal(lt, 0.3)[0]);
+
+  // name callout
+  const [na, nd] = reveal(lt, 0.9, 0.7, 20);
+  g.save(); g.globalAlpha *= na;
+  g.strokeStyle = "rgba(255,255,255,0.7)"; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(hx + 250, hy - 90); g.lineTo(hx + 410, hy - 210); g.lineTo(1265, hy - 210); g.stroke();
+  g.beginPath(); g.arc(hx + 250, hy - 90, 6, 0, TAU); g.fillStyle = "#fff"; g.fill();
+  g.restore();
+  text(g, "Striped mullet", 1280, hy - 200 + nd, { size: 54, weight: 800, fam: FD, alpha: na, shadow: 12 });
+  text(g, "Mugil cephalus", 1282, hy - 152 + nd, { size: 30, weight: 500, italic: true, color: C.dim, alpha: na });
+
+  const l1 = lineAt(seg, 0), l2 = lineAt(seg, 1);
+  const st = seg.start;
+  const chips = [["Silver mullet", "Mugil curema"], ["Fantail mullet", "Mugil gyrans"]];
+  chips.forEach(([n, sci], i) => {
+    const at = l1.start - st + 2.4 + i * 0.6;
+    const [ca, cd] = reveal(lt, at, 0.6, 16);
+    const y = hy - 100 + i * 78 + cd;
+    card(g, 1280, y, 470, 62, ca, { r: 31 });
+    g.save(); g.globalAlpha *= ca; icon(g, "fish", 1318, y + 31, 34, C.accent2); g.restore();
+    const w = text(g, n, 1350, y + 41, { size: 26, weight: 700, alpha: ca });
+    text(g, sci, 1350 + w + 12, y + 41, { size: 22, weight: 500, italic: true, color: C.dim, alpha: ca });
+  });
+
+  // summer habitat row
+  const at2 = l2.start - st;
+  const [ha2, hd2] = reveal(lt, at2 - 0.2, 0.6, 16);
+  text(g, "SUMMER HOME", 120, 772 + hd2, { size: 22, weight: 700, ls: 4, color: C.accent2, alpha: ha2 });
+  const habitats = ["Rivers", "Tidal creeks", "Brackish estuaries", "Diet: algae & detritus"];
+  let x = 120;
+  habitats.forEach((h, i) => {
+    const [a, d] = reveal(lt, at2 + 0.25 + i * (i === 3 ? 0.9 : 0.55), 0.5, 14);
+    g.font = `700 28px ${FB}`;
+    const w = g.measureText(h).width + 64;
+    card(g, x, 798 + d, w, 64, a, { r: 32, fill: i === 3 ? "rgba(56,189,236,0.18)" : "rgba(6,30,46,0.72)" });
+    g.save(); g.globalAlpha *= a; icon(g, i === 3 ? "fish" : "tide", x + 30, 830 + d, 30, C.accent2); g.restore();
+    text(g, h, x + 52, 840 + d, { size: 28, weight: 700, alpha: a });
+    x += w + 18;
+  });
+}
+
+function thermometer(g, x, y, h, temp, alpha) {
+  g.save(); g.globalAlpha *= alpha;
+  const k = clamp((temp - 60) / 30);
+  const col = mixColor("69b7ff", "ef6b47", smooth(66, 84, temp));
+  rrect(g, x - 26, y, 52, h, 26); g.fillStyle = "rgba(255,255,255,0.12)"; g.fill();
+  g.lineWidth = 3; g.strokeStyle = "rgba(255,255,255,0.7)"; g.stroke();
+  g.beginPath(); g.arc(x, y + h + 22, 44, 0, TAU); g.fillStyle = col; g.fill(); g.stroke();
+  const fh = (h - 30) * k + 20;
+  rrect(g, x - 14, y + h - fh + 10, 28, fh + 10, 14); g.fillStyle = col; g.fill();
+  g.fillStyle = "rgba(255,255,255,0.7)";
+  for (const tick of [60, 70, 80, 90]) {
+    const ty = y + h + 10 - ((h - 30) * (tick - 60) / 30 + 20);
+    g.fillRect(x + 30, ty, 14, 2);
+    text(g, tick + "°", x + 52, ty + 7, { size: 18, weight: 600, color: C.dim });
+  }
+  // 68°F marker
+  const my = y + h + 10 - ((h - 30) * (68 - 60) / 30 + 20);
+  g.setLineDash([6, 6]); g.strokeStyle = C.cold; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(x - 46, my); g.lineTo(x + 30, my); g.stroke(); g.setLineDash([]);
+  g.restore();
+  text(g, Math.round(temp) + "°F", x, y - 26, { size: 44, weight: 800, fam: FD, align: "center", color: col, alpha });
+}
+
+function sceneTrigger(g, lt, seg) {
+  const bg = g.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, "#0a2a40"); bg.addColorStop(1, "#05192a");
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  const L = segLines(seg).map((l) => ({ s: l.start - seg.start, e: l.end - seg.start }));
+
+  // ---- map panel ----
+  const px = 880, py = 70, pw = 960, ph = 820;
+  g.save();
+  rrect(g, px, py, pw, ph, 28); g.clip();
+  const sea = g.createLinearGradient(px, py, px + pw, py + ph);
+  sea.addColorStop(0, "#0f4a6a"); sea.addColorStop(1, "#0a3350");
+  g.fillStyle = sea; g.fillRect(px, py, pw, ph);
+  const P = makeProj(-83.4, 28.1, 118, px + pw / 2, py + ph / 2 + 10);
+  drawLand(g, P, { lw: 1.5 });
+  // cold front sweeping NW -> SE
+  const fp = easeInOut(smooth(L[2].s - 1.2, L[3].e + 0.4, lt));
+  const dir = [0.72, 0.69];
+  const c0 = [px - 40, py - 40], c1 = [px + pw + 160, py + ph + 120];
+  const cx = lerp(c0[0], c1[0], fp), cy = lerp(c0[1], c1[1], fp);
+  const nx = -dir[1], ny = dir[0];
+  if (fp > 0) {
+    // cool air behind the front
+    g.beginPath();
+    g.moveTo(cx + nx * 1600, cy + ny * 1600); g.lineTo(cx - nx * 1600, cy - ny * 1600);
+    g.lineTo(cx - nx * 1600 - dir[0] * 2400, cy - ny * 1600 - dir[1] * 2400);
+    g.lineTo(cx + nx * 1600 - dir[0] * 2400, cy + ny * 1600 - dir[1] * 2400);
+    g.closePath(); g.fillStyle = "rgba(105,183,255,0.16)"; g.fill();
+  }
+  // wind arrows: S/SW ahead of the front, N/NE behind it
+  for (let gx = 0; gx < 7; gx++) for (let gy = 0; gy < 6; gy++) {
+    const ax = px + 90 + gx * 135 + (gy % 2) * 50, ay = py + 90 + gy * 135;
+    const behind = (ax - cx) * dir[0] + (ay - cy) * dir[1] < 0 && fp > 0;
+    const ang = behind ? Math.atan2(0.75, -0.66) : Math.atan2(-0.6, 0.8);
+    const wob = Math.sin(lt * 2 + gx + gy) * 6;
+    const len = behind ? 44 : 30;
+    const col = behind ? "rgba(170,215,255,0.85)" : "rgba(255,200,150,0.35)";
+    arrow(g, ax - Math.cos(ang) * len / 2 + wob, ay - Math.sin(ang) * len / 2, ax + Math.cos(ang) * len / 2 + wob, ay + Math.sin(ang) * len / 2, col, behind ? 4 : 3, 13);
+  }
+  if (fp > 0 && fp < 1) {
+    g.strokeStyle = "#3b82f6"; g.lineWidth = 7; g.fillStyle = "#3b82f6";
+    g.beginPath();
+    const pts = [];
+    for (let k = -1; k <= 1.0001; k += 0.02) {
+      const bend = Math.sin(k * 2.2) * 60;
+      pts.push([cx + nx * k * 900 + dir[0] * bend, cy + ny * k * 900 + dir[1] * bend]);
+    }
+    pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+    g.stroke();
+    for (let i = 2; i < pts.length - 2; i += 5) {
+      const [x, y] = pts[i];
+      g.beginPath();
+      g.moveTo(x - nx * 16, y - ny * 16); g.lineTo(x + dir[0] * 26, y + dir[1] * 26); g.lineTo(x + nx * 16, y + ny * 16);
+      g.closePath(); g.fill();
+    }
+  }
+  // mullet leaving the estuaries for the beach
+  const out = easeInOut(smooth(L[1].s, L[1].e, lt));
+  const pack = easeInOut(smooth(L[3].s, L[3].e, lt));
+  const r = rng(77);
+  for (let i = 0; i < 90; i++) {
+    const s = 0.12 + r() * 0.86, j = r();
+    const [lon, lat] = coastAt(s);
+    const inland = -0.22 - j * 0.15, off = 0.1 + j * 0.25, tight = 0.035 + j * 0.05;
+    const o = lerp(lerp(inland, off, out), tight, pack);
+    const [x, y] = P(lon + o, lat + Math.sin(lt * 0.8 + i) * 0.02);
+    miniFish(g, x, y, 14, Math.PI / 2 + 0.2, 0.9);
+  }
+  g.restore();
+  g.lineWidth = 2; g.strokeStyle = "rgba(120,215,247,0.3)"; rrect(g, px, py, pw, ph, 28); g.stroke();
+  // panel legends
+  const fa = smooth(L[2].s - 0.6, L[2].s, lt);
+  card(g, px + 24, py + 24, 264, 58, fa, { r: 29 });
+  g.save(); g.globalAlpha *= fa; icon(g, "front", px + 58, py + 53, 34, "#5b9bff"); g.restore();
+  text(g, "Cold front", px + 88, py + 62, { size: 26, weight: 700, alpha: fa });
+  const wa = smooth(L[3].s - 0.3, L[3].s + 0.4, lt);
+  card(g, px + 24, py + 96, 340, 58, wa, { r: 29 });
+  g.save(); g.globalAlpha *= wa; icon(g, "wind", px + 58, py + 127, 34, "#aad7ff"); g.restore();
+  text(g, "Wind from the N / NE", px + 88, py + 134, { size: 26, weight: 700, alpha: wa });
+
+  // ---- left: thermometer + cards ----
+  kicker(g, "THE TRIGGER", 110, 120, reveal(lt, 0.1)[0]);
+  heading(g, "Cooling water", 110, 190, reveal(lt, 0.2)[0]);
+  heading(g, "+ cold fronts", 110, 258, reveal(lt, 0.35)[0]);
+  const temp = lerp(84, 68, easeInOut(smooth(L[0].s, L[1].e - 1.0, lt)));
+  thermometer(g, 175, 380, 380, temp, reveal(lt, 0.4)[0]);
+  const items = [
+    ["temp", "Water cools toward ~68°F", L[0].s + 0.2],
+    ["fish", "Mullet bunch up and head for the ocean", L[1].s + 2.2],
+    ["front", "The first cold fronts dial it up", L[2].s],
+    ["wind", "Falling pressure + N / NE wind push pods onto the beach", L[3].s + 0.3],
+  ];
+  items.forEach(([ic, label, at], i) => {
+    const [a, d] = reveal(lt, at, 0.55, 18);
+    const y = 350 + i * 118 + d;
+    card(g, 300, y, 520, 100, a);
+    g.save(); g.globalAlpha *= a;
+    g.beginPath(); g.arc(348, y + 50, 26, 0, TAU); g.fillStyle = "rgba(56,189,236,0.18)"; g.fill();
+    icon(g, ic, 348, y + 50, 34, C.accent2);
+    g.font = `650 25px ${FB}`;
+    const lines = wrap(g, label, 410);
+    g.restore();
+    lines.forEach((ln, k) => text(g, ln, 392, y + 50 + (k - (lines.length - 1) / 2) * 32 + 9, { size: 25, weight: 650, alpha: a }));
+  });
+}
+
+function sceneMap(g, lt, seg, t) {
+  const bg = g.createLinearGradient(0, 0, W, 0);
+  bg.addColorStop(0, "#051e2e"); bg.addColorStop(0.5, "#08304a"); bg.addColorStop(1, "#0c3e5c");
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+
+  const north = sceneOf(seg, "north"), middle = sceneOf(seg, "middle"), south = sceneOf(seg, "south");
+  // calendar keyframes synced to the narration
+  const keys = [
+    [seg.start, doyOf(9, 8)],
+    [north.end, doyOf(9, 30)],
+    [middle.end, doyOf(10, 12)],
+    [south.lines[0].end, doyOf(10, 18)],
+    [south.end - 0.6, doyOf(11, 12)],
+  ];
+  let doy = keys[0][1];
+  for (let i = 1; i < keys.length; i++) {
+    if (t >= keys[i - 1][0]) doy = lerp(keys[i - 1][1], keys[i][1], clamp((t - keys[i - 1][0]) / (keys[i][0] - keys[i - 1][0])));
+  }
+
+  // ---- map ----
+  const u = clamp(lt / (seg.end - seg.start));
+  const scale = lerp(150, 162, easeInOut(u));
+  const P = makeProj(-81.2, lerp(28.35, 27.85, easeInOut(u)), scale, 1300, 530);
+  const mapA = easeOut(smooth(0, 1.2, lt));
+  g.save(); g.globalAlpha = mapA;
+  drawLand(g, P);
+  // city labels on land
+  const cities = [["Jacksonville", -81.66, 30.33], ["St. Augustine", -81.31, 29.9], ["Daytona Beach", -81.02, 29.21], ["Cape Canaveral", -80.6, 28.4], ["Vero Beach", -80.4, 27.64], ["West Palm Beach", -80.05, 26.71], ["Miami", -80.19, 25.77]];
+  for (const [n, lon, lat] of cities) {
+    const [x, y] = P(lon, lat);
+    text(g, n, x - 26, y + 7, { size: 19, weight: 600, color: "rgba(40,55,62,0.85)", align: "right" });
+  }
+  const [ax, ay] = P(-78.7, 27.3);
+  text(g, "ATLANTIC OCEAN", ax, ay, { size: 22, weight: 600, italic: true, ls: 8, color: "rgba(169,200,218,0.45)", align: "center" });
+
+  // glow along the coast where the run is on
+  g.save(); g.globalCompositeOperation = "lighter";
+  for (let i = 0; i < 160; i++) {
+    const s = i / 160;
+    const [lon, lat] = coastAt(s);
+    const lv = runLevel(doy, lat);
+    if (lv < 0.02) continue;
+    const [x, y] = P(lon + 0.12, lat);
+    const rg = g.createRadialGradient(x, y, 0, x, y, 40);
+    rg.addColorStop(0, `rgba(56,189,236,${0.055 * lv})`); rg.addColorStop(1, "rgba(56,189,236,0)");
+    g.fillStyle = rg; g.fillRect(x - 40, y - 40, 80, 80);
+  }
+  g.restore();
+
+  // the school, streaming south along the beach
+  const r = rng(9);
+  for (let i = 0; i < 520; i++) {
+    const s0 = r(), sp = 0.035 + r() * 0.02, lat0 = r(), ph = r() * TAU, sz = 9 + r() * 6;
+    const s = (s0 + lt * sp) % 1;
+    const [lon, lat, tx, ty] = coastAt(s);
+    const lv = runLevel(doy, lat);
+    if (lv < 0.03) continue;
+    const off = 0.05 + lat0 * 0.17 + Math.sin(lt * 1.3 + ph) * 0.012;
+    const [x, y] = P(lon + off, lat);
+    const ang = Math.atan2(-ty, tx * K28) + Math.sin(lt * 5 + ph) * 0.12;
+    const edge = smooth(0, 0.03, s) * smooth(1, 0.96, s);
+    miniFish(g, x, y, sz, ang, Math.pow(lv, 2.2) * 0.95 * edge);
+  }
+
+  // offshore to spawn (last line)
+  const sp = south.lines[2];
+  const off = smooth(sp.start - 0.3, sp.end + 1.2, t);
+  if (off > 0) {
+    const [sx, sy] = P(-79.95, 26.6);
+    const ra = rng(31);
+    for (let i = 0; i < 40; i++) {
+      const d = ra(), jy = gauss(ra) * 40, k = clamp(off * 1.6 - d * 0.6);
+      miniFish(g, sx + 20 + k * 330 + d * 30, sy + jy + k * 30, 13, 0.1, Math.sin(clamp(k) * Math.PI) * 0.95);
+    }
+    const aa = smooth(0, 0.2, off) * (1 - smooth(0.9, 1, off));
+    g.save(); g.globalAlpha *= aa; g.setLineDash([10, 10]);
+    arrow(g, sx + 40, sy - 40, sx + 380, sy - 10, "rgba(169,200,218,0.9)", 3, 16);
+    g.restore();
+    text(g, "Adults head offshore to spawn", sx + 210, sy - 62, { size: 22, weight: 700, align: "center", color: C.ink, alpha: aa, shadow: 8 });
+  }
+
+  // station dots
+  for (const [lat, lon] of STATIONS) {
+    const lv = runLevel(doy, lat), [x, y] = P(lon, lat);
+    if (lv > 0.9) {
+      const pulse = (lt * 0.8 + lat) % 1;
+      g.beginPath(); g.arc(x, y, 8 + pulse * 22, 0, TAU);
+      g.strokeStyle = `rgba(120,215,247,${0.6 * (1 - pulse)})`; g.lineWidth = 2; g.stroke();
+    }
+    g.beginPath(); g.arc(x, y, 7, 0, TAU);
+    g.fillStyle = mixColor("5b7486", "78d7f7", lv); g.fill();
+    g.lineWidth = 2; g.strokeStyle = "#fff"; g.stroke();
+  }
+  g.restore();
+
+  // fade the panhandle under the chart panel
+  const fade = g.createLinearGradient(0, 0, 1010, 0);
+  fade.addColorStop(0, "rgba(5,30,46,1)"); fade.addColorStop(0.84, "rgba(5,30,46,0.97)"); fade.addColorStop(1, "rgba(5,30,46,0)");
+  g.fillStyle = fade; g.fillRect(0, 0, 1010, H);
+
+  // ---- left: peak-window chart ----
+  kicker(g, "THE ROUTE", 90, 104, reveal(lt, 0.2)[0]);
+  heading(g, "The run moves south", 90, 168, reveal(lt, 0.3)[0], 54);
+  const x0 = 420, x1 = 860, d0 = doyOf(9, 1), d1 = doyOf(11, 30);
+  const X = (d) => x0 + ((d - d0) / (d1 - d0)) * (x1 - x0);
+  const top = 236, rowH = 63;
+  const ga = easeOut(smooth(0.6, 1.4, lt));
+  g.save(); g.globalAlpha *= ga;
+  for (const [m, label] of [[9, "SEP"], [10, "OCT"], [11, "NOV"]]) {
+    const xm = X(doyOf(m, 1));
+    g.fillStyle = "rgba(169,200,218,0.18)"; g.fillRect(xm, top - 8, 1.5, rowH * ROWS.length + 4);
+    text(g, label, xm + 8, top - 16, { size: 17, weight: 700, ls: 3, color: C.faint });
+  }
+  g.restore();
+
+  // which rows the narration is naming right now
+  const hl = new Set();
+  const nl = north.lines[2], ml = middle.lines[1], sl = south.lines[0];
+  if (t > nl.start - 0.2 && t < nl.end + 0.6) hl.add(0);
+  if (t > ml.start - 0.1 && t < ml.end + 0.4) {
+    const k = Math.min(4, Math.floor(((t - ml.start) / (ml.end - ml.start)) * 5));
+    hl.add([2, 3, 4, 5, 6][Math.max(0, k)]);
+  }
+  if (t > sl.start - 0.2 && t < sl.end + 0.6) hl.add(9);
+
+  ROWS.forEach((row, i) => {
+    const [a, dy] = reveal(lt, 0.9 + i * 0.08, 0.5, 12);
+    const y = top + i * rowH + dy;
+    const on = runLevel(doy, row.lat) > 0.9;
+    if (hl.has(i)) {
+      g.save(); g.globalAlpha *= a;
+      rrect(g, 76, y - 4, 800, rowH - 6, 12); g.fillStyle = "rgba(56,189,236,0.16)"; g.fill();
+      g.strokeStyle = "rgba(120,215,247,0.55)"; g.lineWidth = 1.5; g.stroke();
+      g.restore();
+    }
+    text(g, row.name, 94, y + 24, { size: 20, weight: 700, color: on || hl.has(i) ? C.ink : C.dim, alpha: a });
+    text(g, row.win, 94, y + 48, { size: 17, weight: 500, color: on ? C.accent2 : C.faint, alpha: a });
+    // season curve as a bar
+    g.save(); g.globalAlpha *= a;
+    const bar = g.createLinearGradient(x0, 0, x1, 0);
+    for (let d = d0; d <= d1; d += 0.5) {
+      const f = seasonFactor(d, row.lat);
+      bar.addColorStop((d - d0) / (d1 - d0), f > 0.999 ? `rgba(120,215,247,${d < doy ? 0.95 : 0.5})` : `rgba(56,189,236,${(0.08 + f * 0.45).toFixed(3)})`);
+    }
+    rrect(g, x0, y + 14, x1 - x0, 22, 11); g.fillStyle = bar; g.fill();
+    g.restore();
+  });
+  // today line
+  const tx = X(doy);
+  g.save(); g.globalAlpha *= ga;
+  g.fillStyle = C.warm; g.fillRect(tx - 1.5, top - 6, 3, rowH * ROWS.length);
+  g.restore();
+  const [m, d] = dateOf(doy);
+  // date card
+  const da = reveal(lt, 0.8)[0];
+  card(g, 1560, 70, 280, 132, da);
+  text(g, "SEASON DATE", 1590, 112, { size: 17, weight: 700, ls: 3, color: C.warm, alpha: da });
+  text(g, `${MONTHS[m]} ${d}`, 1590, 178, { size: 62, weight: 800, fam: FD, alpha: da });
+  // stat card
+  const s2 = south.lines[1];
+  const [sa, sd] = reveal(t, s2.start - 0.1, 0.6, 16);
+  card(g, 1560, 222 + sd, 280, 150, sa);
+  text(g, "300+ miles", 1590, 280 + sd, { size: 40, weight: 800, fam: FD, alpha: sa });
+  text(g, "of coast in about", 1590, 314 + sd, { size: 20, weight: 500, color: C.dim, alpha: sa });
+  text(g, "seven weeks", 1590, 350 + sd, { size: 30, weight: 800, fam: FD, color: C.accent2, alpha: sa });
+  // footnote
+  text(g, "Peak windows: floridamulletrun.com season model. Weather shifts them year to year.", 94, top + rowH * ROWS.length + 26, { size: 16, weight: 500, color: C.faint, alpha: ga });
+}
+
+function sceneBlitz(g, lt, seg) {
+  const surf = 300;
+  const sky = g.createLinearGradient(0, 0, 0, surf);
+  sky.addColorStop(0, "#284f74"); sky.addColorStop(0.55, "#7c94a8"); sky.addColorStop(1, "#f0c9a0");
+  g.fillStyle = sky; g.fillRect(0, 0, W, surf);
+  const sea = g.createLinearGradient(0, surf, 0, H);
+  sea.addColorStop(0, "#1f86a3"); sea.addColorStop(0.5, "#0f5878"); sea.addColorStop(1, "#06283c");
+  g.fillStyle = sea; g.fillRect(0, surf, W, H - surf);
+  lightRays(g, lt, 1.3, surf);
+  motes(g, lt, 60, 21, "#e0f6ff", 0.3);
+  // beach slope on the left
+  g.beginPath();
+  g.moveTo(0, surf - 46); g.quadraticCurveTo(190, surf - 28, 380, surf + 2); g.bezierCurveTo(470, 760, 700, 930, 1100, 960); g.lineTo(W, 990); g.lineTo(W, H); g.lineTo(0, H); g.closePath();
+  const sand = g.createLinearGradient(0, surf, 500, H);
+  sand.addColorStop(0, "#ecdcb4"); sand.addColorStop(1, "#b49f72");
+  g.fillStyle = sand; g.fill();
+  // water tint over the submerged sand
+  g.save();
+  g.beginPath(); g.rect(0, surf, W, H - surf); g.clip();
+  g.fillStyle = "rgba(15,88,120,0.28)"; g.fillRect(0, surf, W, H - surf);
+  g.restore();
+  // surface
+  g.strokeStyle = "rgba(255,255,255,0.55)"; g.lineWidth = 3;
+  g.beginPath();
+  for (let x = 380; x <= W; x += 10) { const y = surf + Math.sin(x / 60 + lt * 2) * 3; x === 380 ? g.moveTo(x, y) : g.lineTo(x, y); }
+  g.stroke();
+
+  // predators on a schedule
+  const kinds = [["tarpon", "Tarpon"], ["snook", "Snook"], ["jack", "Jack crevalle"], ["shark", "Shark"], ["tarpon", "Tarpon"], ["shark", "Shark"]];
+  const preds = [];
+  kinds.forEach(([kind], k) => {
+    const t0 = 1.4 + k * 2.0, dur = 2.6;
+    const p = (lt - t0) / dur;
+    if (p < -0.05 || p > 1.05) return;
+    const rr = rng(200 + k);
+    const yA = 560 + rr() * 300, yB = 420 + rr() * 200;
+    const x = lerp(W + 320, 300, easeInOut(p)), y = lerp(yA, yB, easeInOut(p)) + Math.sin(p * 9) * 12;
+    const len = kind === "shark" ? 420 : kind === "jack" ? 250 : kind === "snook" ? 290 : 380;
+    preds.push({ kind, x, y, len, p });
+  });
+
+  // the pod
+  const r = rng(13);
+  const cx = 820 + Math.sin(lt * 0.4) * 30, cy = 470;
+  const fish = [];
+  for (let i = 0; i < 380; i++) {
+    const a = r() * TAU, rad = Math.sqrt(r());
+    let x = cx + Math.cos(a) * rad * 430 + Math.sin(lt * 1.5 + i) * 8;
+    let y = cy + Math.sin(a) * rad * 120 + Math.cos(lt * 1.2 + i * 0.7) * 6;
+    let ang = Math.PI + Math.sin(lt * 2 + i) * 0.1;
+    for (const p of preds) {
+      const dx = x - p.x, dy = y - p.y, dist = Math.hypot(dx, dy), R = 240;
+      if (dist < R) {
+        const push = Math.pow((R - dist) / R, 1.4) * 170;
+        x += (dx / (dist || 1)) * push; y += (dy / (dist || 1)) * push;
+        ang = Math.atan2(dy, dx);
+      }
+    }
+    y = Math.max(surf + 8, y);
+    fish.push([x, y, 16 + (i % 7) * 2, ang]);
+  }
+  for (const p of preds) drawPredator(g, p.kind, p.x, p.y + 30, p.len, Math.PI + 0.12, 0.92 * smooth(-0.05, 0.08, p.p) * smooth(1.05, 0.9, p.p));
+  for (const [x, y, s, a] of fish) miniFish(g, x, y, s, a, 0.95);
+
+  // blow-ups: spray and leaping mullet
+  kinds.forEach((_, k) => {
+    const t0 = 1.4 + k * 2.0 + 1.1, dt = lt - t0;
+    if (dt < 0 || dt > 1.6) return;
+    const rr = rng(300 + k), x0 = 650 + rr() * 500;
+    g.save();
+    for (let i = 0; i < 46; i++) {
+      const vx = (rr() - 0.5) * 340, vy = 240 + rr() * 380;
+      const x = x0 + vx * dt, y = surf - (vy * dt - 0.5 * 980 * dt * dt);
+      if (y > surf + 2) continue;
+      g.globalAlpha = clamp(1 - dt / 1.4) * 0.9;
+      g.fillStyle = "#f4fbff";
+      g.beginPath(); g.arc(x, y, 2 + rr() * 3, 0, TAU); g.fill();
+    }
+    g.restore();
+    for (let j = 0; j < 4; j++) {
+      const vx = -120 + rr() * 240, vy = 330 + rr() * 220, d2 = dt - j * 0.08;
+      if (d2 < 0) continue;
+      const x = x0 + vx * d2, y = surf - (vy * d2 - 0.5 * 980 * d2 * d2);
+      if (y > surf + 10) continue;
+      const vang = Math.atan2(-(vy - 980 * d2), vx);
+      drawMullet(g, x, y, 54, vang, 1);
+    }
+  });
+  // gulls working the blitz
+  for (let i = 0; i < 6; i++) {
+    const a = lt * 0.5 + i * 1.05;
+    gull(g, 820 + Math.cos(a) * (220 + i * 30), 140 + Math.sin(a * 1.3) * 50 + i * 12, 20 + (i % 3) * 4, lt * 8 + i, 0.8);
+  }
+
+  const L = segLines(seg);
+  // pod length bracket
+  const [ba] = reveal(lt, L[0].start - seg.start, 0.5, 0);
+  const bfade = ba * (1 - smooth(L[1].start - seg.start + 0.4, L[1].start - seg.start + 1.2, lt));
+  g.save(); g.globalAlpha *= bfade; g.strokeStyle = "#fff"; g.lineWidth = 2.5;
+  g.beginPath(); g.moveTo(400, 670); g.lineTo(400, 690); g.lineTo(1250, 690); g.lineTo(1250, 670); g.stroke();
+  g.restore();
+  text(g, "Hundreds of yards of bait", 825, 732, { size: 30, weight: 700, align: "center", alpha: bfade, shadow: 10 });
+
+  kicker(g, "THE BLITZ", 90, 90, reveal(lt, 0.1)[0]);
+  heading(g, "Predators follow the bait", 90, 156, reveal(lt, 0.2)[0], 56);
+  const names = ["Tarpon", "Snook", "Redfish", "Jack crevalle", "Bluefish", "Sharks"];
+  const l1 = L[1].start - seg.start, l1d = L[1].end - L[1].start;
+  names.forEach((n, i) => {
+    const [a, d] = reveal(lt, l1 + (i / 6) * l1d * 0.55, 0.45, 12);
+    const y = 60 + i * 66 + d;
+    card(g, 1560, y, 290, 54, a, { r: 27 });
+    g.save(); g.globalAlpha *= a; icon(g, "fish", 1594, y + 27, 30, C.accent2); g.restore();
+    text(g, n, 1622, y + 36, { size: 25, weight: 700, alpha: a });
+  });
+}
+
+function sceneSetup(g, lt, seg) {
+  const bg = g.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, "#082a40"); bg.addColorStop(1, "#04172a");
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  const L = segLines(seg).map((l) => ({ s: l.start - seg.start, e: l.end - seg.start }));
+
+  // ---- inlet diagram (top-down) ----
+  const px = 880, py = 70, pw = 960, ph = 820;
+  g.save();
+  rrect(g, px, py, pw, ph, 28); g.clip();
+  const sea = g.createLinearGradient(0, py, 0, py + 420);
+  sea.addColorStop(0, "#0d4f73"); sea.addColorStop(1, "#1a7b98");
+  g.fillStyle = sea; g.fillRect(px, py, pw, ph);
+  const shoreY = (x) => py + 430 + Math.sin(x / 140) * 10;
+  const chL = 1330, chR = 1420;
+  // land + beach
+  const landPoly = (x0, x1) => {
+    g.beginPath();
+    g.moveTo(x0, shoreY(x0));
+    for (let x = x0; x <= x1; x += 10) g.lineTo(x, shoreY(x));
+    g.lineTo(x1, py + ph); g.lineTo(x0, py + ph); g.closePath();
+  };
+  landPoly(px, chL); g.fillStyle = "#e6d6ac"; g.fill();
+  landPoly(chR, px + pw); g.fill();
+  g.save(); g.translate(0, 36);
+  landPoly(px, chL - 6); g.fillStyle = "#2d5a43"; g.fill();
+  landPoly(chR + 6, px + pw); g.fill();
+  g.restore();
+  // lagoon behind the barrier island
+  g.beginPath(); g.rect(px, py + 640, pw, 180); g.fillStyle = "#1a6a7a"; g.fill();
+  g.beginPath(); g.rect(chL, shoreY(chL) - 2, chR - chL, 700); g.fillStyle = "#1a7590"; g.fill();
+  text(g, "Lagoon / river", px + 40, py + 760, { size: 22, weight: 600, italic: true, color: "rgba(220,240,245,0.75)" });
+  // jetties
+  g.strokeStyle = "#8d969b"; g.lineWidth = 14; g.lineCap = "round";
+  for (const jx of [chL - 6, chR + 6]) { g.beginPath(); g.moveTo(jx, shoreY(jx) + 10); g.lineTo(jx + (jx < 1380 ? -10 : 10), py + 300); g.stroke(); }
+  // breaking waves
+  g.strokeStyle = "rgba(255,255,255,0.55)"; g.lineWidth = 3;
+  for (let k = 0; k < 3; k++) {
+    g.beginPath();
+    for (let x = px; x <= px + pw; x += 10) {
+      if (x > chL - 20 && x < chR + 20) { g.moveTo(x + 10, shoreY(x) - 22 - k * 30 + Math.sin(lt * 2 + k) * 6); continue; }
+      const y = shoreY(x) - 22 - k * 30 + Math.sin(x / 50 + lt * 2 + k) * 4 + Math.sin(lt * 2 + k) * 6;
+      x === px ? g.moveTo(x, y) : g.lineTo(x, y);
+    }
+    g.stroke();
+  }
+  // falling tide: water flowing out of the inlet
+  const ta = smooth(L[0].s, L[0].s + 0.8, lt);
+  g.save(); g.globalAlpha *= ta;
+  for (let i = 0; i < 26; i++) {
+    const r = rng(600 + i);
+    const lane = r(), ph0 = r();
+    const k = (ph0 + lt * 0.28) % 1;
+    const xs = lerp(chL + 14, chR - 14, lane);
+    let x, y;
+    if (k < 0.55) { const q = k / 0.55; x = xs; y = lerp(py + 720, shoreY(xs), q); }
+    else { const q = (k - 0.55) / 0.45; x = xs + (lane - 0.5) * 380 * q; y = shoreY(xs) - q * 280; }
+    const a = Math.sin(k * Math.PI);
+    g.globalAlpha = ta * a * 0.85;
+    const ang = k < 0.55 ? -Math.PI / 2 : Math.atan2(-280, (lane - 0.5) * 380);
+    arrow(g, x - Math.cos(ang) * 14, y - Math.sin(ang) * 14, x + Math.cos(ang) * 14, y + Math.sin(ang) * 14, "#bff1ff", 3, 10);
+  }
+  g.restore();
+  text(g, "Falling tide", chR + 34, py + 600, { size: 28, weight: 800, alpha: ta, shadow: 10 });
+  g.save(); g.globalAlpha *= ta; arrow(g, chR + 20, py + 640, chR + 20, py + 560, "#bff1ff", 4, 14); g.restore();
+  // NE wind
+  const wa = smooth(L[0].s + 2.2, L[0].s + 3.0, lt);
+  g.save(); g.globalAlpha *= wa;
+  for (let i = 0; i < 14; i++) {
+    const r = rng(700 + i), k = (r() + lt * 0.35) % 1;
+    const x = px + 500 + r() * 520 - k * 260, y = py + 20 + r() * 220 + k * 200;
+    g.globalAlpha = wa * Math.sin(k * Math.PI) * 0.5;
+    g.strokeStyle = "#e6f6ff"; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x - 60, y + 46); g.stroke();
+  }
+  g.globalAlpha = wa;
+  arrow(g, px + pw - 70, py + 70, px + pw - 250, py + 210, "#ffffff", 9, 30);
+  g.restore();
+  text(g, "NE wind", px + pw - 60, py + 250, { size: 28, weight: 800, align: "right", alpha: wa, shadow: 10 });
+  // the pod near the inlet mouth, pushed toward the beach
+  const pa = smooth(L[0].s + 1.2, L[0].s + 2.0, lt);
+  const pcx = 1150, pcy = py + 340;
+  const r = rng(808);
+  for (let i = 0; i < 140; i++) {
+    const a = r() * TAU, rad = Math.sqrt(r());
+    const x = pcx + Math.cos(a) * rad * 150 + Math.sin(lt * 2 + i) * 4;
+    const y = pcy + Math.sin(a) * rad * 52 + Math.cos(lt * 1.7 + i) * 3;
+    miniFish(g, x, y, 15, Math.PI * 0.9 + Math.sin(lt + i) * 0.1, pa * 0.95);
+  }
+  // edges vs middle
+  const ea = smooth(L[1].s, L[1].s + 0.6, lt);
+  g.save(); g.globalAlpha *= ea;
+  g.setLineDash([10, 9]); g.strokeStyle = C.good; g.lineWidth = 3;
+  g.beginPath(); g.ellipse(pcx, pcy, 172, 70, 0, 0, TAU); g.stroke(); g.setLineDash([]);
+  for (const [ex, ey] of [[pcx - 172, pcy], [pcx + 172, pcy], [pcx, pcy + 70]]) {
+    g.beginPath(); g.arc(ex, ey, 18, 0, TAU); g.fillStyle = C.good; g.fill();
+    icon(g, "check", ex, ey, 26, "#06263a");
+  }
+  g.strokeStyle = C.hot; g.lineWidth = 6;
+  g.beginPath(); g.moveTo(pcx - 14, pcy - 14); g.lineTo(pcx + 14, pcy + 14); g.moveTo(pcx + 14, pcy - 14); g.lineTo(pcx - 14, pcy + 14); g.stroke();
+  g.restore();
+  text(g, "Fish the edges, not the middle", pcx, pcy - 96, { size: 25, weight: 800, align: "center", alpha: ea, shadow: 10 });
+  // low sun
+  const sa = smooth(L[1].s + 2.6, L[1].s + 3.3, lt);
+  g.save(); g.globalAlpha *= sa;
+  const sg = g.createRadialGradient(px + 100, py + 100, 5, px + 100, py + 100, 120);
+  sg.addColorStop(0, "rgba(255,210,140,0.9)"); sg.addColorStop(1, "rgba(255,210,140,0)");
+  g.fillStyle = sg; g.fillRect(px, py, 260, 260);
+  icon(g, "sun", px + 100, py + 100, 90, "#ffd58a");
+  g.restore();
+  text(g, "First & last light", px + 175, py + 110, { size: 25, weight: 800, alpha: sa, shadow: 10 });
+  g.restore();
+  g.lineWidth = 2; g.strokeStyle = "rgba(120,215,247,0.3)"; rrect(g, px, py, pw, ph, 28); g.stroke();
+
+  // ---- left checklist ----
+  kicker(g, "THE SETUP", 110, 120, reveal(lt, 0.1)[0]);
+  heading(g, "Read the coast", 110, 190, reveal(lt, 0.2)[0]);
+  const items = [
+    ["Falling tide", L[0].s + 0.5],
+    ["Near an inlet", L[0].s + 1.5],
+    ["Northeast wind", L[0].s + 2.6],
+    ["Fish the edges of the pod", L[1].s + 0.3],
+    ["First and last light", L[1].s + 2.8],
+  ];
+  items.forEach(([label, at], i) => {
+    const [a, d] = reveal(lt, at, 0.5, 14);
+    const y = 250 + i * 92 + d;
+    card(g, 110, y, 640, 76, a, { r: 38 });
+    g.save(); g.globalAlpha *= a;
+    g.beginPath(); g.arc(150, y + 38, 22, 0, TAU); g.fillStyle = C.good; g.fill();
+    icon(g, "check", 150, y + 38, 30, "#06263a");
+    g.restore();
+    text(g, label, 192, y + 48, { size: 30, weight: 700, alpha: a });
+  });
+  const [ia, idy] = reveal(lt, L[2].s - 0.1, 0.6, 14);
+  card(g, 110, 730 + idy, 640, 100, ia, { fill: "rgba(245,165,36,0.14)", stroke: "rgba(245,165,36,0.55)" });
+  g.save(); g.globalAlpha *= ia; icon(g, "info", 160, 780 + idy, 46, C.warm); g.restore();
+  text(g, "Keeping bait?", 206, 770 + idy, { size: 27, weight: 800, color: C.warm, alpha: ia });
+  text(g, "Check current FWC rules first.", 206, 806 + idy, { size: 25, weight: 600, alpha: ia });
+}
+
+function sceneOutro(g, lt, seg) {
+  const bg = g.createRadialGradient(1380, 520, 50, 1380, 520, 1300);
+  bg.addColorStop(0, "#0f5479"); bg.addColorStop(0.5, "#082d46"); bg.addColorStop(1, "#03121e");
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  lightRays(g, lt, 0.8, 0);
+  motes(g, lt, 80, 99, "#cfefff", 0.3);
+  // bait ball
+  const r = rng(55);
+  const cx = 1400, cy = 520;
+  for (let i = 0; i < 300; i++) {
+    const rad = 60 + Math.pow(r(), 0.8) * 300, a0 = r() * TAU, sz = 14 + r() * 10, wob = r() * TAU;
+    const w = 0.55 * (180 / rad);
+    const a = a0 + lt * w;
+    const x = cx + Math.cos(a) * rad, y = cy + Math.sin(a) * rad * 0.62 + Math.sin(lt + wob) * 8;
+    const ang = Math.atan2(Math.cos(a) * 0.62, -Math.sin(a));
+    const depth = 0.55 + 0.45 * (Math.sin(a) * 0.5 + 0.5);
+    miniFish(g, x, y, sz * (0.8 + depth * 0.3), ang, depth);
+  }
+  const L = segLines(seg).map((l) => ({ s: l.start - seg.start, e: l.end - seg.start }));
+  kicker(g, "FOLLOW THE RUN", 120, 250, reveal(lt, 0.2)[0]);
+  const [ua, ud] = reveal(lt, L[1].s - 0.1, 0.8, 24);
+  const [qa, qd] = reveal(lt, 0.3, 0.8, 24);
+  text(g, "Where is the run today?", 120, 330 + qd, { size: 66, weight: 800, fam: FD, alpha: qa, shadow: 16 });
+  text(g, "floridamulletrun.com", 120, 420 + ud, { size: 74, weight: 800, fam: FD, color: C.accent2, alpha: ua, shadow: 16 });
+  const feats = [["gauge", "A 0–100 score for every beach"], ["wind", "Live wind, tide & season data"], ["map", "A map of fresh sightings"]];
+  feats.forEach(([ic, label], i) => {
+    const at = L[1].s + 1.2 + i * 1.3;
+    const [a, d] = reveal(lt, at, 0.5, 14);
+    const y = 480 + i * 84 + d;
+    card(g, 120, y, 620, 68, a, { r: 34 });
+    g.save(); g.globalAlpha *= a; icon(g, ic, 162, y + 34, 36, C.accent2); g.restore();
+    text(g, label, 198, y + 44, { size: 28, weight: 700, alpha: a });
+  });
+  const [ca, cd] = reveal(lt, L[2].s, 0.6, 14);
+  g.save(); g.globalAlpha *= ca;
+  rrect(g, 120, 760 + cd, 300, 72, 36); g.fillStyle = C.accent; g.fill();
+  icon(g, "pin", 165, 796 + cd, 36, "#04223a");
+  g.restore();
+  text(g, "Log a sighting", 195, 806 + cd, { size: 28, weight: 800, color: "#04223a", alpha: ca });
+  const [ea] = reveal(lt, L[2].s + 1.6, 0.8, 0);
+  text(g, "See you on the beach.", 450, 808 + cd, { size: 32, weight: 600, italic: true, color: C.dim, alpha: ea });
+}
+
+const SCENES = { intro: sceneIntro, fish: sceneFish, trigger: sceneTrigger, map: sceneMap, blitz: sceneBlitz, setup: sceneSetup, outro: sceneOutro };
+
+// ---------- overlay: captions, brand, progress ----------
+function captions(g, t) {
+  let cur = null;
+  for (let i = 0; i < LINES.length; i++) {
+    const l = LINES[i], next = LINES[i + 1];
+    const until = Math.min(l.end + 0.6, next ? next.start - 0.1 : l.end + 1.2);
+    if (t >= l.start - 0.12 && t < until) { cur = { ...l, until }; break; }
+  }
+  if (!cur) return;
+  const a = smooth(cur.start - 0.12, cur.start + 0.05, t) * (1 - smooth(cur.until - 0.15, cur.until, t));
+  g.save();
+  g.font = `600 34px ${FB}`;
+  const lines = wrap(g, cur.text, 1340);
+  const lh = 46, padX = 34, padY = 18;
+  const bw = Math.max(...lines.map((s) => g.measureText(s).width)) + padX * 2;
+  const bh = lines.length * lh + padY * 2 - 8;
+  const bx = (W - bw) / 2, by = 1040 - bh;
+  g.globalAlpha = a;
+  rrect(g, bx, by, bw, bh, 18); g.fillStyle = "rgba(3,16,26,0.8)"; g.fill();
+  g.restore();
+  lines.forEach((s, i) => text(g, s, W / 2, by + padY + 34 + i * lh, { size: 34, weight: 600, align: "center", alpha: a }));
+}
+function brand(g, t) {
+  const first = SEGS[0], last = SEGS[SEGS.length - 1];
+  const a = smooth(first.end - 0.5, first.end + 0.5, t) * (1 - smooth(last.start - 0.5, last.start + 0.3, t));
+  if (a <= 0) return;
+  g.save(); g.globalAlpha = a * 0.85;
+  icon(g, "fish", 1640, 1047, 26, C.accent2);
+  g.restore();
+  text(g, "floridamulletrun.com", 1660, 1055, { size: 21, weight: 700, alpha: a * 0.85 });
+}
+
+function drawSeg(g, seg, t) {
+  g.save();
+  SCENES[seg.visual](g, t - seg.start, seg, t);
+  g.restore();
+}
+const XF = 0.7;
+function renderAt(t) {
+  let i = SEGS.findIndex((s) => t < s.end);
+  if (i < 0) i = SEGS.length - 1;
+  const seg = SEGS[i];
+  const gB = bufB.getContext("2d");
+  drawSeg(gB, seg, t);
+  ctx.globalAlpha = 1;
+  if (i > 0 && t - seg.start < XF) {
+    const gA = bufA.getContext("2d");
+    drawSeg(gA, SEGS[i - 1], t);
+    ctx.drawImage(bufA, 0, 0);
+    ctx.globalAlpha = easeInOut((t - seg.start) / XF);
+  }
+  ctx.drawImage(bufB, 0, 0);
+  ctx.globalAlpha = 1;
+  captions(ctx, t);
+  brand(ctx, t);
+  ctx.fillStyle = "rgba(255,255,255,0.12)"; ctx.fillRect(0, H - 6, W, 6);
+  ctx.fillStyle = C.accent; ctx.fillRect(0, H - 6, W * clamp(t / TL.duration), 6);
+  const black = Math.max(1 - smooth(0, 0.6, t), smooth(TL.duration - 1.4, TL.duration, t));
+  if (black > 0) { ctx.fillStyle = `rgba(0,0,0,${black})`; ctx.fillRect(0, 0, W, H); }
+}
+
+async function boot() {
+  TL = window.TIMELINE || (await (await fetch("build/timeline.json")).json());
+  FL = window.FLORIDA || (await (await fetch("data/florida.json")).json());
+  buildCoast();
+  for (const s of TL.scenes) {
+    const last = SEGS[SEGS.length - 1];
+    if (last && last.visual === s.visual) { last.end = s.end; last.scenes.push(s); }
+    else SEGS.push({ visual: s.visual, start: s.start, end: s.end, scenes: [s] });
+  }
+  LINES = TL.scenes.flatMap((s) => s.lines);
+  await document.fonts.ready;
+  window.renderAt = renderAt;
+  window.DURATION = TL.duration;
+  window.READY = true;
+  const q = new URLSearchParams(location.search);
+  if (q.has("t")) renderAt(parseFloat(q.get("t")));
+  else if (q.has("play")) {
+    const audio = new Audio("build/narration.wav");
+    const t0 = performance.now();
+    audio.play().catch(() => {});
+    const loop = () => { const t = (performance.now() - t0) / 1000; renderAt(Math.min(t, TL.duration)); if (t < TL.duration) requestAnimationFrame(loop); };
+    loop();
+  } else renderAt(1.5);
+}
+boot();
+</script>
+</body>
+</html>
