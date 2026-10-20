@@ -499,6 +499,16 @@ const ATLANTIC_BEACH_CONTENT: BeachContent[] = [
       "palm beach inlet fishing",
       "singer island mullet run",
     ],
+    image: {
+      src: "/images/beaches/lake-worth-inlet.jpg",
+      alt: "Aerial view west through the Lake Worth Inlet jetties toward Peanut Island, with Palm Beach Shores on Singer Island to the right",
+      width: 1200,
+      height: 795,
+      credit: "Tony Santana, U.S. Army Corps of Engineers",
+      license: "Public domain",
+      sourceUrl:
+        "https://commons.wikimedia.org/wiki/File:Lake_Worth_Inlet_aerial_view.jpg",
+    },
     about: [
       "Lake Worth Inlet — known locally as Palm Beach Inlet — cuts between Singer Island and Palm Beach as the deep-water entrance to the Port of Palm Beach. The rock jetties on both sides and the Lake Worth Lagoon behind it make it one of the busiest inlets on the lower Atlantic coast.",
       "It sits between Jupiter Inlet and Fort Lauderdale on the migration corridor, so timing usually trails Jupiter by days and runs ahead of Broward. When pods hug the beach heading south, they have to cross the inlet mouth, and that is where predators stack up.",

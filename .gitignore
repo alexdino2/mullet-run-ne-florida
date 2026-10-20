@@ -32,3 +32,6 @@ next-env.d.ts
 
 # explainer video build output
 /video/build/
+
+# instagram reel build output
+/scripts/instagram-reel/out/
