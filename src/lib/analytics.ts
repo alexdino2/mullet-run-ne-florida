@@ -1,4 +1,4 @@
-import type { PostHog } from "posthog-js";
+import type { CaptureResult, PostHog } from "posthog-js";
 import { flushEarlyErrors } from "@/lib/early-errors";
 
 export type AnalyticsProperties = Record<
@@ -41,6 +41,20 @@ export function captureEvent(
 }
 
 /**
+ * Wallet browsers (for example Brave on iOS) inject a script that sets
+ * `window.ethereum.selectedAddress`. It throws when `window.ethereum` is not
+ * defined. This site has no wallet code, so these errors are noise.
+ */
+export function isInjectedWalletError(result: CaptureResult): boolean {
+  if (result.event !== "$exception") return false;
+  const exceptions: { value?: string }[] =
+    result.properties.$exception_list ?? [];
+  return exceptions.some((exception) =>
+    exception.value?.includes("window.ethereum"),
+  );
+}
+
+/**
  * Download and initialise posthog-js (~100 KiB, plus the session recorder it
  * fetches), then flush queued events. Called once the page is interactive so
  * none of it is on the critical path.
@@ -68,6 +82,9 @@ export async function loadAnalytics(): Promise<void> {
       session_recording: {
         maskAllInputs: true,
       },
+      // Also applies to the errors that `flushEarlyErrors` sends.
+      before_send: (result) =>
+        result && isInjectedWalletError(result) ? null : result,
     });
   }
 
