@@ -89,6 +89,7 @@ const NAV = [
   { href: "/beaches", label: "Beaches" },
   { href: "/guide", label: "Guide" },
   { href: "/gear", label: "Gear" },
+  { href: "/media", label: "Media" },
   { href: "/insider", label: "Insider" },
 ];
 
@@ -99,6 +100,7 @@ const FOOTER_LINKS = [
   { href: "/guide/locations", label: "Inlet guides" },
   { href: "/guide/regulations", label: "FWC regulations" },
   { href: "/guide/tactics", label: "Tactics & gear" },
+  { href: "/media", label: "Mullet run videos" },
   { href: "/gear", label: "Gear shop" },
   { href: "/charters", label: "Charter captains" },
 ];
