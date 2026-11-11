@@ -85,6 +85,7 @@ export const AD_FREE_PATHS = [
   "/insider",
   "/charters",
   "/gear",
+  "/media",
   "/about",
   "/about-us",
   "/contact",

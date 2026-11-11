@@ -16,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/sightings",
     "/beaches",
     "/guide",
+    "/media",
     // /gear, /charters and /insider are noindexed placeholders; add them back
     // here when they carry original content.
   ].map((path) => ({
